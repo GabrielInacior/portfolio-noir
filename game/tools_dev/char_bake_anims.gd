@@ -115,6 +115,162 @@ func _open_arms(an: Animation, ts: Skeleton3D, id: String) -> void:
 			_moved += vals.size()
 
 
+var _torso := {}
+var _fixed_total := 0
+## Animações que não servem em pé, sem cenário (encostar precisa de parede, sentar e digitar
+## precisam de cadeira): não entram na biblioteca; o personagem usa outra no lugar (noir_character.gd).
+const DROP := ["encostado", "sentado", "digitando"]
+
+
+## pose global (no espaço do esqueleto) de um osso no instante t, cinemática direta com as trilhas
+func _gxf(an: Animation, ts: Skeleton3D, bi: int, t: float) -> Transform3D:
+	var chain: Array[int] = []
+	var b := bi
+	while b >= 0:
+		chain.push_front(b)
+		b = ts.get_bone_parent(b)
+	var x := Transform3D.IDENTITY
+	for c in chain:
+		var rest := ts.get_bone_rest(c)
+		var nm := ts.get_bone_name(c)
+		var tr := an.find_track(NodePath("%SKEL:" + nm), Animation.TYPE_ROTATION_3D)
+		var q: Quaternion = an.rotation_track_interpolate(tr, t) if tr >= 0 else rest.basis.get_rotation_quaternion()
+		var o := rest.origin
+		var tp := an.find_track(NodePath("%SKEL:" + nm), Animation.TYPE_POSITION_3D)
+		if tp >= 0:
+			o = an.position_track_interpolate(tp, t)
+		x = x * Transform3D(Basis(q), o)
+	return x
+
+
+## Volume do tronco medido na malha em repouso (espaço do esqueleto): elipse por altura, metade da
+## largura (x) e da profundidade para a frente e para trás, da cintura ao pescoço. Braços ficam de
+## fora (só vértices perto do eixo do corpo entram na medida).
+func _measure_torso(ts: Skeleton3D) -> Dictionary:
+	var root_n: Node = ts
+	while root_n.get_parent() != null and root_n.get_parent() != root:
+		root_n = root_n.get_parent()
+	var inv := ts.global_transform.affine_inverse()
+	var hips := ts.get_bone_global_rest(ts.find_bone("mixamorig_Hips")).origin
+	var neck := ts.get_bone_global_rest(ts.find_bone("mixamorig_Neck")).origin
+	var toe := ts.get_bone_global_rest(ts.find_bone("mixamorig_LeftToeBase")).origin
+	var front_pos := toe.z > hips.z
+	var xs: Array = []
+	var zf: Array = []
+	var zb: Array = []
+	for mi in root_n.find_children("*", "MeshInstance3D", true, false):
+		var m3 := mi as MeshInstance3D
+		var xf := inv * m3.global_transform
+		for si in m3.mesh.get_surface_count():
+			var arr: Array = m3.mesh.surface_get_arrays(si)
+			for v in (arr[Mesh.ARRAY_VERTEX] as PackedVector3Array):
+				var p: Vector3 = xf * v
+				if p.y < hips.y + 0.08 or p.y > neck.y - 0.06:
+					continue
+				var dx := p.x - hips.x
+				if absf(dx) > 0.2:
+					continue
+				xs.append(absf(dx))
+				var dz := p.z - hips.z
+				if (dz > 0) == front_pos:
+					zf.append(absf(dz))
+				else:
+					zb.append(absf(dz))
+	xs.sort()
+	zf.sort()
+	zb.sort()
+	# largura: a mão e o braço pendentes entram na faixa e inflariam a medida; limita pelo ombro
+	var sh := ts.get_bone_global_rest(ts.find_bone("mixamorig_LeftArm")).origin
+	var rx := minf(_pq(xs, 0.8), absf(sh.x - hips.x) * 0.82)
+	return {"rx": rx, "rf": clampf(_pq(zf, 0.85), 0.08, 0.17), "rb": clampf(_pq(zb, 0.85), 0.07, 0.16), "fz": 1.0 if front_pos else -1.0,
+		"y0": hips.y + 0.04, "y1": neck.y - 0.02}
+
+
+func _pq(a: Array, q: float) -> float:
+	return float(a[int(a.size() * q)]) if not a.is_empty() else 0.15
+
+
+func _p95(a: Array) -> float:
+	return float(a[int(a.size() * 0.95)]) if not a.is_empty() else 0.15
+
+
+## posição do ponto em relação ao eixo do tronco, normalizada pela elipse (y = 1 na superfície)
+func _ell(p: Vector3, c: Vector3, yaw_q: Quaternion, tv: Dictionary, pad: float) -> Vector3:
+	var l := yaw_q.inverse() * (p - c)
+	var rz: float = tv["rf"] if l.z * float(tv["fz"]) > 0 else tv["rb"]
+	var ex := l.x / (float(tv["rx"]) + pad)
+	var ez := l.z / (rz + pad)
+	return Vector3(ex, sqrt(ex * ex + ez * ez), ez)
+
+
+## Restrição de distância mínima braço x tronco, assada nas chaves: em cada quadro, se o cotovelo,
+## o meio do antebraço, o punho ou a ponta da mão estiver dentro do volume do tronco (mais a
+## grossura do braço), gira o braço (cotovelo) e depois o antebraço o mínimo para tirar o ponto.
+func _avoid_torso(an: Animation, ts: Skeleton3D, tv: Dictionary) -> void:
+	var hips_i := ts.find_bone("mixamorig_Hips")
+	var neck_i := ts.find_bone("mixamorig_Neck")
+	var hips_rest_q := ts.get_bone_global_rest(hips_i).basis.get_rotation_quaternion()
+	for side in ["Left", "Right"]:
+		var arm_i := ts.find_bone("mixamorig_" + side + "Arm")
+		var fore_i := ts.find_bone("mixamorig_" + side + "ForeArm")
+		var hand_i := ts.find_bone("mixamorig_" + side + "Hand")
+		for pass_i in 2:
+			var bi := arm_i if pass_i == 0 else fore_i
+			var tr := an.find_track(NodePath("%SKEL:" + ts.get_bone_name(bi)), Animation.TYPE_ROTATION_3D)
+			if tr < 0:
+				continue
+			for k in an.track_get_key_count(tr):
+				var t := an.track_get_key_time(tr, k)
+				for _iter in 4:
+					var hx := _gxf(an, ts, hips_i, t)
+					var nx := _gxf(an, ts, neck_i, t)
+					var yq := hx.basis.get_rotation_quaternion() * hips_rest_q.inverse()
+					var fwd := yq * Vector3(0, 0, 1)
+					fwd.y = 0.0
+					var yaw := atan2(fwd.x, fwd.z) if fwd.length() > 0.01 else 0.0
+					var yaw_q := Quaternion(Vector3.UP, yaw)
+					var bx := _gxf(an, ts, bi, t)
+					var pivot := bx.origin
+					var pts: Array = []
+					if pass_i == 0:
+						pts = [[_gxf(an, ts, fore_i, t).origin, 0.065]]
+					else:
+						var hxf := _gxf(an, ts, hand_i, t)
+						var tip := hxf.origin + (hxf.origin - bx.origin).normalized() * 0.16
+						pts = [[hxf.origin, 0.05], [tip, 0.03], [bx.origin.lerp(hxf.origin, 0.5), 0.06]]
+					var worst := 0.0
+					var target := Vector3.ZERO
+					var src := Vector3.ZERO
+					for pp in pts:
+						var p: Vector3 = pp[0]
+						if p.y < float(tv["y0"]) or p.y > float(tv["y1"]):
+							continue
+						var a := clampf((p.y - hx.origin.y) / maxf(nx.origin.y - hx.origin.y, 0.01), 0.0, 1.0)
+						var c := hx.origin.lerp(nx.origin, a)
+						c.y = p.y
+						var e := _ell(p, c, yaw_q, tv, float(pp[1]))
+						if e.y < 1.0 and (1.0 - e.y) > worst:
+							worst = 1.0 - e.y
+							var l := yaw_q.inverse() * (p - c)
+							var out := l / maxf(e.y, 0.05) * 1.03
+							if e.y < 0.05:
+								out = Vector3(0, 0, (float(tv["rf"]) + float(pp[1])) * float(tv["fz"]) * 1.03)
+							out.y = l.y
+							target = c + yaw_q * out
+							src = p
+					if worst <= 0.0:
+						break
+					var v0 := (src - pivot).normalized()
+					var v1 := (target - pivot).normalized()
+					if v0.dot(v1) > 0.99999:
+						break
+					var rw := Quaternion(v0, v1)
+					var gpar := _gxf(an, ts, ts.get_bone_parent(bi), t).basis.get_rotation_quaternion()
+					var q: Quaternion = an.track_get_key_value(tr, k)
+					an.track_set_key_value(tr, k, (gpar.inverse() * rw * gpar * q).normalized())
+					_fixed_total += 1
+
+
 func _init() -> void:
 	await process_frame
 	var src_scene: Node = (load(SRC) as PackedScene).instantiate()
@@ -132,6 +288,8 @@ func _init() -> void:
 		var sk_s := _skq(ss)
 		var sk_t := _skq(ts)
 		var root_pre := sk_t.inverse() * sk_s   # raiz: muda do espaço do esqueleto de origem para o de destino
+		_torso[id] = _measure_torso(ts)
+		print("  tronco ", id, " ", _torso[id])
 		# correção por osso (nome -> C)
 		var corr := {}
 		for i in ts.get_bone_count():
@@ -144,6 +302,8 @@ func _init() -> void:
 		for lib_name in ap.get_animation_library_list():
 			var srclib := ap.get_animation_library(lib_name)
 			for a in srclib.get_animation_list():
+				if DROP.has(a):
+					continue
 				var an := srclib.get_animation(a).duplicate(true) as Animation
 				for t in range(an.get_track_count() - 1, -1, -1):
 					var tp := an.track_get_type(t)
@@ -169,11 +329,13 @@ func _init() -> void:
 							var p: Vector3 = an.track_get_key_value(t, k)
 							an.track_set_key_value(t, k, hip_rest_t + root_pre * ((p - hip_rest_s) * k_hip))
 				_open_arms(an, ts, id)
+				_avoid_torso(an, ts, _torso[id])
 				an.loop_mode = Animation.LOOP_LINEAR if a != "apontando" else Animation.LOOP_NONE
 				lib.add_animation(a, an)
 		var out := "res://assets/characters/meshy/anims_%s.res" % id
 		var err := ResourceSaver.save(lib, out, ResourceSaver.FLAG_COMPRESS)
-		print("  chaves de braço ajustadas: ", _moved)
+		print("  chaves de braço ajustadas: ", _moved, " | correções contra o tronco: ", _fixed_total)
+		_fixed_total = 0
 		_moved = 0
 		print("ANIMS ", id, " -> ", out, " err=", err, " anims=", lib.get_animation_list().size(), " k_hip=", snappedf(k_hip, 0.01))
 	quit()

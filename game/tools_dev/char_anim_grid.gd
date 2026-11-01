@@ -5,7 +5,7 @@ extends Node3D
 ## GRID_OLD=1 usa a biblioteca comum antiga (sem conversão por esqueleto), para comparar.
 
 const Character := preload("res://scripts/scene3d/noir_character.gd")
-const ANIMS := ["idle", "falando", "apontando", "encostado", "pensativo", "andando"]
+const ANIMS := ["idle", "respirando", "falando", "perguntando", "pensativo", "sim", "nao", "olhando", "apontando", "bartender", "fumando", "andando"]
 var dir := ""
 var cam: Camera3D
 var chars: Array = []
