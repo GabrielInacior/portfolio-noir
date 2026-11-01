@@ -37,6 +37,7 @@ var _mat_cache := {}
 var _tex_cache := {}
 var _prop_cache := {}
 var _multi := {}              # nome do prop -> [Transform3D]
+var _roof_signs := 0
 
 signal visited_changed(count: int, total: int)
 signal near_changed(project: Dictionary)
@@ -66,6 +67,7 @@ func _ready() -> void:
 	_build_plaza()
 	_build_landmark()
 	_street_props()
+	_dress_alley()
 	_commit_batches()
 	_commit_multi()
 	_build_life()
@@ -262,6 +264,44 @@ func _squad(center: Vector3, size: Vector2, normal: Vector3, col: Color, key_mat
 		st.add_vertex(pts[i])
 
 
+## Janela com interior falso (atlas 4x4 de quartos/cozinhas/TV), cor por vértice dá o brilho.
+func _wquad(center: Vector3, size: Vector2, normal: Vector3, cell: int, col: Color) -> void:
+	var m := _win_mat()
+	var c2 := Vector2i(floori(center.x / 32.0), floori(center.z / 32.0))
+	var key := "w|%d,%d" % [c2.x, c2.y]
+	if not _batch.has(key):
+		var st0 := SurfaceTool.new()
+		st0.begin(Mesh.PRIMITIVE_TRIANGLES)
+		_batch[key] = {"mat": m, "st": st0, "n": 0}
+	var st: SurfaceTool = _batch[key]["st"]
+	var u := normal.cross(Vector3.UP).normalized()
+	var v := Vector3.UP
+	var hu := -u * size.x * 0.5
+	var hv := v * size.y * 0.5
+	var pts := [center - hu - hv, center + hu - hv, center + hu + hv, center - hu + hv]
+	var cx := (cell % 4) / 4.0
+	var cy := (cell / 4) / 4.0
+	var uvs := [Vector2(cx + 0.01, cy + 0.24), Vector2(cx + 0.24, cy + 0.24), Vector2(cx + 0.24, cy + 0.01), Vector2(cx + 0.01, cy + 0.01)]
+	for i in [0, 2, 1, 0, 3, 2]:
+		st.set_color(col)
+		st.set_uv(uvs[i])
+		st.set_normal(normal)
+		st.add_vertex(pts[i])
+
+
+func _win_mat() -> StandardMaterial3D:
+	if _mat_cache.has("win"):
+		return _mat_cache["win"]
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.vertex_color_use_as_albedo = true
+	m.albedo_texture = load("res://assets/tex/janelas_atlas.png")
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_mat_cache["win"] = m
+	return m
+
+
 func _commit_batches() -> void:
 	for k in _batch:
 		var b: Dictionary = _batch[k]
@@ -351,6 +391,22 @@ func _build_skyline() -> void:
 			var h := _rng.randf_range(22.0, 60.0) + ring * 10.0
 			var w := _rng.randf_range(9.0, 15.0)
 			boxes.append([c, Vector3(w, h, w), a])
+			# recuo no topo (volume) e, em alguns, letreiro de neon no telhado
+			boxes.append([c + Vector3(0, h, 0), Vector3(w * 0.6, h * 0.18, w * 0.6), a])
+			if ring == 0 and _rng.randf() < 0.22 and _roof_signs < 9:
+				_roof_signs += 1
+				var lb := Label3D.new()
+				lb.text = ["HOTEL", "NOODLES", "24H", "CINEMA", "RÁDIO", "BAR", "JAZZ", "DINER", "MOTEL"][_roof_signs - 1]
+				lb.font = UI.font("title")
+				lb.font_size = 400
+				lb.pixel_size = 0.03
+				var cc: Color = [Color("#ff3d8a"), Color("#4ec9ff"), Color("#ffc83d"), Color("#7fffb0")][_rng.randi() % 4]
+				lb.modulate = Color(cc.r * 1.8, cc.g * 1.8, cc.b * 1.8)
+				lb.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
+				lb.position = c + Vector3(0, h * 1.18 + 3.0, 0)
+				lb.shaded = false
+				add_child(lb)
+				_neon_signs.append(lb)
 			var rows := int(h / 3.2)
 			for r in range(1, rows):
 				for k in 4:
@@ -365,8 +421,8 @@ func _build_skyline() -> void:
 	bm.mesh = bx
 	bm.instance_count = boxes.size()
 	for i in boxes.size():
-		var b: Array = boxes[i]
-		bm.set_instance_transform(i, Transform3D(Basis(Vector3.UP, -b[2]).scaled(b[1]), b[0] + Vector3(0, b[1].y / 2, 0)))
+		var bx2: Array = boxes[i]
+		bm.set_instance_transform(i, Transform3D(Basis(Vector3.UP, -bx2[2]).scaled(bx2[1]), bx2[0] + Vector3(0, bx2[1].y / 2, 0)))
 	var bmi := MultiMeshInstance3D.new()
 	bmi.multimesh = bm
 	bmi.material_override = _mat(Color("#0d0f22"), 0.0, false, 1.0)
@@ -609,20 +665,20 @@ func _building(face_center: Vector3, normal: Vector3, w: float, h_force := 0.0, 
 			var off := (c - (cols - 1) / 2.0) * 2.2
 			var y := 5.0 + r * 2.6
 			var wp := face_center + right * off + Vector3(0, y, 0) + normal * 0.04
-			_sbox(wp - normal * 0.0, Vector3(1.25, 1.55, 0.06), _mat(Color("#0c0f1c")), yaw)
+			# moldura e peitoril pintados, vidro com o interior falso do atlas
+			_sbox(wp, Vector3(1.3, 1.6, 0.06), _mat(Color("#1a1d2c")), yaw)
+			_sbox(wp + normal * 0.1 + Vector3(0, -0.84, 0), Vector3(1.45, 0.1, 0.24), _mat(Color("#3a3e56")), yaw)
 			var lit := _rng.randf()
-			if lit < 0.45:
-				var wc: Color = [Color("#ffcf8f"), Color("#ffb070"), Color("#8fb4ff"), Color("#ff8fc8"), Color("#a8f0ff")][_rng.randi() % 5]
-				wc = wc * _rng.randf_range(0.6, 1.15)
+			var cell := _rng.randi() % 16
+			if lit < 0.5:
+				var wc := Color(1, 1, 1) * _rng.randf_range(0.75, 1.25)
 				if lit < 0.06 and _wins.size() < 40:
-					_live_window(wp + normal * 0.03, normal, wc)
+					_live_window(wp + normal * 0.03, normal, wc, cell)
 				else:
-					_squad(wp + normal * 0.035, Vector2(1.0, 1.3), normal, wc, _vcol_mat(1.0))
-					# persiana: meia janela com faixas
-					if _rng.randf() < 0.3:
-						_squad(wp + normal * 0.04 + Vector3(0, 0.35, 0), Vector2(1.0, 0.55), normal, wc * 0.35, _vcol_mat(1.0))
+					_wquad(wp + normal * 0.035, Vector2(1.1, 1.4), normal, cell, wc)
 			else:
-				_squad(wp + normal * 0.035, Vector2(1.0, 1.3), normal, Color("#141a30"), _vcol_mat(1.0))
+				# apagada: o quarto mal se vê (luz da rua)
+				_wquad(wp + normal * 0.035, Vector2(1.1, 1.4), normal, cell, Color(0.12, 0.12, 0.2))
 	# escada de incêndio e ar-condicionado
 	if not is_end and h > 11.0 and _rng.randf() < 0.45:
 		for k in range(1, mini(4, rows)):
@@ -648,13 +704,16 @@ func _building(face_center: Vector3, normal: Vector3, w: float, h_force := 0.0, 
 		_sbox(body_c + Vector3(_rng.randf_range(-2, 2), h + 1.0, 0), Vector3(1.6, 2.0, 1.6), _mat(Color("#1c1a24")), yaw)
 
 
-func _live_window(p: Vector3, normal: Vector3, col: Color) -> void:
+func _live_window(p: Vector3, normal: Vector3, col: Color, cell := 0) -> void:
 	var mi := MeshInstance3D.new()
 	var q := QuadMesh.new()
-	q.size = Vector2(1.0, 1.3)
+	q.size = Vector2(1.1, 1.4)
 	mi.mesh = q
 	var m := StandardMaterial3D.new()
 	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.albedo_texture = load("res://assets/tex/janelas_atlas.png")
+	m.uv1_scale = Vector3(0.23, 0.23, 1)
+	m.uv1_offset = Vector3((cell % 4) / 4.0 + 0.01, (cell / 4) / 4.0 + 0.01, 0)
 	m.albedo_color = col
 	mi.material_override = m
 	mi.position = p
@@ -937,7 +996,18 @@ func _build_plaza() -> void:
 		_tree(p)
 		_prop("banco_praca", c + Vector3(cos(a + 0.5) * 4.6, 0.2, sin(a + 0.5) * 6.0), -a - 0.5 + PI / 2)
 	for k in 4:
-		_prop("poste", c + Vector3((k % 2 - 0.5) * 12.0, 0.2, (k / 2 - 0.5) * 20.0), 0.0)
+		_street_lamp(c + Vector3((k % 2 - 0.5) * 12.0, 0.2, (k / 2 - 0.5) * 20.0), k % 2 == 0)
+	# poças grandes na praça pegando o reflexo da fonte e dos postes
+	var pud := StandardMaterial3D.new()
+	pud.albedo_color = Color("#05070f")
+	pud.roughness = 0.02
+	pud.metallic = 0.9
+	for k in 6:
+		_sbox(c + Vector3(_rng.randf_range(-7, 7), 0.21, _rng.randf_range(-12, 12)), Vector3(_rng.randf_range(1.2, 2.6), 0.01, _rng.randf_range(0.8, 1.8)), pud, _rng.randf() * PI)
+	var fg := Node3D.new()
+	fg.position = c + Vector3(0, 0.23, 0)
+	add_child(fg)
+	_lhalo(fg, Vector3.ZERO, Vector2(10, 10), Color("#3aa8ff"), 0.22, true)
 	# outdoor grande com a foto do Gabriel na parede oeste
 	_photo_billboard(Vector3(PLAZA.position.x + 0.3, 0, c.z), Vector3(1, 0, 0))
 	# cabine telefônica = CONTATO
@@ -998,6 +1068,21 @@ func _photo_billboard(face: Vector3, normal: Vector3) -> void:
 	for y in [3.9, 9.1]:
 		_lbox(holder, Vector3(0, y, 0.3), Vector3(7.8, 0.06, 0.06), _neon_mat(Color("#ffc83d")))
 	_lhalo(holder, Vector3(0, 6.5, 0.4), Vector2(9.5, 7.0), Color("#ffc83d"), 0.25)
+	for hx in [-2.8, 0.0, 2.8]:
+		_lbox(holder, Vector3(hx, 3.7, 0.9), Vector3(0.3, 0.2, 0.3), _mat(Color("#14161e")))
+		_lbox(holder, Vector3(hx, 3.82, 0.85), Vector3(0.22, 0.06, 0.22), _mat(Color(2.4, 2.0, 1.4), 0.0, true))
+		var bm := MeshInstance3D.new()
+		var cm := CylinderMesh.new()
+		cm.top_radius = 0.1
+		cm.bottom_radius = 1.2
+		cm.height = 2.8
+		cm.cap_top = false
+		cm.cap_bottom = false
+		bm.mesh = cm
+		bm.material_override = _add_mat(Color("#ffe0a8"), 0.06)
+		bm.position = Vector3(hx, 5.2, 0.55)
+		bm.rotation.x = 0.35
+		holder.add_child(bm)
 	var l := SpotLight3D.new()
 	l.position = Vector3(0, 10.5, 2.5)
 	l.rotation.x = -1.2
@@ -1085,6 +1170,81 @@ func _build_landmark() -> void:
 	_lhalo(bh, Vector3(0, 8, 0.3), Vector2(11, 7), Color("#ffc83d"), 0.25)
 
 
+# ═════════════════════════════════════════════ beco: varal de lâmpadas, neons laterais, seta
+func _dress_alley() -> void:
+	var zn := ALLEY_Z + 1.95
+	var zs := ALLEY_Z - 1.95
+	# varal de lâmpadas atravessando o beco em zigue-zague (emissivas, um lote só)
+	var bulb := _mat(Color(2.4, 1.7, 0.9), 0.0, true)
+	var wire := _mat(Color("#0a0a10"))
+	for k in 5:
+		var x0 := FAC + 2.0 + k * 3.6
+		var a := Vector3(x0, 4.6, zn)
+		var b := Vector3(x0 + 1.8, 4.6, zs)
+		for i in 9:
+			var t := i / 8.0
+			var p := a.lerp(b, t) - Vector3(0, sin(t * PI) * 0.6, 0)
+			_sbox(p, Vector3(0.12, 0.16, 0.12), bulb)
+			if i < 8:
+				var q := a.lerp(b, (i + 1) / 8.0) - Vector3(0, sin((i + 1) / 8.0 * PI) * 0.6, 0)
+				_sbox((p + q) / 2, Vector3(0.02, 0.02, p.distance_to(q)), wire, atan2((q - p).x, (q - p).z))
+	# luz quente fraca do varal + luz magenta de um letreiro lateral
+	for x in [FAC + 6.0, FAC + 14.0]:
+		var l := OmniLight3D.new()
+		l.position = Vector3(x, 4.0, ALLEY_Z)
+		l.light_color = Color("#ffb46a")
+		l.light_energy = 1.4
+		l.omni_range = 6.5
+		l.distance_fade_enabled = true
+		l.distance_fade_begin = 26.0
+		add_child(l)
+	var signs := [["BAR 24H", Color("#ff3d8a"), Vector3(FAC + 9.0, 3.4, zn), PI], ["HOTEL", Color("#4ec9ff"), Vector3(FAC + 13.0, 6.0, zs), 0.0],
+		["CYBER →", Color("#e2384f"), Vector3(FAC + 4.0, 2.9, zs), 0.0]]
+	for sg in signs:
+		var h := Node3D.new()
+		h.position = sg[2]
+		h.rotation.y = sg[3]
+		add_child(h)
+		_lbox(h, Vector3(0, 0, 0.05), Vector3(2.4, 0.8, 0.1), _mat(Color("#0a0d18")))
+		var lb := Label3D.new()
+		lb.text = sg[0]
+		lb.font = UI.font("title")
+		lb.font_size = 160
+		lb.pixel_size = 0.004
+		var c: Color = sg[1]
+		lb.modulate = Color(c.r * 1.7, c.g * 1.7, c.b * 1.7)
+		lb.position = Vector3(0, 0, 0.13)
+		lb.shaded = false
+		h.add_child(lb)
+		_neon_signs.append(lb)
+		if sg[0] == "HOTEL":
+			_broken.append({"node": lb, "seed": 1.3})
+		_lhalo(h, Vector3(0, 0, 0.18), Vector2(3.4, 1.6), c, 0.55)
+		_lhalo(h, Vector3(0, -sg[2].y + 0.06, 1.4), Vector2(3.0, 2.4), c, 0.3, true)
+		var l := OmniLight3D.new()
+		l.position = Vector3(0, 0, 1.2)
+		l.light_color = c
+		l.light_energy = 1.8
+		l.omni_range = 5.0
+		l.distance_fade_enabled = true
+		l.distance_fade_begin = 24.0
+		h.add_child(l)
+	# entulho: caçamba e sacos de lixo
+	_sbox(Vector3(FAC + 11.0, 0.7, zs + 0.8), Vector3(2.2, 1.4, 1.2), _painted("metal", Color("#2e5a46"), 0.5, 0.4, 1.0))
+	_sbox(Vector3(FAC + 11.0, 1.45, zs + 0.8), Vector3(2.3, 0.1, 1.3), _mat(Color("#1d3a2d")), 0.0)
+	for i in 4:
+		var bag := MeshInstance3D.new()
+		var sm := SphereMesh.new()
+		sm.radius = 0.35
+		sm.height = 0.55
+		sm.radial_segments = 8
+		sm.rings = 4
+		bag.mesh = sm
+		bag.material_override = _mat(Color("#121418"), 0.0, false, 0.25)
+		bag.position = Vector3(FAC + 13.0 + i * 0.5, 0.28, zs + 0.5 + (i % 2) * 0.4)
+		add_child(bag)
+
+
 # ═════════════════════════════════════════════ props de rua (MultiMesh) e postes com luz
 func _street_props() -> void:
 	# postes: um a cada ~11 m nos dois lados; só alguns com OmniLight real, os outros emissivos
@@ -1112,7 +1272,7 @@ func _street_props() -> void:
 		_prop("lixeira", p, _rng.randf() * TAU)
 	for p in [Vector3(-5.4, 0.2, -21), Vector3(5.4, 0.2, -46.5)]:
 		_prop("caixa_correio", p, PI / 2)
-	_prop("banca_jornal", Vector3(-5.6, 0.2, -38.5), PI / 2)
+	_prop("banca_jornal", Vector3(-5.9, 0.2, -61.0), PI / 2, 0.75)
 	for p in [Vector3(12, 0.06, ALLEY_Z - 1.2), Vector3(22, 0.06, ALLEY_Z + 1.2), Vector3(23.5, 0.06, ALLEY_Z - 1.0), Vector3(-6.2, 0.2, -63)]:
 		_prop("caixas_papelao", p, _rng.randf() * TAU)
 	for p in [Vector3(-2.5, 0.0, -64), Vector3(-1.5, 0.0, -65), Vector3(-3.5, 0.0, -65.5)]:
@@ -1209,7 +1369,7 @@ func _build_life() -> void:
 	if not _light:
 		_spawn_idle(Vector3(-5.9, 0.2, -9.5), PI / 2, "lena")
 		_spawn_idle(Vector3(-5.9, 0.2, -10.6), PI / 2 + PI, "detetive")
-		_spawn_idle(Vector3(-55.0, 0.3, -38.0), 0.4, "hacker")
+		_spawn_idle(Vector3(-55.0, 0.3, -38.0), 0.4, "hacker", "idle")
 	# pombos no chão da praça (voam quando o jogador chega perto)
 	for i in (4 if _light else 9):
 		var b := MeshInstance3D.new()
@@ -1296,12 +1456,12 @@ func _spawn_walker(a: Vector3, b: Vector3, id: String, phase: float) -> void:
 	_walkers.append({"node": ch, "a": a, "b": b, "t": phase, "speed": 1.25 / a.distance_to(b), "back": false})
 
 
-func _spawn_idle(p: Vector3, yaw: float, id: String) -> void:
+func _spawn_idle(p: Vector3, yaw: float, id: String, anim := "") -> void:
 	var ch := _make_person(id)
 	ch.position = p
 	ch.rotation.y = yaw
 	if ch.has_method("play"):
-		ch.call("play", ["falando", "pensando", "idle"][_rng.randi() % 3])
+		ch.call("play", anim if anim != "" else ["falando", "idle"][_rng.randi() % 2])
 
 
 func _rain() -> void:
@@ -1424,7 +1584,7 @@ func _process(dt: float) -> void:
 		if float(w["next"]) <= 0.0:
 			w["on"] = not bool(w["on"])
 			w["next"] = _rng.randf_range(3.0, 16.0)
-			(w["m"] as StandardMaterial3D).albedo_color = w["col"] if w["on"] else Color("#141a30")
+			(w["m"] as StandardMaterial3D).albedo_color = w["col"] if w["on"] else Color(0.12, 0.12, 0.2)
 	for s in _swing:
 		var n: Node3D = s["node"]
 		n.rotation.z = sin(_t * 1.3 + float(s["seed"])) * float(s["amp"])
