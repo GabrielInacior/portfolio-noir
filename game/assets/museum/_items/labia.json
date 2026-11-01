@@ -1,0 +1,34 @@
+{
+ "theme": {
+  "room": "bar",
+  "floor": "ladrilho",
+  "wall": "papel_parede",
+  "warm": "#ff3d7f",
+  "cool": "#5bd0ff",
+  "accent": "#ff3d7f",
+  "sub": "Bar dos vigaristas"
+ },
+ "items": [
+  {
+   "kind": "frame",
+   "img": "res://assets/museum/labia/golpe.jpg",
+   "title": "Lábia",
+   "text": "Jogo cooperativo de comédia para um a quatro jogadores: vocês são vigaristas e aplicam golpes falando pelo microfone com personagens movidos por IA local.",
+   "tag": "Godot · IA local · Voz"
+  },
+  {
+   "kind": "frame",
+   "img": "res://assets/museum/labia/deu_ruim.jpg",
+   "title": "Eles reagem",
+   "text": "Os personagens entendem o que você fala, se irritam, riem e chamam a segurança. Cinco fases, primeira pessoa.",
+   "tag": "NPCs com IA"
+  },
+  {
+   "kind": "prop",
+   "model": "microfone",
+   "title": "Fale para jogar",
+   "text": "O jogo roda IA local para ouvir e responder em tempo real. A graça está em convencer, improvisar e não ser pego.",
+   "tag": "Voz"
+  }
+ ]
+}

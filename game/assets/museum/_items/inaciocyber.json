@@ -1,0 +1,55 @@
+{
+ "theme": {
+  "room": "lab",
+  "floor": "metal",
+  "wall": "concreto",
+  "warm": "#39ff9b",
+  "cool": "#1f7a4a",
+  "accent": "#39ff9b",
+  "sub": "Sala de segurança"
+ },
+ "items": [
+  {
+   "kind": "monitor",
+   "img": "res://assets/museum/inaciocyber/arquitetura.png",
+   "title": "Como funciona",
+   "text": "Você conversa num chat de estética terminal, define um alvo autorizado e um modelo local encadeia ferramentas reais de reconhecimento, varredura e auditoria, terminando com um relatório.",
+   "tag": "Python · Ollama · Docker"
+  },
+  {
+   "kind": "monitor",
+   "img": "res://assets/museum/inaciocyber/autorizacao.png",
+   "title": "Só com autorização",
+   "text": "Cada sessão pede uma confirmação escrita de que o alvo é seu ou autorizado. Sem isso, nenhuma ferramenta roda. É uma ferramenta de defesa e teste autorizado.",
+   "tag": "Uso responsável"
+  },
+  {
+   "kind": "monitor",
+   "img": "res://assets/museum/inaciocyber/metricas.png",
+   "title": "Painel ao vivo",
+   "text": "CPU e RAM do host e dos containers, GPU e VRAM, tokens usados no contexto e histórico de sessões na lateral.",
+   "tag": "Observabilidade"
+  },
+  {
+   "kind": "prop",
+   "model": "servidor",
+   "title": "Tudo local",
+   "text": "Roda inteiro na sua máquina, em containers Docker. Nada sai para fora, exceto as requisições do agente contra o alvo que você autorizar.",
+   "tag": "Privacidade"
+  },
+  {
+   "kind": "prop",
+   "model": "cadeado",
+   "title": "Relatório final",
+   "text": "O agente registra cada comando no Postgres e entrega um relatório em markdown com o que encontrou e onde esbarrou em limitações.",
+   "tag": "Auditoria"
+  },
+  {
+   "kind": "plaque",
+   "img": "res://assets/museum/inaciocyber/icone.jpg",
+   "title": "Blackwall",
+   "text": "App desktop de verdade em Electron, janela sem moldura, tema terminal. Segurança ofensiva usada para o lado certo.",
+   "tag": "Desktop"
+  }
+ ]
+}

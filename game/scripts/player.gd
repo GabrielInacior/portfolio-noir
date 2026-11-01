@@ -21,6 +21,16 @@ var look_delta := Vector2.ZERO
 signal target_changed(project: Dictionary)
 signal interacted(project: Dictionary)
 
+# limites de deslocamento (rua por padrão; o museu troca para a sala)
+var bound_min := Vector2(-4.2, -64.0)
+var bound_max := Vector2(4.2, 4.0)
+
+
+func forward() -> Vector3:
+	var f := -global_transform.basis.z
+	f.y = 0.0
+	return f.normalized()
+
 
 func _ready() -> void:
 	var col := CollisionShape3D.new()
@@ -100,6 +110,6 @@ func _physics_process(dt: float) -> void:
 
 	velocity = dir.normalized() * SPEED if dir.length() > 0.05 else Vector3.ZERO
 	move_and_slide()
-	# limites simples da rua (não sai do quarteirão)
-	global_position.x = clampf(global_position.x, -4.2, 4.2)
-	global_position.z = clampf(global_position.z, -64.0, 4.0)
+	# limites simples (rua ou sala do museu)
+	global_position.x = clampf(global_position.x, bound_min.x, bound_max.x)
+	global_position.z = clampf(global_position.z, bound_min.y, bound_max.y)

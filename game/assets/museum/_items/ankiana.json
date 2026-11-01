@@ -1,0 +1,27 @@
+{
+ "theme": {
+  "room": "estudio",
+  "floor": "madeira",
+  "wall": "papel_parede",
+  "warm": "#ffc83d",
+  "cool": "#5fd38a",
+  "accent": "#5fd38a",
+  "sub": "Sala de estudos"
+ },
+ "items": [
+  {
+   "kind": "prop",
+   "model": "livro",
+   "title": "AnkiAna",
+   "text": "App de estudos que transforma tema, texto ou PDF em dezenas de flashcards com IA, usando repetição espaçada.",
+   "tag": "Flutter · OpenAI"
+  },
+  {
+   "kind": "prop",
+   "model": "cartao",
+   "title": "Repetição espaçada",
+   "text": "Algoritmo SM-2 decide quando rever cada cartão. Interface Material 3 moderna e acessível.",
+   "tag": "Aprendizado"
+  }
+ ]
+}

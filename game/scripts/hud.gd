@@ -6,6 +6,12 @@ const Dossier := preload("res://scripts/dossier.gd")
 const ListMode := preload("res://scripts/list_mode.gd")
 const Dialogue := preload("res://scripts/dialogue.gd")
 const Minimap := preload("res://scripts/minimap.gd")
+const Museum := preload("res://scripts/museum.gd")
+const Exhibit := preload("res://scripts/exhibit.gd")
+
+var _museum = null
+var _entry_xform: Transform3D
+var _exam: Dictionary = {}
 
 var player
 var city
@@ -187,14 +193,107 @@ func _input(e: InputEvent) -> void:
 
 
 func _on_interact(project: Dictionary) -> void:
-	if project.is_empty() or _sheet_open:
+	if _sheet_open:
 		return
-	# NPC perto? conversa primeiro
-	var near_npc: Node = _nearest_npc()
-	if near_npc != null and project.get("special", "") != "contact":
-		_open_dialogue(near_npc)
+	# dentro de uma loja-museu: examinar o item mirado ou sair pela porta
+	if _museum != null:
+		if _museum.at_exit(player.global_position) and _exam.is_empty():
+			exit_museum()
+		elif not _exam.is_empty():
+			_open_exhibit(_exam)
 		return
-	open_dossier(project)
+	if project.is_empty():
+		return
+	# contato é um cartão simples; sobre e projetos entram numa loja-museu
+	if project.get("special", "") == "contact":
+		open_dossier(project)
+		return
+	enter_museum(project)
+
+
+# ───────────────────────────────── entrar e sair da loja-museu
+func enter_museum(project: Dictionary) -> void:
+	var id := "_lab" if project.get("special", "") == "about" else str(project.get("id", ""))
+	var path := "res://assets/museum/_items/%s.json" % id
+	if not FileAccess.file_exists(path):
+		open_dossier(project)   # sem museu montado: cai no dossiê
+		return
+	var d: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if city:
+		city.mark_visited(project)
+	_entry_xform = player.global_transform
+	city.visible = false
+	city.set_process(false)
+	city.set_physics_process(false)
+	_museum = Museum.new()
+	_museum.setup(project, d, project.get("special", "") == "about")
+	city.get_parent().add_child(_museum)
+	player.get_parent().remove_child(player)
+	_museum.add_child(player)
+	player.global_position = _museum.spawn_pos()
+	player._yaw = PI
+	player.rotation.y = PI
+	player.bound_min = Vector2(-4.4, -5.4)
+	player.bound_max = Vector2(4.4, 5.4)
+	_museum.examined.connect(func(c: int, t: int) -> void:
+		counter_label.text = "· %d/%d examinados" % [c, t])
+	counter_label.text = "· 0/%d examinados" % _museum.items.size()
+	if minimap:
+		minimap.visible = false
+	prompt_label.text = ""
+	prompt.visible = false
+
+
+func exit_museum() -> void:
+	if _museum == null:
+		return
+	player.get_parent().remove_child(player)
+	city.add_child(player)
+	player.global_transform = _entry_xform
+	player.bound_min = Vector2(-4.2, -64.0)
+	player.bound_max = Vector2(4.2, 4.0)
+	_museum.queue_free()
+	_museum = null
+	_exam = {}
+	city.visible = true
+	city.set_process(true)
+	city.set_physics_process(true)
+	if minimap:
+		minimap.visible = true
+	_on_visited(city.visited_count(), city.total_projects())
+	prompt.visible = false
+
+
+func _open_exhibit(entry: Dictionary) -> void:
+	_sheet_open = true
+	prompt.visible = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	_museum.mark_seen(entry)
+	var ex := Exhibit.new()
+	ex.setup(entry["item"], _museum._accent, _museum.project)
+	ex.closed.connect(func() -> void:
+		_sheet_open = false
+		if not UI.is_mobile():
+			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED)
+	add_child(UI.full(ex))
+
+
+func _process(_dt: float) -> void:
+	if _museum == null or _sheet_open:
+		return
+	# realce do item mirado e aviso de examinar/sair
+	for e in _museum.items:
+		e["_hot"] = false
+	_exam = _museum.nearest(player.global_position, player.forward())
+	if not _exam.is_empty():
+		_exam["_hot"] = true
+		prompt_label.text = str(_exam["item"].get("title", "")).to_upper()
+		prompt.visible = true
+	elif _museum.at_exit(player.global_position):
+		prompt_label.text = "SAIR PARA A RUA"
+		prompt.visible = true
+	else:
+		prompt.visible = false
 
 
 func _nearest_npc() -> Node:

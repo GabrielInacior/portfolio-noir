@@ -1,0 +1,41 @@
+{
+ "theme": {
+  "room": "escritorio",
+  "floor": "carpete",
+  "wall": "concreto",
+  "warm": "#ffd36a",
+  "cool": "#b06bff",
+  "accent": "#b06bff",
+  "sub": "Central de operações"
+ },
+ "items": [
+  {
+   "kind": "monitor",
+   "img": "res://assets/museum/orbix/rls.png",
+   "title": "Multi-tenant de verdade",
+   "text": "Isolamento por Row-Level Security no próprio PostgreSQL: cada empresa só enxerga o que é dela, mesmo se a aplicação errar.",
+   "tag": "Postgres RLS"
+  },
+  {
+   "kind": "monitor",
+   "img": "res://assets/museum/orbix/arquitetura.png",
+   "title": "Uma API, vários produtos",
+   "text": "O orbix-api centraliza login, OTP, tokens e finanças e serve vários produtos, como CRM e gestão de oficinas.",
+   "tag": "NestJS · Flutter"
+  },
+  {
+   "kind": "frame",
+   "img": "res://assets/museum/orbix/login.jpg",
+   "title": "Entrada única",
+   "text": "Toda a camada de autenticação é delegada ao orbix-api via proxy. Um só lugar para login e segurança.",
+   "tag": "Auth"
+  },
+  {
+   "kind": "prop",
+   "model": "servidor",
+   "title": "Monorepo",
+   "text": "NestJS e Flutter no mesmo repositório, com Docker. Plataforma SaaS pensada para crescer com muitos clientes.",
+   "tag": "Infra"
+  }
+ ]
+}

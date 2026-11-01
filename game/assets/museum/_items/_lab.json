@@ -1,0 +1,52 @@
+{
+ "theme": {
+  "room": "lab",
+  "floor": "metal",
+  "wall": "concreto",
+  "warm": "#ffc83d",
+  "cool": "#4e9bff",
+  "accent": "#ff3d7f",
+  "sub": "Laboratório"
+ },
+ "items": [
+  {
+   "kind": "monitor",
+   "title": "Game dev",
+   "model": "",
+   "tag": "Godot · Blender · 3D web",
+   "text": "Jogos completos em Godot: 3D para web e celular, modelos e animação em Blender, servidor autoritativo em tempo real. RUMOR, Fortress Chaos e Lábia saíram daqui."
+  },
+  {
+   "kind": "monitor",
+   "title": "IA aplicada",
+   "tag": "Claude · agentes · IA local",
+   "text": "Orquestração de agentes de IA (uso o Claude e o Claude Code a fundo), modelos locais via Ollama, geração de arte por IA e automação. IA como ferramenta de trabalho, não enfeite."
+  },
+  {
+   "kind": "monitor",
+   "title": "Integrações e APIs",
+   "tag": "WebSocket · REST · filas",
+   "text": "Tempo real com WebSocket, filas, webhooks e integrações com GitHub, WhatsApp, OpenAI e Hugging Face. Dados que batem em todas as telas, sem recarregar."
+  },
+  {
+   "kind": "monitor",
+   "title": "Arquitetura",
+   "tag": "multi-tenant · Docker · Postgres",
+   "text": "Multi-tenant com Row-Level Security, monorepos, Docker, Postgres e Redis. Sistemas pensados para crescer e não quebrar com muitos usuários."
+  },
+  {
+   "kind": "prop",
+   "model": "servidor",
+   "title": "Full-stack",
+   "text": "Do banco ao pixel: back-end em Node e NestJS, front em Nuxt, Vue e Flutter, e a camada 3D em Godot. Entrego a coisa inteira funcionando.",
+   "tag": "Ponta a ponta"
+  },
+  {
+   "kind": "prop",
+   "model": "cadeado",
+   "title": "Segurança",
+   "text": "Autenticação com JWT e 2FA, isolamento de dados, e segurança ofensiva autorizada no InacioCyber para encontrar falhas antes de quem quer explorá-las.",
+   "tag": "Defesa"
+  }
+ ]
+}

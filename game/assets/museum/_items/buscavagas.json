@@ -1,0 +1,62 @@
+{
+ "theme": {
+  "room": "escritorio",
+  "floor": "carpete",
+  "wall": "concreto",
+  "warm": "#ffc83d",
+  "cool": "#4e9bff",
+  "accent": "#4e9bff",
+  "sub": "Agência de empregos"
+ },
+ "items": [
+  {
+   "kind": "screen",
+   "img": "res://assets/museum/buscavagas/dashboard.jpg",
+   "title": "Oportunidades",
+   "text": "Cruza seu currículo com vagas de 17 fontes e põe no topo o que combina com você, tem poucos candidatos e foi publicado há pouco.",
+   "tag": "Nuxt · Fastify · Postgres"
+  },
+  {
+   "kind": "frame",
+   "img": "res://assets/museum/buscavagas/poucos.jpg",
+   "title": "Poucos candidatos",
+   "text": "Vagas do LinkedIn com o número real de candidatos. Aqui, todas com menos de 25 e match alto.",
+   "tag": "Sinal de chance"
+  },
+  {
+   "kind": "frame",
+   "img": "res://assets/museum/buscavagas/detalhe.jpg",
+   "title": "Por que essa vaga",
+   "text": "Match, concorrência com cada motivo, elegibilidade e o link da vaga original. A nota de oportunidade sai de embeddings locais.",
+   "tag": "Ranking"
+  },
+  {
+   "kind": "screen",
+   "img": "res://assets/museum/buscavagas/aovivo.jpg",
+   "title": "Tempo real sem lacunas",
+   "text": "Sequência atômica no Redis, WebSocket com heartbeat, polling de reserva e ressincronização. Tudo muda em todas as abas, sem recarregar.",
+   "tag": "Arquitetura"
+  },
+  {
+   "kind": "frame",
+   "img": "res://assets/museum/buscavagas/kanban.jpg",
+   "title": "Kanban",
+   "text": "Arraste os cards entre colunas; o quadro sincroniza entre abas e janelas.",
+   "tag": "UX"
+  },
+  {
+   "kind": "frame",
+   "img": "res://assets/museum/buscavagas/fontes.jpg",
+   "title": "17 fontes",
+   "text": "Fontes brasileiras primeiro, liga e desliga cada uma, vagas abertas e o resultado da última execução, ao vivo.",
+   "tag": "Coleta"
+  },
+  {
+   "kind": "prop",
+   "model": "monitor_cv",
+   "title": "Roda na sua máquina",
+   "text": "Tudo local e de graça. A chave da OpenAI é opcional: sem ela o ranking funciona por completo com o modelo local.",
+   "tag": "IA local"
+  }
+ ]
+}

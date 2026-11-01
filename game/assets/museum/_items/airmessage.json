@@ -1,0 +1,27 @@
+{
+ "theme": {
+  "room": "escritorio",
+  "floor": "carpete",
+  "wall": "concreto",
+  "warm": "#ffd36a",
+  "cool": "#5bd0ff",
+  "accent": "#5bd0ff",
+  "sub": "Central de mensagens"
+ },
+ "items": [
+  {
+   "kind": "prop",
+   "model": "celular",
+   "title": "AirMessage",
+   "text": "SaaS de CRM e campanhas por WhatsApp e SMS para clínicas, estúdios e oficinas: mensagens diretas, campanhas agendadas e reengajamento.",
+   "tag": "Node · Flutter · AWS"
+  },
+  {
+   "kind": "prop",
+   "model": "servidor",
+   "title": "Operação",
+   "text": "Billing mensal e deploy em AWS. Pensado para pequenos negócios manterem contato com os clientes.",
+   "tag": "SaaS"
+  }
+ ]
+}

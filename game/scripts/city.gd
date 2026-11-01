@@ -107,6 +107,7 @@ func _window_mm(points: Array) -> void:
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	var qm := QuadMesh.new()
 	qm.size = Vector2(0.7, 0.9)
+	mm.use_colors = true
 	mm.mesh = qm
 	mm.instance_count = points.size()
 	var warm := Color("#ffcf8f")

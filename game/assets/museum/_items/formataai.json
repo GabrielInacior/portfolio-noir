@@ -1,0 +1,48 @@
+{
+ "theme": {
+  "room": "estudio",
+  "floor": "madeira",
+  "wall": "papel_parede",
+  "warm": "#ff6fae",
+  "cool": "#4e9bff",
+  "accent": "#ff6fae",
+  "sub": "Estúdio de voz"
+ },
+ "items": [
+  {
+   "kind": "monitor",
+   "img": "res://assets/museum/formataai/fluxo.png",
+   "title": "Da voz ao texto pronto",
+   "text": "Grava a voz, o Whisper transcreve, o GPT-4o-mini formata e você compartilha em um toque.",
+   "tag": "Flutter · OpenAI"
+  },
+  {
+   "kind": "monitor",
+   "img": "res://assets/museum/formataai/formatos.png",
+   "title": "Nove formatos",
+   "text": "WhatsApp, e-mail, documento, orçamento, receita, currículo, post social, lista ou outro, da mesma fala.",
+   "tag": "Versatilidade"
+  },
+  {
+   "kind": "monitor",
+   "img": "res://assets/museum/formataai/arquitetura.png",
+   "title": "Arquitetura",
+   "text": "Flutter no celular, Nginx com SSL, Node com Express, Prisma e Postgres. A IA é orquestrada, não embutida.",
+   "tag": "Backend"
+  },
+  {
+   "kind": "frame",
+   "img": "res://assets/museum/formataai/tcc.png",
+   "title": "Trabalho de conclusão",
+   "text": "Feito como TCC, para quem tem menos fluência digital. Basta falar e o texto formal sai pronto.",
+   "tag": "Propósito"
+  },
+  {
+   "kind": "prop",
+   "model": "microfone",
+   "title": "Acessibilidade",
+   "text": "Pensado para maior faixa etária e rotinas corridas: elimina a barreira de redigir mensagens formais.",
+   "tag": "Inclusão"
+  }
+ ]
+}

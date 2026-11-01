@@ -1,0 +1,68 @@
+{
+ "theme": {
+  "room": "fliperama",
+  "floor": "ladrilho",
+  "wall": "tijolo",
+  "warm": "#ff7a3d",
+  "cool": "#8a5bff",
+  "accent": "#ff7a3d",
+  "sub": "Loja de jogos e fliperama"
+ },
+ "items": [
+  {
+   "kind": "frame",
+   "img": "res://assets/museum/fortress/capa.jpg",
+   "title": "Fortress Chaos",
+   "text": "Roguelite medieval de construção de fortaleza e defesa de torres, 3D low-poly com interface em pixel art feita à mão.",
+   "tag": "Godot · Steam"
+  },
+  {
+   "kind": "screen",
+   "img": "res://assets/museum/fortress/horda.jpg",
+   "title": "A horda chega",
+   "text": "As ondas vêm cada vez mais fortes. Torres e tropas lutam sozinhas; você intervém com magias por clique. Chefes nas ondas 5 e 10.",
+   "tag": "Tower defense"
+  },
+  {
+   "kind": "frame",
+   "img": "res://assets/museum/fortress/sinergias.jpg",
+   "title": "Sinergias por adjacência",
+   "text": "A muralha herda o elemento da torre ao lado: elétrica, fogo, gelo, veneno. A estratégia nasce do desenho físico da fortaleza.",
+   "tag": "Sistemas"
+  },
+  {
+   "kind": "frame",
+   "img": "res://assets/museum/fortress/mapa.jpg",
+   "title": "Campanha com Calor",
+   "text": "Mapa de nós com 12 biomas, clima que muda o terreno e baús trancados. O Calor é a dificuldade opcional que paga mais Prata.",
+   "tag": "Meta"
+  },
+  {
+   "kind": "screen",
+   "img": "res://assets/museum/fortress/loja.jpg",
+   "title": "Progresso permanente",
+   "text": "A Prata de cada expedição compra civilizações, construções, magias e cosméticos para a próxima.",
+   "tag": "Progressão"
+  },
+  {
+   "kind": "frame",
+   "img": "res://assets/museum/fortress/vitoria.jpg",
+   "title": "Seguir ou resistir",
+   "text": "Fase vencida: siga viagem ou fique para ondas sem fim, que pagam mais e perdoam menos.",
+   "tag": "Risco"
+  },
+  {
+   "kind": "plaque",
+   "img": "res://assets/museum/fortress/numeros.png",
+   "title": "Em números",
+   "text": "7 civilizações, 12 biomas, 14 magias, cartas por raridade com mutações, 9 idiomas, Windows e Android.",
+   "tag": "Escopo"
+  },
+  {
+   "kind": "arcade",
+   "title": "No fliperama",
+   "text": "Civilizações com arquitetura e tropas próprias, cartas de Caos para quem gosta de risco e a Oficina do Estandarte, onde você desenha o brasão pixel a pixel.",
+   "tag": "Conteúdo"
+  }
+ ]
+}

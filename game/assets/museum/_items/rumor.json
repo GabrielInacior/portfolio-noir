@@ -1,0 +1,62 @@
+{
+ "theme": {
+  "room": "escritorio",
+  "floor": "madeira",
+  "wall": "papel_parede",
+  "warm": "#ffb23d",
+  "cool": "#4e9bff",
+  "accent": "#ffc83d",
+  "sub": "Escritório de detetive"
+ },
+ "items": [
+  {
+   "kind": "frame",
+   "img": "res://assets/museum/rumor/banner.jpg",
+   "title": "O caso RUMOR",
+   "text": "Jogo de detetive multiplayer para a sala de aula. Equipes exploram a escola em 3D, interrogam personagens que mudam de expressão e montam juntas um quadro com fios e provas.",
+   "tag": "Godot · Node · WebSocket"
+  },
+  {
+   "kind": "screen",
+   "img": "res://assets/museum/rumor/telas.jpg",
+   "title": "Quatro telas do jogo",
+   "text": "Explorar em 3D, interrogar, ligar os fios do quadro e compartilhar a vitória. Tudo no navegador do celular de cada aluno.",
+   "tag": "Mobile e desktop"
+  },
+  {
+   "kind": "frame",
+   "img": "res://assets/museum/rumor/expressoes.jpg",
+   "title": "Expressões",
+   "text": "O rosto do suspeito muda a cada fala: desconfiado, nervoso, triste. Mostrar a prova certa na hora certa desmonta a versão dele.",
+   "tag": "Atlas de rostos"
+  },
+  {
+   "kind": "screen",
+   "img": "res://assets/museum/rumor/professor.jpg",
+   "title": "O professor vê tudo",
+   "text": "Do celular ou do telão, o professor acompanha as equipes ao vivo: radar, pistas achadas, provas e quem está parado.",
+   "tag": "Painel ao vivo"
+  },
+  {
+   "kind": "frame",
+   "img": "res://assets/museum/rumor/cenas.jpg",
+   "title": "Cenário pintado",
+   "text": "Doze cômodos da escola em 3D com estilo pincelado, feitos por código e Blender. Nada de asset pronto de terceiro.",
+   "tag": "Arte própria"
+  },
+  {
+   "kind": "plaque",
+   "img": "res://assets/museum/rumor/numeros.png",
+   "title": "Em números",
+   "text": "12 casos escritos à mão, 192 pistas com imagem, servidor autoritativo em Node, reconexão e votação da equipe.",
+   "tag": "Escopo"
+  },
+  {
+   "kind": "prop",
+   "model": "maquina_escrever",
+   "title": "Casos à mão",
+   "text": "Cada caso foi escrito à mão, sem IA gerando história, e verificado por scripts para não ter furo: toda pista existe e todo objetivo pode ser provado.",
+   "tag": "Design de jogo"
+  }
+ ]
+}

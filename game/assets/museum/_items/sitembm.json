@@ -1,0 +1,27 @@
+{
+ "theme": {
+  "room": "escritorio",
+  "floor": "carpete",
+  "wall": "concreto",
+  "warm": "#ffd36a",
+  "cool": "#4e9bff",
+  "accent": "#4e9bff",
+  "sub": "Agência"
+ },
+ "items": [
+  {
+   "kind": "prop",
+   "model": "monitor_cv",
+   "title": "MBM",
+   "text": "Plataforma de landing pages e blog institucional para empresa de telecom, com CMS, newsletter, analytics e SEO dinâmico.",
+   "tag": "Nuxt · Vue · AWS"
+  },
+  {
+   "kind": "prop",
+   "model": "cadeado",
+   "title": "Segurança",
+   "text": "Backend com autenticação JWT e 2FA, papéis de acesso e upload para S3.",
+   "tag": "Auth"
+  }
+ ]
+}
