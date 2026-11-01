@@ -190,3 +190,6 @@ comparação em `docs/referencias/personagens/comparacao_elenco.jpg`. Vance (det
   do Godot estoura). Originais em `tools/props/_orig/char_*` (fora do git).
 - **Prova dentro do jogo:** `game/tools_dev/char_ingame_shot.tscn` (NPCs na rua em close, frente e 3/4,
   e tela de diálogo; a câmera entra na SubViewport retrô do `main.gd`).
+- Branco nunca puro nas texturas dos personagens (cinza claro quente, máx. 214) e contorno neon
+  pesado pelo inverso da claridade (`*_rim.png` gerado junto, usado como `rim_texture`): a manga do
+  Otto parou de estourar.

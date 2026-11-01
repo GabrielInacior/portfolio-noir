@@ -37,6 +37,17 @@ for name in TEX:
     skin = (r > g) & (g > b) & ((r - b) > 28) & (r > 70) & ((r - g) < 90)
     post = (a // 16) * 16 + 8
     out = np.where(skin[..., None], post, np.asarray(q).astype(np.int16))
-    Image.fromarray(np.clip(out, 0, 255).astype(np.uint8)).save(f, quality=96)
+    # branco nunca puro: camisa/colarinho viram cinza claro levemente quente (o branco chapado
+    # estourava com a luz da rua e o contorno neon, sem forma)
+    o = out.astype(np.float32)
+    lum = o.mean(2, keepdims=True)
+    hi = lum > 170
+    warm = np.array([200, 192, 178], np.float32)
+    o = np.where(hi, warm * (0.82 + 0.18 * (lum - 170) / 85.0) * (o / np.maximum(lum, 1)) ** 0.3, o)
+    out = np.clip(o, 0, 214)
+    Image.fromarray(out.astype(np.uint8)).save(f, quality=96)
+    # máscara do contorno: forte no escuro, fraca no claro (superfície clara não "brilha" de neon)
+    rim = (255 * np.clip(1.15 - out.mean(2) / 200.0, 0.15, 1.0)).astype(np.uint8)
+    Image.fromarray(rim, "L").save(f.replace(".jpg", "_rim.png"))
     print("  pele preservada: %.1f%%" % (skin.mean() * 100))
     print("PS1", name, side)

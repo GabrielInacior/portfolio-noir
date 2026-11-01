@@ -90,6 +90,11 @@ func setup(p_card: Dictionary) -> void:
 					# o contorno do Godot abre com a rugosidade: em 1,0 o personagem inteiro "estoura"
 					shared.roughness = 0.8
 					shared.rim = 0.4
+					# contorno pesado pelo inverso da claridade do tecido (tools/blender/char_ps1_textures.py)
+					var tex_path := String((src as StandardMaterial3D).albedo_texture.resource_path) if (src as StandardMaterial3D).albedo_texture else ""
+					var rim_path := tex_path.replace(".jpg", "_rim.png")
+					if tex_path != "" and ResourceLoader.exists(rim_path):
+						shared.rim_texture = load(rim_path)
 				m3.set_surface_override_material(s, shared)
 	_mat = shared
 	_setup_anim()
