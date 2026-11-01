@@ -233,6 +233,8 @@ func enter_museum(project: Dictionary) -> void:
 	player.global_position = _museum.spawn_pos()
 	player._yaw = PI
 	player.rotation.y = PI
+	player.set_meta("walk", player.walk_rects)
+	player.walk_rects = []
 	player.bound_min = Vector2(-4.4, -5.4)
 	player.bound_max = Vector2(4.4, 5.4)
 	_museum.examined.connect(func(c: int, t: int) -> void:
@@ -250,8 +252,7 @@ func exit_museum() -> void:
 	player.get_parent().remove_child(player)
 	city.add_child(player)
 	player.global_transform = _entry_xform
-	player.bound_min = Vector2(-4.2, -64.0)
-	player.bound_max = Vector2(4.2, 4.0)
+	player.walk_rects = player.get_meta("walk", [])
 	_museum.queue_free()
 	_museum = null
 	_exam = {}

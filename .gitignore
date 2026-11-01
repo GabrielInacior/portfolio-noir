@@ -20,3 +20,17 @@ node_modules/
 # Logs e temporários
 *.log
 override.cfg
+
+# chaves
+*.meshy_key
+.meshy_key
+*.openai_key
+
+# animacoes brutas da Mixamo (nao redistribuir)
+tools/mixamo_raw/*.fbx
+
+# props crus da Meshy, conceitos e texturas candidatas (pesados; o jogo usa game/assets/props e game/assets/tex)
+tools/props/raw/
+tools/props/concepts/
+tools/props/_sheet*.png
+tools/art/sd_tex/

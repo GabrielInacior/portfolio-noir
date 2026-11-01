@@ -24,6 +24,8 @@ signal interacted(project: Dictionary)
 # limites de deslocamento (rua por padrão; o museu troca para a sala)
 var bound_min := Vector2(-4.2, -64.0)
 var bound_max := Vector2(4.2, 4.0)
+## áreas onde se pode andar (união de retângulos x,z): ruas, esquinas, beco, praça. Vazio = usa bound.
+var walk_rects: Array = []
 
 
 func forward() -> Vector3:
@@ -110,6 +112,20 @@ func _physics_process(dt: float) -> void:
 
 	velocity = dir.normalized() * SPEED if dir.length() > 0.05 else Vector3.ZERO
 	move_and_slide()
-	# limites simples (rua ou sala do museu)
-	global_position.x = clampf(global_position.x, bound_min.x, bound_max.x)
-	global_position.z = clampf(global_position.z, bound_min.y, bound_max.y)
+	# limites: união de áreas do bairro, ou a sala do museu
+	if walk_rects.is_empty():
+		global_position.x = clampf(global_position.x, bound_min.x, bound_max.x)
+		global_position.z = clampf(global_position.z, bound_min.y, bound_max.y)
+	else:
+		var p2 := Vector2(global_position.x, global_position.z)
+		var best := p2
+		var bd := INF
+		for r in walk_rects:
+			var rr: Rect2 = r
+			var q := Vector2(clampf(p2.x, rr.position.x, rr.end.x), clampf(p2.y, rr.position.y, rr.end.y))
+			var d := q.distance_squared_to(p2)
+			if d < bd:
+				bd = d
+				best = q
+		global_position.x = best.x
+		global_position.z = best.y
