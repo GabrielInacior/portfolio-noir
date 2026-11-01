@@ -1321,6 +1321,19 @@ func _street_props() -> void:
 		_prop("caixas_papelao", p, _rng.randf() * TAU)
 	for p in [Vector3(-2.5, 0.0, -64), Vector3(-1.5, 0.0, -65), Vector3(-3.5, 0.0, -65.5)]:
 		_prop("cone_transito", p, _rng.randf() * TAU)
+	# vida de calçada: sacos de lixo, latas, papéis, bicicleta encostada, mesas de bar na calçada
+	for p in [Vector3(-6.5, 0.2, -1.2), Vector3(-6.5, 0.2, -0.6), Vector3(6.5, 0.2, -13.3), Vector3(13.5, 0.06, ALLEY_Z - 1.5),
+			Vector3(20.0, 0.06, ALLEY_Z + 1.5), Vector3(-36.5, 0.2, CROSS_Z - 5.6), Vector3(6.5, 0.2, -54.6)]:
+		_prop("sd_saco_lixo", p, _rng.randf() * TAU, _rng.randf_range(0.8, 1.1))
+	for p in [Vector3(-5.6, 0.2, -4.0), Vector3(5.0, 0.2, -20.0), Vector3(16.0, 0.06, ALLEY_Z), Vector3(-20, 0.2, CROSS_Z + 4.9)]:
+		_prop("sd_latas", p, _rng.randf() * TAU)
+	for p in [Vector3(-3.0, 0.0, -18.0), Vector3(2.0, 0.0, -35.0), Vector3(-12.0, 0.0, CROSS_Z + 1.0), Vector3(-56.0, 0.2, -46.0)]:
+		_prop("sd_papeis", p, _rng.randf() * TAU, 1.4)
+	_prop("sd_bicicleta", Vector3(6.4, 0.2, -16.5), 0.0)
+	_prop("sd_bicicleta", Vector3(-6.4, 0.2, -45.5 + 0.0), PI / 2 + 0.1)
+	# mesinhas de bar na calçada em frente à Lábia
+	for p in [Vector3(5.6, 0.2, -27.6), Vector3(5.6, 0.2, -31.0)]:
+		_prop("sd_mesa_bar_rua", p, 0.0)
 	# carros estacionados (encostados no meio-fio)
 	for p in [Vector3(-3.3, 0.0, -13.5), Vector3(3.3, 0.0, -25.0), Vector3(-3.3, 0.0, -56.0), Vector3(30.0, 0.0, CROSS_Z - 2.6), Vector3(-34.0, 0.0, CROSS_Z + 2.6)]:
 		var yaw := 0.0 if absf(p.z - CROSS_Z) > 3.0 else PI / 2

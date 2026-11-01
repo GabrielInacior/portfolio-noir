@@ -219,6 +219,7 @@ func _build_room(room: String, floor_tex: String, wall_tex: String) -> void:
 	add_child(fill)
 	_dress_room(room)
 	_clutter()
+	_story_dressing(room)
 	_dust()
 
 
@@ -316,6 +317,47 @@ func _dress_room(room: String) -> void:
 			_p("planta_vaso", Vector3(-4.3, 0, 4.8))
 			for i in 16:
 				_box(Vector3(-ROOM_W / 2 + 0.16, 2.6 + (i % 2) * 0.42, -4.6 + (i / 2) * 0.5), Vector3(0.1, 0.38, 0.4), _flat(Color("#241a2a")))
+
+
+## Objetos de cena com história (kit Blender sd_*): mesa bagunçada do detetive, copos no balcão do
+## bar, cabos do hacker, papéis amassados, relógio na parede, post-its, guarda-chuva pingando.
+func _story_dressing(room: String) -> void:
+	var id := str(project.get("id", ""))
+	_p("sd_relogio", Vector3(-1.8, 2.85, -ROOM_D / 2 + 0.14))
+	_p("sd_papeis", Vector3(0.6, 0.0, -1.3), 0.7)
+	_p("sd_guarda_chuva", Vector3(-3.6, 0.0, 5.55), 0.3)
+	match room:
+		"escritorio":
+			_p("sd_pastas", Vector3(-1.05, 0.92, -2.35), 0.3)
+			_p("sd_cinzeiro", Vector3(0.95, 0.92, -2.35))
+			_p("sd_copos", Vector3(-4.2, 1.35, -5.2))
+			_p("sd_caixa_arquivo", Vector3(-3.6, 0.0, -5.4), 0.2)
+			_p("sd_caixa_arquivo", Vector3(-3.55, 0.31, -5.38), -0.15)
+			_p("sd_papeis", Vector3(-1.4, 0.0, -3.4), 2.0)
+			_p("sd_postits", Vector3(-2.6, 1.4, ROOM_D / 2 - 0.3), PI)
+			if id == "rumor":
+				_p("sd_pizza", Vector3(3.4, 0.45, 4.3), 0.4)
+		"bar":
+			_p("sd_copos", Vector3(-0.3, 1.12, -4.1), 0.5)
+			_p("sd_garrafas_vazias", Vector3(1.6, 1.12, -4.15))
+			_p("sd_cinzeiro", Vector3(0.4, 1.12, -4.05))
+			_p("sd_latas", Vector3(2.5, 0.0, -2.6))
+			_p("sd_garrafas_vazias", Vector3(-2.8, 0.0, -2.9), 2.0)
+		"lab":
+			_p("sd_cabos", Vector3(-0.7, 0.0, -2.0), 0.4)
+			_p("sd_cabos", Vector3(-3.6, 0.0, -4.4), 1.4)
+			_p("sd_latas", Vector3(0.8, 0.0, -1.6))
+			_p("sd_pizza", Vector3(1.6, 0.0, -1.2), 0.9)
+			_p("sd_postits", Vector3(2.9, 1.5, -ROOM_D / 2 + 0.16))
+		"fliperama":
+			_p("sd_latas", Vector3(-3.5, 0.0, -4.2))
+			_p("sd_copos", Vector3(0.5, 0.85, -1.3))
+			_p("sd_pizza", Vector3(-0.5, 0.85, -1.5), 0.3)
+			_p("sd_papeis", Vector3(3.2, 0.0, -3.0))
+		"estudio":
+			_p("sd_cabos", Vector3(0.4, 0.0, -2.3), 0.9)
+			_p("sd_copos", Vector3(-0.6, 0.98, -2.8))
+			_p("sd_postits", Vector3(-2.9, 1.6, -ROOM_D / 2 + 0.16))
 
 
 func _clutter() -> void:
