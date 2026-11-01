@@ -15,9 +15,11 @@ aprendido lá em arte, Blender, Godot e web foi trazido para cá:
 - Personagem riggado + atlas de rosto + animações Mixamo reaproveitados do RUMOR
   (`scripts/scene3d/character.gd`, `assets/characters/student.glb`).
 
+**Leia primeiro `docs/CONTEXTO_E_DECISOES.md`**: tudo que o usuário pediu e decidiu (visão, estilo dos personagens, lojas-museu, ferramentas liberadas, Meshy, SD local, Mixamo).
+
 ## Regras de base (herdadas do RUMOR)
 - Nenhum asset pronto de terceiro; gerado por código ou por IA é permitido.
-- Teste nunca faz som (`--audio-driver Dummy`). Nunca `git commit` sem pedido do usuário.
+- Teste nunca faz som (`--audio-driver Dummy`). Commits regulares com push estão autorizados pelo usuário (sempre com as linhas de atribuição da sessão; `git pull --rebase` antes; `git add` só com caminhos exatos).
 - Texto ao jogador sem travessão "—" e sem termo de dev.
 - Confirmar UX ambígua antes de implementar. Uma frente por vez; economia de tokens.
 - **Segredos nunca entram no repositório nem no build**: a chave OpenAI em
