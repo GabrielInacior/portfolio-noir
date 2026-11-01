@@ -198,6 +198,23 @@ func _tex_mat(tex: Texture2D, emit := 0.0) -> StandardMaterial3D:
 	return m
 
 
+## Ajusta a UV para a imagem PREENCHER a superfície sem esticar (corta o excesso, centralizado).
+func _cover(m: StandardMaterial3D, tex: Texture2D, w: float, h: float) -> StandardMaterial3D:
+	if tex == null:
+		return m
+	var r_img := float(tex.get_width()) / maxf(1.0, tex.get_height())
+	var r_surf := w / maxf(0.001, h)
+	if r_img > r_surf:
+		var su := r_surf / r_img
+		m.uv1_scale = Vector3(su, 1, 1)
+		m.uv1_offset = Vector3((1.0 - su) / 2.0, 0, 0)
+	else:
+		var sv := r_img / r_surf
+		m.uv1_scale = Vector3(1, sv, 1)
+		m.uv1_offset = Vector3(0, (1.0 - sv) / 2.0, 0)
+	return m
+
+
 func _add_mat(col: Color, a: float) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -792,7 +809,7 @@ func _shop(face: Vector3, normal: Vector3, project: Dictionary, grand := false) 
 	var dq := QuadMesh.new()
 	dq.size = Vector2(vw - 0.2, 2.0)
 	disp.mesh = dq
-	disp.material_override = _tex_mat(tex, 0.75) if tex else _mat(neon.darkened(0.6), 0.5, true)
+	disp.material_override = _cover(_tex_mat(tex, 0.75), tex, vw - 0.2, 2.0) if tex else _mat(neon.darkened(0.6), 0.5, true)
 	disp.position = Vector3(vx, 1.55, 0.09)
 	holder.add_child(disp)
 	if not grand and _tvs.size() < 6:
@@ -1069,7 +1086,8 @@ func _photo_billboard(face: Vector3, normal: Vector3) -> void:
 		var q := QuadMesh.new()
 		q.size = Vector2(3.4, 4.4)
 		ph.mesh = q
-		ph.material_override = _tex_mat(load("res://assets/foto_gabriel.png"), 0.65)
+		var ftex: Texture2D = load("res://assets/foto_gabriel.png")
+		ph.material_override = _cover(_tex_mat(ftex, 0.65), ftex, 3.4, 4.4)
 		ph.position = Vector3(-1.8, 6.5, 0.22)
 		holder.add_child(ph)
 	var nm := Label3D.new()
@@ -1189,7 +1207,8 @@ func _build_landmark() -> void:
 		var q := QuadMesh.new()
 		q.size = Vector2(8.4, 4.4)
 		ad.mesh = q
-		ad.material_override = _tex_mat(load(cover), 0.8)
+		var atex: Texture2D = load(cover)
+		ad.material_override = _cover(_tex_mat(atex, 0.8), atex, 8.4, 4.4)
 		ad.position = Vector3(0, 8, 0.17)
 		bh.add_child(ad)
 	_lhalo(bh, Vector3(0, 8, 0.3), Vector2(11, 7), Color("#ffc83d"), 0.25)

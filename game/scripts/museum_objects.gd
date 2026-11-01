@@ -64,6 +64,53 @@ static func _img_ratio(tex: Texture2D) -> float:
 		return 1.4
 	return float(tex.get_width()) / maxf(1.0, tex.get_height())
 
+## Imagem numa moldura SEM esticar nem vazar: plano (UV 0..1) do tamanho exato da tela.
+## "cover" preenche a tela cortando o excesso, centralizado (telas e quadros);
+## "contain" cabe inteira com fundo escuro nas sobras (prints com texto importante).
+static func img(parent: Node, pos: Vector3, w: float, h: float, tex: Texture2D, emit := 0.0, mode := "cover") -> void:
+	var r_img := _img_ratio(tex)
+	var r_surf := w / maxf(0.001, h)
+	var qw := w
+	var qh := h
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = tex
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED if emit > 0.0 else BaseMaterial3D.SHADING_MODE_PER_PIXEL
+	if emit > 0.0:
+		var k := 0.75 + emit * 0.25
+		m.albedo_color = Color(k, k, k)
+	if mode == "contain":
+		# fundo escuro do tamanho da tela e a imagem inteira por cima
+		var bg := MeshInstance3D.new()
+		var bq := QuadMesh.new()
+		bq.size = Vector2(w, h)
+		bg.mesh = bq
+		bg.material_override = _mat(Color("#05060c"))
+		bg.position = pos - Vector3(0, 0, 0.002)
+		parent.add_child(bg)
+		if r_img > r_surf:
+			qh = w / r_img
+		else:
+			qw = h * r_img
+	else:
+		if r_img > r_surf:
+			var su := r_surf / r_img
+			m.uv1_scale = Vector3(su, 1, 1)
+			m.uv1_offset = Vector3((1.0 - su) / 2.0, 0, 0)
+		else:
+			var sv := r_img / r_surf
+			m.uv1_scale = Vector3(1, sv, 1)
+			m.uv1_offset = Vector3(0, (1.0 - sv) / 2.0, 0)
+	var mi := MeshInstance3D.new()
+	var q := QuadMesh.new()
+	q.size = Vector2(qw, qh)
+	mi.mesh = q
+	mi.material_override = m
+	mi.position = pos
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(mi)
+
+
 
 # ───────────── itens de parede (voltados para +Z do holder)
 
@@ -75,7 +122,7 @@ static func framed(h: Node, tex: Texture2D, accent: Color, warm: Color) -> void:
 	_box(h, Vector3(0, 0, 0.0), Vector3(pw + 0.18, ph + 0.18, 0.08), _mat(Color("#120f0a")))   # moldura
 	_box(h, Vector3(0, 0, 0.05), Vector3(pw + 0.26, ph + 0.26, 0.04), _mat(warm.darkened(0.3)))  # borda dourada
 	if tex:
-		_box(h, Vector3(0, 0, 0.09), Vector3(pw, ph, 0.02), _tex_mat(tex, 0.25))
+		img(h, Vector3(0, 0, 0.101), pw, ph, tex, 0.3, "cover")
 	else:
 		_box(h, Vector3(0, 0, 0.09), Vector3(pw, ph, 0.02), _mat(accent.darkened(0.3), 0.3))
 	# vidro com reflexo
@@ -97,7 +144,8 @@ static func screen(h: Node, tex: Texture2D, cool: Color, emit := 1.2) -> void:
 	var sw := sh * r
 	_box(h, Vector3(0, 0, 0.0), Vector3(sw + 0.2, sh + 0.2, 0.12), _mat(Color("#080a12")))
 	if tex:
-		_box(h, Vector3(0, 0, 0.08), Vector3(sw, sh, 0.02), _tex_mat(tex, emit))
+		_box(h, Vector3(0, 0, 0.07), Vector3(sw, sh, 0.02), _mat(Color("#05060c")))
+		img(h, Vector3(0, 0, 0.081), sw - 0.06, sh - 0.06, tex, emit, "contain")
 	else:
 		_box(h, Vector3(0, 0, 0.08), Vector3(sw, sh, 0.02), _mat(cool, emit))
 	# brilho de tela (halo)
@@ -117,7 +165,8 @@ static func monitor(h: Node, tex: Texture2D, accent: Color) -> void:
 	var sw := sh * r
 	_box(h, Vector3(0, 0.1, 0), Vector3(sw + 0.12, sh + 0.12, 0.08), _mat(Color("#0c0f16")))
 	if tex:
-		_box(h, Vector3(0, 0.1, 0.05), Vector3(sw, sh, 0.02), _tex_mat(tex, 1.0))
+		_box(h, Vector3(0, 0.1, 0.04), Vector3(sw, sh, 0.02), _mat(Color("#05060c")))
+		img(h, Vector3(0, 0.1, 0.051), sw - 0.05, sh - 0.05, tex, 1.0, "contain")
 	else:
 		_box(h, Vector3(0, 0.1, 0.05), Vector3(sw, sh, 0.02), _mat(accent, 1.0))
 	_box(h, Vector3(0, -0.5, 0.0), Vector3(0.1, 0.3, 0.1), _mat(Color("#161a24")))   # pescoço
@@ -134,7 +183,7 @@ static func poster(h: Node, tex: Texture2D, accent: Color) -> void:
 	var ph := 1.5
 	var pw := ph * r
 	if tex:
-		_box(h, Vector3(0, 0, 0.02), Vector3(pw, ph, 0.01), _tex_mat(tex, 0.2))
+		img(h, Vector3(0, 0, 0.026), pw, ph, tex, 0.2, "cover")
 	else:
 		_box(h, Vector3(0, 0, 0.02), Vector3(pw, ph, 0.01), _mat(accent.darkened(0.3), 0.3))
 	for c in [Vector3(-pw / 2, ph / 2, 0.03), Vector3(pw / 2, ph / 2, 0.03), Vector3(-pw / 2, -ph / 2, 0.03), Vector3(pw / 2, -ph / 2, 0.03)]:
@@ -146,7 +195,7 @@ static func plaque(h: Node, tex: Texture2D, accent: Color) -> void:
 	_box(h, Vector3(0, 0, 0), Vector3(1.6, 1.0, 0.06), _mat(Color("#2a2f3c")))
 	_box(h, Vector3(0, 0, 0.035), Vector3(1.5, 0.9, 0.02), _mat(accent.darkened(0.2)))
 	if tex:
-		_box(h, Vector3(0, 0, 0.05), Vector3(1.3, 0.72, 0.01), _tex_mat(tex, 0.4))
+		img(h, Vector3(0, 0, 0.056), 1.3, 0.72, tex, 0.4, "contain")
 	for sx in [-0.72, 0.72]:
 		for sy in [-0.44, 0.44]:
 			_cyl(h, Vector3(sx, sy, 0.05), 0.04, 0.03, _mat(accent, 1.0), Vector3(PI / 2, 0, 0))
