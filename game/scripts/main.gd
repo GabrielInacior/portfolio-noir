@@ -11,6 +11,9 @@ var _gate: Control
 
 
 func _ready() -> void:
+	# tela lógica por orientação: celular em pé 720x1280; deitado baixo (celular) 960x540; PC 1280x720
+	get_window().size_changed.connect(_fit_scale)
+	_fit_scale()
 	city = City.new()
 	add_child(city)
 	var layer := CanvasLayer.new()
@@ -38,7 +41,7 @@ func _build_gate(layer: CanvasLayer) -> void:
 	var logo := UI.title("GABRIEL INÁCIO", 86, UI.PAPER)
 	logo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(logo)
-	var sub := UI.label("PORTFÓLIO · UMA CIDADE NOIR DE PROJETOS", 24, UI.AMBER, "type")
+	var sub := UI.label("engenharia de software · games · IA", 26, UI.AMBER, "type")
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(sub)
 	var spacer := Control.new()
@@ -66,3 +69,53 @@ func _enter() -> void:
 	var tw := create_tween()
 	tw.tween_property(_gate, "modulate:a", 0.0, 0.9)
 	tw.tween_callback(_gate.queue_free)
+
+
+
+func _fit_scale() -> void:
+	var ws := DisplayServer.window_get_size()
+	if ws.x <= 0 or ws.y <= 0:
+		return
+	var want := Vector2i(1280, 720)
+	if ws.y > ws.x:
+		want = Vector2i(720, 1280)
+	elif ws.y < 600:
+		want = Vector2i(960, 540)
+	if get_window().content_scale_size != want:
+		get_window().content_scale_size = want
+		_watch_dirty = 3
+
+
+## Vigia de texto vertical (lição do RUMOR): texto que quebra linha e ficou espremido vira coluna de
+## letras; aqui ele deixa de quebrar. Só confere quando a tela muda (nó novo ou janela girada).
+var _watch_t := 0.0
+var _watch_dirty := 2
+var _watch_hooked := false
+
+
+func _process(dt: float) -> void:
+	if not _watch_hooked:
+		_watch_hooked = true
+		get_tree().node_added.connect(func(n: Node) -> void:
+			if n is Label:
+				_watch_dirty = 2)
+	_watch_t += dt
+	if _watch_t < 0.4 or _watch_dirty <= 0:
+		return
+	_watch_t = 0.0
+	_watch_dirty -= 1
+	_scan_labels(self)
+
+
+func _scan_labels(n: Node) -> void:
+	for c in n.get_children():
+		if c is Label:
+			var l := c as Label
+			if l.autowrap_mode != TextServer.AUTOWRAP_OFF and l.is_visible_in_tree() and l.text.length() > 3:
+				var fs := l.get_theme_font_size("font_size")
+				if l.size.x > 0.0 and l.size.x < fs * 2.2:
+					l.autowrap_mode = TextServer.AUTOWRAP_OFF
+					l.clip_text = true
+		elif c is CanvasItem and not (c as CanvasItem).visible:
+			continue
+		_scan_labels(c)

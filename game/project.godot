@@ -3,8 +3,8 @@ config_version=5
 
 [application]
 
-config/name="Gabriel Inácio — Portfólio"
-config/description="Portfólio interativo em primeira pessoa: uma cidade noir dos projetos do Gabriel."
+config/name="Gabriel Inácio"
+config/description="Gabriel Inácio: engenharia de software, games e IA. Uma cidade noir em primeira pessoa com os projetos dele."
 run/main_scene="res://scenes/city.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://assets/icon.png"

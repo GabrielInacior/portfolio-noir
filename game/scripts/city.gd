@@ -751,6 +751,11 @@ func _place_shops() -> void:
 	for s in spots:
 		if by_id.has(s[0]):
 			_shop(s[1], s[2], by_id[s[0]])
+	for g in [["rumor", Vector3(-5.6, 0.2, -9.0), PI / 2], ["fortress", Vector3(-25.0, 0.2, CROSS_Z + 4.6), PI],
+			["inaciocyber", Vector3(23.0, 0.06, ALLEY_Z + 1.2), -PI / 2]]:
+		if by_id.has(g[0]):
+			_guide_npc(g[1], g[2], by_id[g[0]])
+	_guide_npc(Vector3(2.5, 0.2, AVE_END + 2.6), PI + 0.4, {"id": "sobre", "title": "LAB · SOBRE MIM", "neon": "#ffffff", "special": "about"})
 	# o LAB (Sobre mim) é o prédio no fim da avenida; contato é a cabine na praça
 	_shop(Vector3(0, 0, AVE_END + 0.0), Vector3(0, 0, 1), {"id": "sobre", "title": "LAB · SOBRE MIM", "neon": "#ffffff", "special": "about"}, true)
 
@@ -879,6 +884,15 @@ func _shop(face: Vector3, normal: Vector3, project: Dictionary, grand := false) 
 	kiosks.append({"pos": rp, "project": project, "light": l, "ring": ring, "base_energy": l.light_energy,
 		"neon": neon, "visited": false})
 	map_labels.append({"p": Vector2(rp.x, rp.z), "t": str(project.get("title", "")), "c": neon})
+
+
+func _guide_npc(pos: Vector3, yaw: float, project: Dictionary) -> void:
+	var n := Npc.new()
+	n.position = pos
+	n.look_yaw = yaw
+	n.setup(project)
+	add_child(n)
+	npcs.append(n)
 
 
 func _lbox(parent: Node3D, pos: Vector3, size: Vector3, mat: Material) -> MeshInstance3D:
@@ -1016,7 +1030,7 @@ func _build_plaza() -> void:
 	add_child(fg)
 	_lhalo(fg, Vector3.ZERO, Vector2(10, 10), Color("#3aa8ff"), 0.22, true)
 	# outdoor grande com a foto do Gabriel na parede oeste
-	_photo_billboard(Vector3(PLAZA.position.x + 0.3, 0, c.z), Vector3(1, 0, 0))
+	_photo_billboard(Vector3(PLAZA.position.x + 1.4, 0, c.z), Vector3(1, 0, 0))
 	# cabine telefônica = CONTATO
 	_phone_booth(c + Vector3(5.5, 0.2, -9.0))
 	map_labels.append({"p": Vector2(c.x, c.z), "t": "PRAÇA", "c": Color("#9fdcff")})
@@ -1046,6 +1060,10 @@ func _photo_billboard(face: Vector3, normal: Vector3) -> void:
 	holder.rotation.y = atan2(normal.x, normal.z)
 	add_child(holder)
 	_lbox(holder, Vector3(0, 6.5, 0.1), Vector3(7.6, 5.2, 0.2), _mat(Color("#0a0d18")))
+	# estrutura de metal que segura a placa longe da parede
+	for sx in [-3.2, 3.2]:
+		_lbox(holder, Vector3(sx, 3.6, -0.6), Vector3(0.14, 7.2, 0.14), _mat(Color("#14161e")))
+		_lbox(holder, Vector3(sx, 6.5, -0.6), Vector3(0.1, 0.1, 1.4), _mat(Color("#14161e")))
 	if ResourceLoader.exists("res://assets/foto_gabriel.png"):
 		var ph := MeshInstance3D.new()
 		var q := QuadMesh.new()

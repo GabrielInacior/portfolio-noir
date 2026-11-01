@@ -24,28 +24,53 @@ func _ready() -> void:
 		if e is InputEventMouseButton and (e as InputEventMouseButton).pressed:
 			_close())
 	var vs := get_viewport_rect().size
-	var wide := vs.x > vs.y
-	var center := CenterContainer.new()
-	add_child(UI.full(center))
+	var tall := vs.y > vs.x
+	var small := vs.y <= 560.0
+	var mobile := tall or small
+	# folha: no celular quase a tela toda; no PC uma cartela centrada (máx. 860)
+	var w: float = vs.x - 24.0 if tall else minf(vs.x - 48.0, 860.0)
+	var h: float = vs.y - (24.0 if mobile else 80.0)
 	var panel := PanelContainer.new()
 	panel.add_theme_stylebox_override("panel", UI.box(UI.PANEL, _accent, 3, 18, 0))
-	var w: float = minf(vs.x - 48.0, 760.0)
-	panel.custom_minimum_size = Vector2(w, 0)
-	center.add_child(panel)
+	panel.custom_minimum_size = Vector2(w, h)
+	panel.size = Vector2(w, h)
+	panel.position = (vs - Vector2(w, h)) / 2.0
+	add_child(panel)
+	var outer := UI.vbox(0)
+	panel.add_child(outer)
+	# cabeçalho fixo (fechar sempre visível)
+	var headpad := MarginContainer.new()
+	for sd in ["left", "right", "top"]:
+		headpad.add_theme_constant_override("margin_" + sd, 18)
+	headpad.add_theme_constant_override("margin_bottom", 6)
+	var head := UI.hbox(8)
+	var kicker := UI.label(str(project.get("title", "")).to_upper(), 24 if mobile else 20, _accent, "type")
+	kicker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	kicker.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	head.add_child(kicker)
+	var x := UI.ghost("✕", _accent, 72 if small else 88)
+	x.custom_minimum_size.x = 72 if small else 88
+	x.add_theme_font_override("font", UI.font("body"))
+	x.add_theme_font_size_override("font_size", 34)
+	x.pressed.connect(_close)
+	head.add_child(x)
+	headpad.add_child(head)
+	outer.add_child(headpad)
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.custom_minimum_size.y = minf(vs.y - 80.0, 900.0)
-	panel.add_child(scroll)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	outer.add_child(scroll)
+	TouchScroll.attach(scroll)
 	var pad := MarginContainer.new()
-	for s in ["left", "right", "top", "bottom"]:
-		pad.add_theme_constant_override("margin_" + s, 24)
+	for sd in ["left", "right", "bottom"]:
+		pad.add_theme_constant_override("margin_" + sd, 22)
+	pad.add_theme_constant_override("margin_top", 4)
 	pad.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(pad)
 	var col := UI.vbox(14)
 	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	pad.add_child(col)
 
-	# imagem do item (foto do projeto ou cartão), altura limitada para não dominar
 	var img_path := str(item.get("img", ""))
 	if img_path != "" and ResourceLoader.exists(img_path):
 		var frame := PanelContainer.new()
@@ -55,54 +80,40 @@ func _ready() -> void:
 		tr.texture = load(img_path)
 		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		tr.custom_minimum_size = Vector2(0, minf(vs.y * 0.4, 360.0))
+		tr.custom_minimum_size = Vector2(0, minf(vs.y * (0.32 if tall else 0.42), 380.0))
 		frame.add_child(tr)
 		col.add_child(frame)
 
-	var head := UI.hbox(8)
-	var kicker := UI.label(str(project.get("title", "")).to_upper(), 18, _accent, "type")
-	kicker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(kicker)
-	var x := UI.ghost("✕", _accent, 44)
-	x.custom_minimum_size.x = 48
-	x.add_theme_font_override("font", UI.font("body"))
-	x.pressed.connect(_close)
-	head.add_child(x)
-	col.add_child(head)
-
-	col.add_child(UI.title(str(item.get("title", "")), 48, UI.PAPER))
+	col.add_child(UI.title(str(item.get("title", "")), 46 if mobile else 48, UI.PAPER))
 	var rule := ColorRect.new()
 	rule.color = Color(_accent, 0.6)
 	rule.custom_minimum_size.y = 3
 	col.add_child(rule)
-
-	var body := UI.label(str(item.get("text", "")), 24, Color(UI.PAPER, 0.92), "body")
+	var body := UI.label(str(item.get("text", "")), 28 if mobile else 24, Color(UI.PAPER, 0.92), "body")
 	col.add_child(body)
-
 	var tag := str(item.get("tag", ""))
 	if tag != "":
 		var chip := PanelContainer.new()
 		chip.add_theme_stylebox_override("panel", UI.box(Color(_accent, 0.16), _accent, 1, 8, 10))
 		chip.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-		chip.add_child(UI.label(tag, 18, _accent, "type"))
+		chip.add_child(UI.label(tag, 22 if mobile else 18, _accent, "type"))
 		col.add_child(chip)
-
-	# links do projeto (site/github), se houver
 	var links: Dictionary = project.get("links", {})
 	if links is Dictionary and not links.is_empty():
-		var lr := UI.hbox(10)
+		var lr: BoxContainer = UI.vbox(10) if tall else UI.hbox(10)
 		if links.has("site"):
-			var b := UI.button("ABRIR O SITE  ↗", _accent, 64)
+			var b := UI.button("ABRIR O SITE  ↗", _accent, 88 if mobile else 64)
+			b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			b.pressed.connect(func() -> void: _open(str(links["site"])))
 			lr.add_child(b)
 		if links.has("github"):
-			var g := UI.ghost("GITHUB  ↗", UI.PAPER, 64)
+			var g := UI.ghost("GITHUB  ↗", UI.PAPER, 88 if mobile else 64)
+			g.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			g.pressed.connect(func() -> void: _open(str(links["github"])))
 			lr.add_child(g)
 		col.add_child(lr)
 	elif bool(project.get("private", false)):
-		var pv := UI.label("repositório privado", 18, UI.MIST, "type")
-		col.add_child(pv)
+		col.add_child(UI.label("repositório privado", 22 if mobile else 18, UI.MIST, "type"))
 
 	modulate.a = 0.0
 	scale = Vector2(0.98, 0.98)
