@@ -29,6 +29,36 @@
    "title": "Fale para jogar",
    "text": "O jogo roda IA local para ouvir e responder em tempo real. A graça está em convencer, improvisar e não ser pego.",
    "tag": "Voz"
+  },
+  {
+   "kind": "frame",
+   "title": "O jogo",
+   "text": "Labia e um jogo cooperativo de comedia para 1 a 4 jogadores. Voces sao vigaristas e aplicam golpes falando de verdade, pelo microfone, com personagens de IA.",
+   "tag": ""
+  },
+  {
+   "kind": "screen",
+   "title": "NPCs que ouvem",
+   "text": "Os personagens sao movidos por IA rodando localmente: eles entendem o que voce fala, se irritam, riem e podem chamar a seguranca.",
+   "tag": ""
+  },
+  {
+   "kind": "frame",
+   "title": "Fale para enganar",
+   "text": "Nao tem menu de dialogo. O jogador convence na conversa, improvisando, enquanto os colegas ajudam nos bastidores.",
+   "tag": ""
+  },
+  {
+   "kind": "frame",
+   "title": "Cinco fases",
+   "text": "Cinco fases em primeira pessoa, cada uma com um golpe e um alvo diferente.",
+   "tag": ""
+  },
+  {
+   "kind": "plaque",
+   "title": "Como foi feito",
+   "text": "Godot e GDScript, com IA local para a fala e a compreensao dos personagens, sem depender de nuvem.",
+   "tag": ""
   }
  ]
 }

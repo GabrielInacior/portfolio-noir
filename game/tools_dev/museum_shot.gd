@@ -24,15 +24,17 @@ func _ready() -> void:
 	add_child(m)
 	await _wait(1.2)
 	var cam := Camera3D.new()
-	cam.fov = 70
+	cam.fov = 74
 	cam.current = true
 	add_child(cam)
+	var dd: float = m.D / 2
+	var ww: float = m.W / 2
 	var shots := [
-		[Vector3(0, 1.6, 4.0), Vector3(0, 1.5, -2.0), "01_entrada"],
-		[Vector3(-3.0, 1.6, 2.0), Vector3(-4.6, 1.6, -2.0), "02_parede_esq"],
-		[Vector3(2.4, 1.6, 1.0), Vector3(4.6, 1.5, -2.0), "03_parede_dir"],
-		[Vector3(0, 1.6, 2.5), Vector3(0, 1.6, -5.5), "04_fundo"],
-		[Vector3(-1.2, 1.6, -1.0), Vector3(-4.6, 1.6, -3.0), "05_detalhe"],
+		[Vector3(0, 1.65, dd - 0.6), Vector3(0, 1.4, -dd), "01_entrada"],
+		[Vector3(ww - 0.6, 1.65, dd - 0.8), Vector3(-ww, 1.4, -1.0), "02_parede_esq"],
+		[Vector3(-ww + 0.6, 1.65, dd - 0.8), Vector3(ww, 1.4, -1.0), "03_parede_dir"],
+		[Vector3(0.4, 1.6, 0.6), Vector3(0, 1.6, -dd), "04_fundo"],
+		[Vector3(1.2, 1.5, -dd + 2.6), Vector3(-0.2, 1.0, -dd + 0.8), "05_detalhe"],
 	]
 	for s in shots:
 		cam.position = s[0]

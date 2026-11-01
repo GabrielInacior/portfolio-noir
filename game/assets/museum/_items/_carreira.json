@@ -1,0 +1,88 @@
+{
+ "theme": {
+  "room": "career",
+  "floor": "carpete",
+  "wall": "concreto",
+  "warm": "#ffe0b0",
+  "cool": "#4e9bff",
+  "accent": "#5bd0ff",
+  "sub": "Carreira"
+ },
+ "items": [
+  {
+   "kind": "screen",
+   "title": "ACL: o assistente de licitações",
+   "text": "Fui o desenvolvedor original do ACL na Sys Evolution: automatiza o ciclo inteiro de compras públicas nos portais do governo, da captura dos editais ao envio de propostas, lances e monitoramento dos pregões.",
+   "tag": "Sys Evolution · LicitaSys",
+   "zone": 0,
+   "img": "res://assets/museum/carreira/acl.png"
+  },
+  {
+   "kind": "screen",
+   "title": "Milhões de linhas na tela",
+   "text": "Projeto de análise de dados sobre a base pública do mercado de licitações: telas que mostram milhões de linhas de uma vez, com rolagem virtualizada, filtros e análises detalhadas por órgão, objeto e período.",
+   "tag": "Dados · performance de front",
+   "zone": 0,
+   "img": "res://assets/museum/carreira/licitacoes.png"
+  },
+  {
+   "kind": "frame",
+   "title": "Liderança técnica",
+   "text": "Lidero um time de 3 desenvolvedores em mais de 6 projetos grandes: decisões de arquitetura, planejamento de sprint e entrega. Já entreguei o escopo de 2 semanas em 3 dias e migrei um sistema inteiro de Vue para React em menos de uma semana, sem regressão em produção.",
+   "tag": "Sys Evolution",
+   "zone": 0
+  },
+  {
+   "kind": "frame",
+   "title": "SaaS multi-tenant",
+   "text": "Aplicações SaaS multi-tenant em Vue, React, Node e PostgreSQL, com BFF e DDD, tempo real por WebSockets, integrações entre vários sistemas e uma biblioteca de componentes usada por mais de 20 desenvolvedores.",
+   "tag": "Vue · React · Node · Postgres",
+   "zone": 0
+  },
+  {
+   "kind": "screen",
+   "title": "SysGuide: vídeo e streaming",
+   "text": "Servidor de vídeo e streaming com transmissão ao vivo, gravação e busca, e um app desktop em Rust com Tauri que conversa com ele.",
+   "tag": "Rust · Tauri · streaming",
+   "zone": 1,
+   "img": "res://assets/museum/carreira/sysguide.png"
+  },
+  {
+   "kind": "screen",
+   "title": "IA local e Whisper",
+   "text": "No SysGuide, uma LLM rodando localmente e o Whisper transcrevendo áudio em tempo real, com resumo gerado sem mandar dados para fora.",
+   "tag": "LLM local · Whisper",
+   "zone": 1,
+   "img": "res://assets/museum/carreira/whisper.png"
+  },
+  {
+   "kind": "frame",
+   "title": "App Flutter e qualidade",
+   "text": "Um dos 2 desenvolvedores do app Flutter da empresa, que juntou vários aplicativos num só. Pipelines de CI/CD no GitLab com testes unitários e E2E, desenvolvimento guiado por especificação e Claude Code e Codex no dia a dia.",
+   "tag": "Flutter · GitLab CI · testes",
+   "zone": 1
+  },
+  {
+   "kind": "frame",
+   "title": "Loop Sistemas",
+   "text": "Aplicações desktop em WPF com arquitetura MVVM e SQL Server, da correção de bugs a entregas prontas para produção.",
+   "tag": "abr a jun 2024 · Jales, SP",
+   "zone": 2
+  },
+  {
+   "kind": "screen",
+   "title": "Pesquisa científica (CNPq / UNESP)",
+   "text": "Bolsista de iniciação científica: estudo de um compressor de CO2 supercrítico para o pré-sal, comparando planejamento fatorial fracionário e SS-ANOVA, com scripts próprios em Python.",
+   "tag": "set 2022 a ago 2023",
+   "zone": 2,
+   "img": "res://assets/museum/carreira/pesquisa.png"
+  },
+  {
+   "kind": "frame",
+   "title": "Freelas em produção",
+   "text": "ATN360: site institucional com CMS próprio, SSR com nota 100 de SEO, 5 idiomas e posts gerados com Gemini. BarberCore: CRM multi-tenant para barbearias com WhatsApp, agendamento, fidelidade e assinaturas no Stripe, rodando na AWS com clientes pagantes.",
+   "tag": "Nuxt · Next · AWS · Stripe",
+   "zone": 2
+  }
+ ]
+}

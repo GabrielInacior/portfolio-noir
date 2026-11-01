@@ -75,6 +75,28 @@ func readme(id: String) -> String:
 	return txt
 
 
+## README ao vivo de um repo publico (raw). cb recebe o texto; se falhar (privado, limite, offline),
+## cb recebe o README do snapshot do build.
+func fetch_readme(id: String, cb: Callable) -> void:
+	var r := repo(id)
+	var name := str(r.get("repo", id))
+	if r.get("private", false) or not OS.has_feature("web") and OS.get_environment("PF_LIVE") == "":
+		cb.call(readme(id))
+		return
+	var h := HTTPRequest.new()
+	add_child(h)
+	h.timeout = 8.0
+	h.request_completed.connect(func(_r: int, code: int, _hh: PackedStringArray, body: PackedByteArray) -> void:
+		h.queue_free()
+		if code == 200 and body.size() > 20:
+			_readmes[id] = body.get_string_from_utf8()
+		cb.call(readme(id)))
+	var err := h.request("https://api.github.com/repos/%s/%s/readme" % [USER, name], ["Accept: application/vnd.github.raw", "User-Agent: portfolio-noir"])
+	if err != OK:
+		h.queue_free()
+		cb.call(readme(id))
+
+
 ## Tenta atualizar ao vivo. So no web vale a pena (navegador tem o IP do visitante); no editor
 ## tambem funciona, util para testar. Atualiza estrelas e atividade sem bloquear a cidade.
 func fetch() -> void:
@@ -116,7 +138,7 @@ func _on_repos(v: Variant) -> void:
 		if s != int(rep.get("stars", 0)):
 			rep["stars"] = s
 			changed = true
-		rep["updated"] = str(m.get("updated_at", rep.get("updated", "")))[0:10]
+		rep["updated"] = str(m.get("updated_at", rep.get("updated", ""))).substr(0, 10)
 	if changed or stars != total_stars():
 		data["total_stars"] = stars
 		data["_at"] = Time.get_unix_time_from_system() * 1000.0

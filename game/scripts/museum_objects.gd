@@ -124,7 +124,7 @@ static func framed(h: Node, tex: Texture2D, accent: Color, warm: Color) -> void:
 	if tex:
 		img(h, Vector3(0, 0, 0.101), pw, ph, tex, 0.3, "cover")
 	else:
-		_box(h, Vector3(0, 0, 0.09), Vector3(pw, ph, 0.02), _mat(accent.darkened(0.3), 0.3))
+		_box(h, Vector3(0, 0, 0.09), Vector3(pw, ph, 0.02), _mat(Color("#14110c")))
 	# vidro com reflexo
 	var glass := _box(h, Vector3(0, 0, 0.11), Vector3(pw, ph, 0.01), null)
 	var gm := StandardMaterial3D.new()
@@ -147,7 +147,7 @@ static func screen(h: Node, tex: Texture2D, cool: Color, emit := 1.2) -> void:
 		_box(h, Vector3(0, 0, 0.07), Vector3(sw, sh, 0.02), _mat(Color("#05060c")))
 		img(h, Vector3(0, 0, 0.081), sw - 0.06, sh - 0.06, tex, emit, "contain")
 	else:
-		_box(h, Vector3(0, 0, 0.08), Vector3(sw, sh, 0.02), _mat(cool, emit))
+		_box(h, Vector3(0, 0, 0.08), Vector3(sw, sh, 0.02), _mat(Color("#070a12")))
 	# brilho de tela (halo)
 	var halo := _box(h, Vector3(0, 0, 0.12), Vector3(sw * 1.1, sh * 1.1, 0.01), null)
 	var hm := StandardMaterial3D.new()
@@ -168,7 +168,7 @@ static func monitor(h: Node, tex: Texture2D, accent: Color) -> void:
 		_box(h, Vector3(0, 0.1, 0.04), Vector3(sw, sh, 0.02), _mat(Color("#05060c")))
 		img(h, Vector3(0, 0.1, 0.051), sw - 0.05, sh - 0.05, tex, 1.0, "contain")
 	else:
-		_box(h, Vector3(0, 0.1, 0.05), Vector3(sw, sh, 0.02), _mat(accent, 1.0))
+		_box(h, Vector3(0, 0.1, 0.05), Vector3(sw, sh, 0.02), _mat(Color("#070a12")))
 	_box(h, Vector3(0, -0.5, 0.0), Vector3(0.1, 0.3, 0.1), _mat(Color("#161a24")))   # pescoço
 	_box(h, Vector3(0, -0.66, 0.1), Vector3(0.6, 0.05, 0.3), _mat(Color("#161a24")))  # base
 	# fileira de LEDs
@@ -185,7 +185,7 @@ static func poster(h: Node, tex: Texture2D, accent: Color) -> void:
 	if tex:
 		img(h, Vector3(0, 0, 0.026), pw, ph, tex, 0.2, "cover")
 	else:
-		_box(h, Vector3(0, 0, 0.02), Vector3(pw, ph, 0.01), _mat(accent.darkened(0.3), 0.3))
+		_box(h, Vector3(0, 0, 0.02), Vector3(pw, ph, 0.01), _mat(Color("#0d0f18")))
 	for c in [Vector3(-pw / 2, ph / 2, 0.03), Vector3(pw / 2, ph / 2, 0.03), Vector3(-pw / 2, -ph / 2, 0.03), Vector3(pw / 2, -ph / 2, 0.03)]:
 		_box(h, c, Vector3(0.14, 0.14, 0.005), _mat(Color("#d9d2b8", 0.7)), Vector3(0, 0, 0.78))
 

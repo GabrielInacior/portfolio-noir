@@ -773,6 +773,8 @@ func _place_shops() -> void:
 		if by_id.has(g[0]):
 			_guide_npc(g[1], g[2], by_id[g[0]])
 	_guide_npc(Vector3(2.5, 0.2, AVE_END + 2.6), PI + 0.4, {"id": "sobre", "title": "LAB · SOBRE MIM", "neon": "#ffffff", "special": "about"})
+	# prédio da CARREIRA (empresas e projetos profissionais) no fim da transversal à direita
+	_shop(Vector3(34.0, 0, zn), Vector3(0, 0, -1), {"id": "carreira", "title": "CARREIRA", "neon": "#5bd0ff", "special": "career"})
 	# o LAB (Sobre mim) é o prédio no fim da avenida; contato é a cabine na praça
 	_shop(Vector3(0, 0, AVE_END + 0.0), Vector3(0, 0, 1), {"id": "sobre", "title": "LAB · SOBRE MIM", "neon": "#ffffff", "special": "about"}, true)
 

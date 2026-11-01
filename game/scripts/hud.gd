@@ -8,6 +8,7 @@ const Dialogue := preload("res://scripts/dialogue.gd")
 const Minimap := preload("res://scripts/minimap.gd")
 const Museum := preload("res://scripts/museum.gd")
 const Exhibit := preload("res://scripts/exhibit.gd")
+const Panels := preload("res://scripts/panels.gd")
 
 var _museum = null
 var _entry_xform: Transform3D
@@ -26,6 +27,9 @@ var _look_touch := -1
 var _stick_center := Vector2.ZERO
 var _current: Dictionary = {}
 var _sheet_open := false
+var reticle: Control
+var _prompt_hint: Label
+var _ret_hot := false
 
 
 func setup(p, c) -> void:
@@ -45,6 +49,7 @@ func _ready() -> void:
 	_build_topbar()
 	_build_minimap()
 	_build_prompt()
+	_build_reticle()
 	if UI.is_mobile():
 		_build_stick()
 	set_process_input(true)
@@ -109,7 +114,8 @@ func _build_prompt() -> void:
 	prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	prompt_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	v.add_child(prompt_label)
-	var hint := UI.label("toque para abrir" if UI.is_mobile() else "[E] abrir  ·  toque no letreiro para ir até lá", 18, UI.MIST, "body")
+	var hint := UI.label("toque para abrir" if UI.is_mobile() else "[E] abrir  ·  toque no letreiro para ir até lá", 20 if UI.is_mobile() else 18, UI.MIST, "body")
+	_prompt_hint = hint
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(hint)
 	prompt.add_child(v)
@@ -124,6 +130,21 @@ func _build_prompt() -> void:
 		if e is InputEventMouseButton and (e as InputEventMouseButton).pressed and not _current.is_empty():
 			_on_interact(_current))
 	add_child(prompt)
+
+
+## retícula central: ponto discreto; vira anel com a cor do objeto quando há algo interativo
+func _build_reticle() -> void:
+	reticle = Control.new()
+	reticle.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	reticle.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	reticle.draw.connect(func() -> void:
+		if _ret_hot:
+			var k := 0.85 + 0.15 * sin(Time.get_ticks_msec() * 0.01)
+			reticle.draw_arc(Vector2.ZERO, 16.0 * k, 0, TAU, 32, UI.AMBER, 3.0, true)
+			reticle.draw_circle(Vector2.ZERO, 3.0, UI.AMBER)
+		else:
+			reticle.draw_circle(Vector2.ZERO, 3.0, Color(1, 1, 1, 0.55)))
+	add_child(reticle)
 
 
 func _build_stick() -> void:
@@ -200,7 +221,7 @@ func _on_interact(project: Dictionary) -> void:
 		if _museum.at_exit(player.global_position) and _exam.is_empty():
 			exit_museum()
 		elif not _exam.is_empty():
-			_open_exhibit(_exam)
+			_activate(_exam)
 		return
 	if project.is_empty():
 		return
@@ -213,7 +234,7 @@ func _on_interact(project: Dictionary) -> void:
 
 # ───────────────────────────────── entrar e sair da loja-museu
 func enter_museum(project: Dictionary) -> void:
-	var id := "_lab" if project.get("special", "") == "about" else str(project.get("id", ""))
+	var id := "_lab" if project.get("special", "") == "about" else ("_carreira" if project.get("special", "") == "career" else str(project.get("id", "")))
 	var path := "res://assets/museum/_items/%s.json" % id
 	if not FileAccess.file_exists(path):
 		open_dossier(project)   # sem museu montado: cai no dossiê
@@ -226,7 +247,7 @@ func enter_museum(project: Dictionary) -> void:
 	city.set_process(false)
 	city.set_physics_process(false)
 	_museum = Museum.new()
-	_museum.setup(project, d, project.get("special", "") == "about")
+	_museum.setup(project if project.get("special", "") != "career" else {"id": "_carreira", "title": "CARREIRA", "special": "career"}, d, project.get("special", "") == "about")
 	city.get_parent().add_child(_museum)
 	player.get_parent().remove_child(player)
 	_museum.add_child(player)
@@ -235,8 +256,9 @@ func enter_museum(project: Dictionary) -> void:
 	player.rotation.y = PI
 	player.set_meta("walk", player.walk_rects)
 	player.walk_rects = []
-	player.bound_min = Vector2(-4.4, -5.4)
-	player.bound_max = Vector2(4.4, 5.4)
+	var br: Rect2 = _museum.bounds()
+	player.bound_min = br.position
+	player.bound_max = br.end
 	_museum.examined.connect(func(c: int, t: int) -> void:
 		counter_label.text = "· %d/%d examinados" % [c, t])
 	counter_label.text = "· 0/%d examinados" % _museum.items.size()
@@ -263,6 +285,52 @@ func exit_museum() -> void:
 		minimap.visible = true
 	_on_visited(city.visited_count(), city.total_projects())
 	prompt.visible = false
+	_museum_hot_clear()
+	_prompt_hint.text = L.t("toque para abrir") if UI.is_mobile() else L.t("[E] abrir  ·  toque no letreiro para ir até lá")
+
+
+## Aciona o objeto: ação física (telefone, gaveta, máquina, interruptor) e/ou o painel do tipo dele.
+func _museum_hot_clear() -> void:
+	_ret_hot = false
+
+
+func _activate(entry: Dictionary) -> void:
+	var it: Dictionary = entry["item"]
+	var action := str(it.get("action", ""))
+	match action:
+		"switch":
+			var on: bool = _museum.toggle_lights()
+			var tog = it.get("toggle")
+			if tog and is_instance_valid(tog):
+				(tog as Node3D).position.y = 0.02 if on else -0.02
+			_museum.mark_seen(entry)
+			return
+		"phone":
+			if entry.has("ring"):
+				entry["ring"]["on"] = false
+		"drawer":
+			var dr = it.get("drawer")
+			if dr and is_instance_valid(dr):
+				var tw := create_tween()
+				tw.tween_property(dr, "position:z", 0.6, 0.35).set_trans(Tween.TRANS_BACK)
+	var panel := str(it.get("panel", ""))
+	if panel == "" or panel == "exhibit":
+		_open_exhibit(entry)
+		return
+	_sheet_open = true
+	prompt.visible = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	_museum.mark_seen(entry)
+	var p := Panels.new()
+	p.setup(panel, it, _museum._accent, _museum.project)
+	p.closed.connect(func() -> void:
+		_sheet_open = false
+		var dr2 = it.get("drawer")
+		if dr2 and is_instance_valid(dr2):
+			create_tween().tween_property(dr2, "position:z", 0.24, 0.3)
+		if not UI.is_mobile():
+			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED)
+	add_child(UI.full(p))
 
 
 func _open_exhibit(entry: Dictionary) -> void:
@@ -280,18 +348,27 @@ func _open_exhibit(entry: Dictionary) -> void:
 
 
 func _process(_dt: float) -> void:
+	if reticle:
+		reticle.queue_redraw()
 	if _museum == null or _sheet_open:
+		_ret_hot = not _current.is_empty() and _museum == null
 		return
-	# realce do item mirado e aviso de examinar/sair
+	# realce do item mirado (contorno + retícula) e aviso de ação/sair
 	for e in _museum.items:
 		e["_hot"] = false
 	_exam = _museum.nearest(player.global_position, player.forward())
+	_museum.set_hot(_exam)
+	_ret_hot = not _exam.is_empty()
 	if not _exam.is_empty():
 		_exam["_hot"] = true
-		prompt_label.text = str(_exam["item"].get("title", "")).to_upper()
+		var it: Dictionary = _exam["item"]
+		var verb := L.t(str(it.get("verb", "EXAMINAR")))
+		prompt_label.text = L.tx(it, "title").to_upper()
+		_prompt_hint.text = (L.t("toque para") + " " + verb.to_lower()) if UI.is_mobile() else ("[E] " + verb.to_lower())
 		prompt.visible = true
 	elif _museum.at_exit(player.global_position):
-		prompt_label.text = "SAIR PARA A RUA"
+		prompt_label.text = L.t("SAIR PARA A RUA")
+		_prompt_hint.text = L.t("toque para sair") if UI.is_mobile() else L.t("[E] sair")
 		prompt.visible = true
 	else:
 		prompt.visible = false

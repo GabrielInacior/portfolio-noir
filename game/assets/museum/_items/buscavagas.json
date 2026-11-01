@@ -57,6 +57,18 @@
    "title": "Roda na sua máquina",
    "text": "Tudo local e de graça. A chave da OpenAI é opcional: sem ela o ranking funciona por completo com o modelo local.",
    "tag": "IA local"
+  },
+  {
+   "kind": "frame",
+   "title": "A ideia",
+   "text": "BuscaVagas cruza o seu curriculo com vagas de desenvolvedor e coloca no topo aquelas em que voce tem chance real: combina com voce, tem poucos candidatos e foi publicada ha pouco.",
+   "tag": ""
+  },
+  {
+   "kind": "frame",
+   "title": "Nota de oportunidade",
+   "text": "Uma nota de match calculada com embeddings locais compara a sua experiencia com cada vaga, sem mandar seus dados para fora.",
+   "tag": ""
   }
  ]
 }

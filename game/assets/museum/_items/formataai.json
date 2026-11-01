@@ -43,6 +43,30 @@
    "title": "Acessibilidade",
    "text": "Pensado para maior faixa etária e rotinas corridas: elimina a barreira de redigir mensagens formais.",
    "tag": "Inclusão"
+  },
+  {
+   "kind": "frame",
+   "title": "O app",
+   "text": "FormataAI transforma uma fala informal em e-mail, mensagem, orcamento ou receita prontos para usar. Foi o meu trabalho de conclusao de curso.",
+   "tag": ""
+  },
+  {
+   "kind": "screen",
+   "title": "Voz vira texto",
+   "text": "Voce grava a voz, o app transcreve com o Whisper e formata com o GPT-4o-mini, entregando um texto estruturado e limpo.",
+   "tag": ""
+  },
+  {
+   "kind": "frame",
+   "title": "Pensado para incluir",
+   "text": "Feito para quem tem menos fluencia digital: em vez de digitar e formatar, a pessoa so fala e recebe o texto pronto.",
+   "tag": ""
+  },
+  {
+   "kind": "frame",
+   "title": "Design de prompt",
+   "text": "O segredo esta no desenho dos prompts e na gestao de contexto, para a saida sair sempre no formato certo.",
+   "tag": ""
   }
  ]
 }

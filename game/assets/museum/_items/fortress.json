@@ -63,6 +63,12 @@
    "title": "No fliperama",
    "text": "Civilizações com arquitetura e tropas próprias, cartas de Caos para quem gosta de risco e a Oficina do Estandarte, onde você desenha o brasão pixel a pixel.",
    "tag": "Conteúdo"
+  },
+  {
+   "kind": "frame",
+   "title": "O jogo",
+   "text": "Fortress Chaos e um roguelite 3D de construir fortaleza e defender de ondas de inimigos. Voce ergue muralhas, posiciona torres e sobrevive.",
+   "tag": ""
   }
  ]
 }

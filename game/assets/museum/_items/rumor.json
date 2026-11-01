@@ -57,6 +57,18 @@
    "title": "Casos à mão",
    "text": "Cada caso foi escrito à mão, sem IA gerando história, e verificado por scripts para não ter furo: toda pista existe e todo objetivo pode ser provado.",
    "tag": "Design de jogo"
+  },
+  {
+   "kind": "frame",
+   "title": "O caso",
+   "text": "RUMOR e um jogo de detetive multiplayer feito para a sala de aula. A turma se divide em equipes e cada aluno investiga pelo proprio celular.",
+   "tag": ""
+  },
+  {
+   "kind": "screen",
+   "title": "A escola em 3D",
+   "text": "Doze comodos da escola em 3D para explorar. O aluno arrasta para olhar em volta e toca no que brilha para achar pistas.",
+   "tag": ""
   }
  ]
 }

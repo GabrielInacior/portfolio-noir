@@ -176,7 +176,32 @@ SKILLS_LAB = {
 }
 
 
+KIND_BY_TIPO = {"quadro": "frame", "telao": "screen", "tela": "screen", "placa_stack": "plaque", "placa": "plaque",
+                "relatorio": "frame", "objeto": "frame", "poster": "poster"}
+MODEL_BY_ID = {"airmessage": "telefone", "ankiana": "livro", "sitembm": "monitor_cv", "labia": "microfone", "orbix": "servidor"}
+
+
+def enrich(pid, items):
+    """Lojas com poucas peças recebem as peças do roteiro (data/museum/<id>.json); as que não têm
+    imagem viram cartões de texto na própria tela/quadro (o museu desenha o texto)."""
+    path = os.path.join(ROOT, "data", "museum", pid + ".json")
+    if not os.path.exists(path):
+        return items
+    have = {i["title"].lower() for i in items}
+    out = list(items)
+    for pc in json.load(open(path, encoding="utf8")).get("pieces", []):
+        t = pc.get("titulo", "")
+        if not t or t.lower() in have or len(out) >= 9:
+            continue
+        kind = KIND_BY_TIPO.get(pc.get("tipo", "quadro"), "frame")
+        out.append({"kind": kind, "title": t, "text": pc.get("texto", ""), "tag": pc.get("tag", "")})
+        have.add(t.lower())
+    return out
+
+
 def main():
+    for pid in list(ITEMS.keys()):
+        ITEMS[pid] = enrich(pid, ITEMS[pid])
     for pid, items in ITEMS.items():
         theme = THEMES.get(pid, {"room": "escritorio", "floor": "carpete", "wall": "concreto",
                                  "warm": "#ffd36a", "cool": "#4e9bff", "accent": "#ffc83d", "sub": ""})

@@ -40,7 +40,7 @@ func box(bg: Color, border := Color.TRANSPARENT, bw := 0, rad := 12, pad := 0) -
 
 func label(text: String, size := 24, col := PAPER, kind := "body") -> Label:
 	var l := Label.new()
-	l.text = text
+	l.text = L.t(text)
 	l.add_theme_font_override("font", font(kind))
 	l.add_theme_font_size_override("font_size", size)
 	l.add_theme_color_override("font_color", col)
@@ -67,7 +67,7 @@ func hbox(sep := 12) -> HBoxContainer:
 
 func button(text: String, neon := AMBER, h := 68) -> Button:
 	var b := Button.new()
-	b.text = text
+	b.text = L.t(text)
 	b.custom_minimum_size.y = h
 	b.add_theme_font_override("font", font("title"))
 	b.add_theme_font_size_override("font_size", 30)

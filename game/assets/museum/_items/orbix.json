@@ -36,6 +36,36 @@
    "title": "Monorepo",
    "text": "NestJS e Flutter no mesmo repositório, com Docker. Plataforma SaaS pensada para crescer com muitos clientes.",
    "tag": "Infra"
+  },
+  {
+   "kind": "frame",
+   "title": "A plataforma",
+   "text": "OrbixHub e um SaaS multi-tenant onde varios produtos, como um CRM e uma gestao de oficinas, nascem sobre uma base comum.",
+   "tag": ""
+  },
+  {
+   "kind": "frame",
+   "title": "Isolamento por tenant",
+   "text": "Cada cliente fica isolado no proprio espaco usando Row-Level Security do Postgres, entao os dados de um nunca alcancam o do outro.",
+   "tag": ""
+  },
+  {
+   "kind": "frame",
+   "title": "API central",
+   "text": "Uma orbix-api cuida de autenticacao, OTP, tokens e financas e serve todos os produtos, evitando reescrever o mesmo nucleo.",
+   "tag": ""
+  },
+  {
+   "kind": "frame",
+   "title": "Desafio tecnico",
+   "text": "Servir produtos diferentes a partir de um nucleo so, mantendo seguranca, financas e isolamento de dados por cliente.",
+   "tag": ""
+  },
+  {
+   "kind": "plaque",
+   "title": "Como foi feito",
+   "text": "NestJS e Fastify no back, Flutter no mobile, PostgreSQL com RLS e Docker.",
+   "tag": ""
   }
  ]
 }

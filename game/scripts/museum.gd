@@ -1,22 +1,25 @@
 extends Node3D
-## Loja-museu de um projeto: ao entrar pela porta, o jogador troca da rua para um interior fechado
-## e temático (escritório de detetive, fliperama, sala de segurança, bar, estúdio, laboratório),
-## cheio de objetos 3D examináveis. Cada objeto (quadro com print, telão, monitor, prop, placa,
-## fliperama) acende ao ser mirado e abre um MODAL noir com título, texto da história, imagem,
-## stack e link. É aqui que a história de cada projeto é contada. Os NPCs são extra.
+## Loja-museu de um projeto: ao entrar pela porta, o jogador troca da rua para um interior fechado,
+## pequeno e LOTADO, com identidade própria (escritório de detetive, sala de servidores, fliperama,
+## bar, estúdio, startup, laboratório de skills, prédio da carreira). Cada objeto examinável acende
+## com contorno ao ser mirado e abre um painel do tipo certo (quadro, inspeção 3D, terminal,
+## galeria, documento, fliperama jogável, skills, linha do tempo). Os NPCs são extra.
 ##
-## Leve: uma sala de caixas, poucas luzes (emissão para o neon), nada da rua renderizado dentro.
+## Leve: uma sala de caixas, poucas luzes (emissão para neon e telas), nada da rua renderizado dentro.
 
-signal left                       # jogador saiu pela porta (volta para a rua)
+signal left
 signal examined(count: int, total: int)
+signal action(entry: Dictionary)
 
 const PolyFace := preload("res://scripts/museum_objects.gd")
+const Dress := preload("res://scripts/museum_dress.gd")
+const HOVER := preload("res://shaders/hover_outline.gdshader")
 
 var project: Dictionary = {}
-var data: Dictionary = {}         # {theme, items}
+var data: Dictionary = {}
 var is_lab := false
 
-var items: Array = []             # [{node, item, light, seen}]
+var items: Array = []             # [{node, item, light, seen, pos}]
 var _accent := Color("#ffc83d")
 var _warm := Color("#ffb23d")
 var _cool := Color("#4e9bff")
@@ -24,7 +27,16 @@ var _t := 0.0
 var _seen := 0
 var _exit_pos := Vector3.ZERO
 var _tex_cache := {}
-var _spin: Array = []             # objetos em pedestal girando devagar
+var _spin: Array = []
+var _props_cache := {}
+var _room_lights: Array = []
+var _hover_mat: ShaderMaterial
+var _hot_node: Node = null
+var tickers: Array = []           # nós com _process próprio (telefone tocando etc.)
+
+var W := 7.2
+var D := 9.0
+const H := 3.4
 
 
 func setup(p: Dictionary, d: Dictionary, lab := false) -> void:
@@ -33,46 +45,64 @@ func setup(p: Dictionary, d: Dictionary, lab := false) -> void:
 	is_lab = lab
 
 
+func pid() -> String:
+	if is_lab:
+		return "_lab"
+	return str(project.get("id", ""))
+
+
 func _ready() -> void:
 	var theme: Dictionary = data.get("theme", {})
 	_accent = Color(str(theme.get("accent", "#ffc83d")))
 	_warm = Color(str(theme.get("warm", "#ffb23d")))
-	# sala de segurança: luz de trabalho branco-azulada; o verde fica só no neon e nas telas
-	if str(project.get("id", "")) == "inaciocyber":
-		_warm = Color("#cfe0ff")
 	_cool = Color(str(theme.get("cool", "#4e9bff")))
-	_build_env()
-	_build_room(str(theme.get("room", "escritorio")), str(theme.get("floor", "carpete")), str(theme.get("wall", "concreto")))
-	_place_items()
+	if pid() == "_carreira":
+		D = 13.0
+	_hover_mat = ShaderMaterial.new()
+	_hover_mat.shader = HOVER
+	_hover_mat.set_shader_parameter("color", _accent)
+	var style := Dress.style_of(pid(), str(theme.get("room", "escritorio")))
+	var look: Dictionary = Dress.LOOKS.get(style, Dress.LOOKS["startup"])
+	if look.has("warm"):
+		_warm = Color(look["warm"])
+	_build_env(look)
+	_build_shell(look)
+	_place_items(style)
+	Dress.dress(self, style)
+	examined.emit(0, items.size())
 
 
-# ───────────────────────────────── ambiente fechado (sem céu; luz de interior)
-func _build_env() -> void:
+# ───────────────────────────────── ambiente fechado
+func _build_env(look: Dictionary) -> void:
 	var we := WorldEnvironment.new()
 	var e := Environment.new()
 	e.background_mode = Environment.BG_COLOR
 	e.background_color = Color("#05060c")
 	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	e.ambient_light_color = Color("#3a3850").lerp(_cool, 0.2)
-	e.ambient_light_energy = 0.9
+	e.ambient_light_color = Color(look.get("ambient", "#3a3850"))
+	e.ambient_light_energy = float(look.get("ambient_e", 1.45))
 	e.reflected_light_source = Environment.REFLECTION_SOURCE_DISABLED
 	e.fog_enabled = true
 	e.fog_mode = Environment.FOG_MODE_DEPTH
-	e.fog_light_color = Color("#1c1a28").lerp(_cool, 0.15)
-	e.fog_depth_begin = 6.0
-	e.fog_depth_end = 26.0
-	e.fog_density = 1.0
+	e.fog_light_color = Color(look.get("fog", "#1c1a28"))
+	e.fog_depth_begin = 4.0
+	e.fog_depth_end = 20.0
+	e.fog_density = 0.8
 	e.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	e.tonemap_exposure = 1.2
+	e.tonemap_exposure = float(look.get("exposure", 1.25))
 	e.adjustment_enabled = true
-	e.adjustment_saturation = 1.14
-	e.adjustment_contrast = 1.08
+	e.adjustment_saturation = 1.18
+	e.adjustment_contrast = 1.1
+	if not UI.is_mobile():
+		e.glow_enabled = true
+		e.glow_intensity = 0.7
+		e.glow_bloom = 0.08
+		e.glow_hdr_threshold = 1.1
 	we.environment = e
 	add_child(we)
 
 
-func _painted(tex: String, tint: Color, scale := 0.5, rough := 0.95) -> ShaderMaterial:
-	# material pincelado (toon.gdshader com textura triplanar, como a cidade)
+func painted(tex: String, tint: Color, scale := 0.5) -> ShaderMaterial:
 	var m := ShaderMaterial.new()
 	m.shader = load("res://shaders/toon.gdshader")
 	m.set_shader_parameter("albedo", tint)
@@ -86,10 +116,10 @@ func _painted(tex: String, tint: Color, scale := 0.5, rough := 0.95) -> ShaderMa
 	return m
 
 
-func _flat(col: Color, emit := 0.0) -> StandardMaterial3D:
+func flat(col: Color, emit := 0.0) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.albedo_color = col
-	m.roughness = 0.95
+	m.roughness = 0.9
 	if emit > 0.0:
 		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		m.emission_enabled = true
@@ -98,29 +128,21 @@ func _flat(col: Color, emit := 0.0) -> StandardMaterial3D:
 	return m
 
 
-func _box(pos: Vector3, size: Vector3, mat: Material, parent: Node = null) -> MeshInstance3D:
+func box(pos: Vector3, size: Vector3, mat: Material, parent: Node = null, rot := Vector3.ZERO) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
 	var bm := BoxMesh.new()
 	bm.size = size
 	mi.mesh = bm
 	mi.material_override = mat
 	mi.position = pos
+	mi.rotation = rot
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	(parent if parent else self).add_child(mi)
 	return mi
 
 
-# ───────────────────────────────── a sala: 4 paredes, piso, teto, porta de saída
-const ROOM_W := 10.0
-const ROOM_D := 12.0
-const ROOM_H := 3.6
-
-
-var _props_cache := {}
-
-
-## Prop 3D da Meshy (game/assets/props) colocado na sala; frente do modelo = +z.
-func _p(name: String, pos: Vector3, yaw := 0.0, scl := 1.0) -> Node3D:
+## Prop 3D (Meshy ou kit Blender) colocado na sala; frente do modelo = +z.
+func prop(name: String, pos: Vector3, yaw := 0.0, scl := 1.0, parent: Node = null) -> Node3D:
 	var path := "res://assets/props/%s.glb" % name
 	if not ResourceLoader.exists(path):
 		return null
@@ -130,374 +152,168 @@ func _p(name: String, pos: Vector3, yaw := 0.0, scl := 1.0) -> Node3D:
 	n.position = pos
 	n.rotation.y = yaw
 	n.scale = Vector3.ONE * scl
-	add_child(n)
+	(parent if parent else self).add_child(n)
 	return n
 
 
-func _build_room(room: String, floor_tex: String, wall_tex: String) -> void:
-	var wall_tint := Color("#6a6680").lerp(_cool, 0.08)
-	var floor_mat := _painted(floor_tex, Color("#9a8a80") if floor_tex == "madeira" else Color("#8a8498"), 0.5, 0.9)
-	var wall_mat := _painted(wall_tex, wall_tint, 1.1)
-	var ceil_mat := _painted("concreto", Color("#3a3648"), 0.5)
-	var base_mat := _flat(Color("#1c1622"))
-	_box(Vector3(0, -0.05, 0), Vector3(ROOM_W, 0.1, ROOM_D), floor_mat)
-	_box(Vector3(0, ROOM_H, 0), Vector3(ROOM_W, 0.1, ROOM_D), ceil_mat)
-	_box(Vector3(0, ROOM_H / 2, -ROOM_D / 2), Vector3(ROOM_W, ROOM_H, 0.2), wall_mat)
-	_box(Vector3(-ROOM_W / 2, ROOM_H / 2, 0), Vector3(0.2, ROOM_H, ROOM_D), wall_mat)
-	_box(Vector3(ROOM_W / 2, ROOM_H / 2, 0), Vector3(0.2, ROOM_H, ROOM_D), wall_mat)
-	var fz := ROOM_D / 2
-	_box(Vector3(-3.1, ROOM_H / 2, fz), Vector3(ROOM_W - 6.2, ROOM_H, 0.2), wall_mat)
-	_box(Vector3(3.1, ROOM_H / 2, fz), Vector3(ROOM_W - 6.2, ROOM_H, 0.2), wall_mat)
-	_box(Vector3(0, ROOM_H - 0.4, fz), Vector3(1.8, 0.8, 0.2), wall_mat)
-	# rodapé e roda-teto (acabamento de sala de verdade)
-	_box(Vector3(0, 0.09, -ROOM_D / 2 + 0.12), Vector3(ROOM_W, 0.18, 0.06), base_mat)
-	_box(Vector3(0, ROOM_H - 0.08, -ROOM_D / 2 + 0.12), Vector3(ROOM_W, 0.12, 0.1), base_mat)
-	for x in [-ROOM_W / 2 + 0.12, ROOM_W / 2 - 0.12]:
-		_box(Vector3(x, 0.09, 0), Vector3(0.06, 0.18, ROOM_D), base_mat)
-		_box(Vector3(x, ROOM_H - 0.08, 0), Vector3(0.1, 0.12, ROOM_D), base_mat)
-	if room in ["escritorio", "bar"]:
-		var wood := _painted("painel_madeira", Color("#7a5a44"), 0.8)
-		_box(Vector3(0, 0.6, -ROOM_D / 2 + 0.13), Vector3(ROOM_W - 0.2, 1.2, 0.05), wood)
-		for x in [-ROOM_W / 2 + 0.13, ROOM_W / 2 - 0.13]:
-			_box(Vector3(x, 0.6, 0), Vector3(0.05, 1.2, ROOM_D - 0.2), wood)
-		_box(Vector3(0, 1.22, -ROOM_D / 2 + 0.16), Vector3(ROOM_W - 0.2, 0.06, 0.1), base_mat)
-		for x in [-ROOM_W / 2 + 0.16, ROOM_W / 2 - 0.16]:
-			_box(Vector3(x, 1.22, 0), Vector3(0.1, 0.06, ROOM_D - 0.2), base_mat)
+func light(pos: Vector3, col: Color, energy: float, rng: float) -> OmniLight3D:
+	var l := OmniLight3D.new()
+	l.position = pos
+	l.light_color = col
+	l.light_energy = energy
+	l.omni_range = rng
+	add_child(l)
+	_room_lights.append(l)
+	return l
+
+
+# ───────────────────────────────── casca da sala: piso, paredes, teto, rodapé, porta, janela
+func _build_shell(look: Dictionary) -> void:
+	var wall_mat := painted(str(look["wall"]), Color(look["wall_tint"]), float(look.get("wall_scale", 1.0)))
+	var floor_mat := painted(str(look["floor"]), Color(look["floor_tint"]), float(look.get("floor_scale", 0.6)))
+	var ceil_mat := painted("concreto", Color(look.get("ceil", "#2a2632")), 0.5)
+	var base_mat := flat(Color(look.get("trim", "#16121a")))
+	box(Vector3(0, -0.05, 0), Vector3(W, 0.1, D), floor_mat)
+	box(Vector3(0, H, 0), Vector3(W, 0.1, D), ceil_mat)
+	box(Vector3(0, H / 2, -D / 2), Vector3(W, H, 0.2), wall_mat)
+	box(Vector3(-W / 2, H / 2, 0), Vector3(0.2, H, D), wall_mat)
+	box(Vector3(W / 2, H / 2, 0), Vector3(0.2, H, D), wall_mat)
+	var fz := D / 2
+	var side := (W - 1.8) / 2
+	box(Vector3(-W / 2 + side / 2, H / 2, fz), Vector3(side, H, 0.2), wall_mat)
+	box(Vector3(W / 2 - side / 2, H / 2, fz), Vector3(side, H, 0.2), wall_mat)
+	box(Vector3(0, H - 0.35, fz), Vector3(1.8, 0.7, 0.2), wall_mat)
+	# rodapé e roda-teto
+	box(Vector3(0, 0.08, -D / 2 + 0.12), Vector3(W, 0.16, 0.05), base_mat)
+	box(Vector3(0, H - 0.07, -D / 2 + 0.12), Vector3(W, 0.12, 0.08), base_mat)
+	for x in [-W / 2 + 0.12, W / 2 - 0.12]:
+		box(Vector3(x, 0.08, 0), Vector3(0.05, 0.16, D), base_mat)
+		box(Vector3(x, H - 0.07, 0), Vector3(0.08, 0.12, D), base_mat)
+	if look.get("wainscot", false):
+		var wood := painted("painel_madeira", Color(look.get("wainscot_tint", "#5a3e2c")), 0.8)
+		box(Vector3(0, 0.55, -D / 2 + 0.13), Vector3(W - 0.2, 1.1, 0.04), wood)
+		for x in [-W / 2 + 0.13, W / 2 - 0.13]:
+			box(Vector3(x, 0.55, 0), Vector3(0.04, 1.1, D - 0.2), wood)
+		box(Vector3(0, 1.12, -D / 2 + 0.15), Vector3(W - 0.2, 0.05, 0.08), base_mat)
+		for x in [-W / 2 + 0.15, W / 2 - 0.15]:
+			box(Vector3(x, 1.12, 0), Vector3(0.08, 0.05, D - 0.2), base_mat)
 	# porta de saída com batente de neon e SAIR
-	for ox in [-0.95, 0.95]:
-		_box(Vector3(ox, 1.5, fz - 0.02), Vector3(0.08, 3.0, 0.08), _flat(_accent, 3.0))
-	_box(Vector3(0, 3.0, fz - 0.02), Vector3(1.9, 0.08, 0.08), _flat(_accent, 3.0))
+	for ox in [-0.92, 0.92]:
+		box(Vector3(ox, 1.4, fz - 0.03), Vector3(0.07, 2.8, 0.07), flat(_accent, 3.0))
+	box(Vector3(0, 2.8, fz - 0.03), Vector3(1.9, 0.07, 0.07), flat(_accent, 3.0))
 	var exit := Label3D.new()
-	exit.text = "SAIR"
+	exit.text = L.t("SAIR")
 	exit.font = UI.font("title")
-	exit.font_size = 70
-	exit.pixel_size = 0.004
-	exit.modulate = _accent
-	exit.position = Vector3(0, 2.7, fz - 0.06)
+	exit.font_size = 64
+	exit.pixel_size = 0.0038
+	exit.modulate = _accent * 1.6
+	exit.position = Vector3(0, 3.05, fz - 0.08)
 	exit.rotation.y = PI
 	exit.shaded = false
 	exit.double_sided = true
 	add_child(exit)
-	_exit_pos = Vector3(0, 1.6, fz - 1.2)
-	# janela para a rua (à direita da porta): noite e o letreiro da loja
-	_street_window(Vector3(3.0, 1.75, fz - 0.12))
-	# tapete no centro
-	var rug := MeshInstance3D.new()
-	var rq := QuadMesh.new()
-	rq.size = Vector2(4.2, 6.0)
-	rug.mesh = rq
-	var rm := StandardMaterial3D.new()
-	rm.albedo_texture = load("res://assets/tex/carpete.png")
-	rm.albedo_color = Color("#4a3038").lerp(_accent, 0.12)
-	rm.uv1_scale = Vector3(2, 3, 1)
-	rug.material_override = rm
-	rug.rotation.x = -PI / 2
-	rug.position = Vector3(0, 0.012, 0.6)
-	add_child(rug)
-	# luminárias de teto (Meshy) com luz quente; luz fria ao fundo
-	for lz in [-2.6, 2.2]:
-		_p("luminaria_teto", Vector3(0, ROOM_H - 0.55, lz))
-		var l := OmniLight3D.new()
-		l.position = Vector3(0, ROOM_H - 0.8, lz)
-		l.light_color = _warm
-		l.light_energy = 2.4
-		l.omni_range = 8.0
-		add_child(l)
-		var glow := MeshInstance3D.new()
-		var sm := SphereMesh.new()
-		sm.radius = 0.14
-		sm.height = 0.2
-		glow.mesh = sm
-		glow.material_override = _flat(_warm.lightened(0.3), 4.0)
-		glow.position = Vector3(0, ROOM_H - 0.78, lz)
-		add_child(glow)
-	var fill := OmniLight3D.new()
-	fill.position = Vector3(0, 2.0, -ROOM_D / 2 + 1.0)
-	fill.light_color = _cool
-	fill.light_energy = 1.6
-	fill.omni_range = 9.0
-	add_child(fill)
-	_dress_room(room)
-	_clutter()
-	_story_dressing(room)
-	_dust()
+	_exit_pos = Vector3(0, 1.6, fz - 1.0)
+	# luz principal da sala (cor do tema) e preenchimento frio ao fundo
+	for lz in [-D / 4, D / 4]:
+		light(Vector3(0, H - 0.5, lz), _warm, float(look.get("light_e", 2.2)), 6.5)
+	light(Vector3(0, 1.8, -D / 2 + 0.9), _cool, 1.3, 6.0)
+	# lavagem das paredes laterais (luz baixa e larga para a sala não afundar no preto)
+	for sx in [-1.0, 1.0]:
+		light(Vector3(sx * (W / 2 - 1.1), 2.4, 0), _warm.lerp(_cool, 0.3), 1.0, 5.0)
 
 
-func _street_window(pos: Vector3) -> void:
-	var frame := _flat(Color("#141018"))
-	_box(pos, Vector3(2.2, 1.7, 0.1), frame)
-	var q := MeshInstance3D.new()
-	var qm := QuadMesh.new()
-	qm.size = Vector2(2.0, 1.5)
-	q.mesh = qm
-	var m := StandardMaterial3D.new()
-	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	m.albedo_texture = load("res://assets/sky_night.png")
-	m.uv1_scale = Vector3(0.25, 0.5, 1)
-	m.uv1_offset = Vector3(0.3, 0.35, 0)
-	q.material_override = m
-	q.position = pos + Vector3(0, 0, -0.06)
-	q.rotation.y = PI
-	add_child(q)
-	for k in 3:
-		_box(pos + Vector3(-0.66 + k * 0.66, 0, -0.07), Vector3(0.04, 1.5, 0.03), frame)
-	var l := OmniLight3D.new()
-	l.position = pos + Vector3(0, 0, -1.2)
-	l.light_color = _accent
-	l.light_energy = 1.4
-	l.omni_range = 5.0
-	add_child(l)
-
-
-func _dress_room(room: String) -> void:
-	var id := str(project.get("id", ""))
-	match room:
-		"escritorio":
-			if id == "rumor":
-				# escritório de detetive: mesa de frente para a porta, máquina de escrever, abajur, telefone
-				_p("mesa_detetive", Vector3(0, 0, -2.6), 0.0, 1.15)
-				_p("maquina_escrever", Vector3(0.25, 0.92, -2.55), 0.15)
-				_p("abajur_banqueiro", Vector3(-0.75, 0.92, -2.85), 0.4)
-				_p("telefone_antigo", Vector3(0.9, 0.92, -2.85), -0.4)
-				_p("pilha_papeis", Vector3(-0.35, 0.92, -2.3), 0.3)
-				_p("caneca", Vector3(0.65, 0.92, -2.25))
-				_p("cadeira_escritorio", Vector3(0, 0, -3.6), 0.0)
-				_p("quadro_cortica", Vector3(-2.6, 1.0, ROOM_D / 2 - 0.25), PI)
-				_desk_lamp_light(Vector3(-0.75, 1.3, -2.85))
-			else:
-				for x in [-1.6, 1.6]:
-					_p("mesa_escritorio", Vector3(x, 0, -2.6), 0.0, 1.2)
-					_p("monitor", Vector3(x, 0.9, -2.75), 0.0)
-					_p("cadeira_escritorio", Vector3(x, 0, -3.6), 0.0)
-					_p("pilha_papeis", Vector3(x + 0.5, 0.9, -2.4), 0.6)
-			_p("arquivo_aco", Vector3(-4.3, 0, -5.3), PI / 2)
-			_p("estante_livros", Vector3(4.1, 0, -5.4), 0.0)
-			_p("cabideiro", Vector3(-4.2, 0, 5.2), 0.0)
-			_p("sofa_couro", Vector3(3.4, 0, 4.6), PI)
-			_p("planta_vaso", Vector3(4.4, 0, 1.7))
-		"fliperama":
-			_p("fliperama", Vector3(-4.2, 0, -5.0), PI / 4)
-			_p("fliperama", Vector3(4.2, 0, -5.0), -PI / 4)
-			_p("fliperama", Vector3(-4.2, 0, 5.0), 3 * PI / 4)
-			_p("mesa_cartas", Vector3(0, 0, -1.6), 0.0, 1.1)
-			_p("miniatura_fortaleza", Vector3(0, 0.84, -1.7), 0.4, 1.1)
-			_p("banqueta_bar", Vector3(-1.1, 0, -1.6))
-			_p("banqueta_bar", Vector3(1.1, 0, -1.6))
-			_p("trofeu", Vector3(3.9, 0, 4.7), 0.0, 2.0)
-			_p("estante_livros", Vector3(4.3, 0, 1.7), -PI / 2)
-		"lab":
-			_p("mesa_monitores", Vector3(0, 0, -3.0), 0.0, 1.2)
-			_p("cadeira_gamer", Vector3(0, 0, -1.8), PI)
-			_p("rack_servidor", Vector3(-4.2, 0, -5.2), 0.0)
-			_p("rack_servidor", Vector3(-3.4, 0, -5.2), 0.0)
-			_p("servidor_ia", Vector3(4.2, 0, -5.2), 0.0)
-			_p("bancada_lab", Vector3(3.6, 0, 4.6), PI)
-			_p("roteador", Vector3(3.3, 1.0, 4.5), PI)
-			_p("planta_vaso", Vector3(-4.3, 0, 4.8))
-			_p("estante_livros", Vector3(-4.3, 0, 1.7), PI / 2)
-			if id == "inaciocyber":
-				_theme_wall()
-		"bar":
-			_p("balcao_bar", Vector3(0, 0, -4.2), 0.0, 1.6)
-			_p("garrafas", Vector3(-0.8, 1.1, -4.3))
-			_p("garrafas", Vector3(0.9, 1.1, -4.3), 1.0)
-			for x in [-1.5, 0.0, 1.5]:
-				_p("banqueta_bar", Vector3(x, 0, -3.1))
-			_p("estante_livros", Vector3(4.2, 0, -5.4), 0.0)
-			_p("microfone_estudio", Vector3(-3.8, 0, 4.4), 3 * PI / 4)
-			_p("sofa_couro", Vector3(3.4, 0, 4.6), PI)
-		"estudio":
-			_p("mesa_escritorio", Vector3(0, 0, -3.0), 0.0, 1.3)
-			_p("mesa_som", Vector3(0, 0.98, -3.0), 0.0, 1.0)
-			_p("cadeira_escritorio", Vector3(0, 0, -2.0), PI)
-			_p("microfone_estudio", Vector3(-1.9, 0, -1.4), PI / 4)
-			_p("monitor", Vector3(1.0, 0.98, -3.2), -0.3)
-			_p("estante_livros", Vector3(4.1, 0, -5.4))
-			_p("sofa_couro", Vector3(3.4, 0, 4.6), PI)
-			_p("planta_vaso", Vector3(-4.3, 0, 4.8))
-			for i in 16:
-				_box(Vector3(-ROOM_W / 2 + 0.16, 2.6 + (i % 2) * 0.42, -4.6 + (i / 2) * 0.5), Vector3(0.1, 0.38, 0.4), _flat(Color("#241a2a")))
-
-
-## Objetos de cena com história (kit Blender sd_*): mesa bagunçada do detetive, copos no balcão do
-## bar, cabos do hacker, papéis amassados, relógio na parede, post-its, guarda-chuva pingando.
-func _story_dressing(room: String) -> void:
-	var id := str(project.get("id", ""))
-	_p("sd_relogio", Vector3(-1.8, 2.85, -ROOM_D / 2 + 0.14))
-	_p("sd_papeis", Vector3(0.6, 0.0, -1.3), 0.7)
-	_p("sd_guarda_chuva", Vector3(-3.6, 0.0, 5.55), 0.3)
-	match room:
-		"escritorio":
-			_p("sd_pastas", Vector3(-1.05, 0.92, -2.35), 0.3)
-			_p("sd_cinzeiro", Vector3(0.95, 0.92, -2.35))
-			_p("sd_copos", Vector3(-4.2, 1.35, -5.2))
-			_p("sd_caixa_arquivo", Vector3(-3.6, 0.0, -5.4), 0.2)
-			_p("sd_caixa_arquivo", Vector3(-3.55, 0.31, -5.38), -0.15)
-			_p("sd_papeis", Vector3(-1.4, 0.0, -3.4), 2.0)
-			_p("sd_postits", Vector3(-2.6, 1.4, ROOM_D / 2 - 0.3), PI)
-			if id == "rumor":
-				_p("sd_pizza", Vector3(3.4, 0.45, 4.3), 0.4)
-		"bar":
-			_p("sd_copos", Vector3(-0.3, 1.12, -4.1), 0.5)
-			_p("sd_garrafas_vazias", Vector3(1.6, 1.12, -4.15))
-			_p("sd_cinzeiro", Vector3(0.4, 1.12, -4.05))
-			_p("sd_latas", Vector3(2.5, 0.0, -2.6))
-			_p("sd_garrafas_vazias", Vector3(-2.8, 0.0, -2.9), 2.0)
-		"lab":
-			_p("sd_cabos", Vector3(-0.7, 0.0, -2.0), 0.4)
-			_p("sd_cabos", Vector3(-3.6, 0.0, -4.4), 1.4)
-			_p("sd_latas", Vector3(0.8, 0.0, -1.6))
-			_p("sd_pizza", Vector3(1.6, 0.0, -1.2), 0.9)
-			_p("sd_postits", Vector3(2.9, 1.5, -ROOM_D / 2 + 0.16))
-		"fliperama":
-			_p("sd_latas", Vector3(-3.5, 0.0, -4.2))
-			_p("sd_copos", Vector3(0.5, 0.85, -1.3))
-			_p("sd_pizza", Vector3(-0.5, 0.85, -1.5), 0.3)
-			_p("sd_papeis", Vector3(3.2, 0.0, -3.0))
-		"estudio":
-			_p("sd_cabos", Vector3(0.4, 0.0, -2.3), 0.9)
-			_p("sd_copos", Vector3(-0.6, 0.98, -2.8))
-			_p("sd_postits", Vector3(-2.9, 1.6, -ROOM_D / 2 + 0.16))
-
-
-func _clutter() -> void:
-	_p("caixas_papelao", Vector3(4.2, 0, -3.9), 0.4, 0.8)
-	_p("pilha_livros", Vector3(-4.3, 0, -3.95), 0.5)
-	_p("planta_vaso", Vector3(-4.4, 0, -0.3 + 1.5), 0.0, 0.9)
-	_p("caneca", Vector3(4.15, 0.0, 4.0))
-
-
-func _desk_lamp_light(pos: Vector3) -> void:
-	var l := OmniLight3D.new()
-	l.position = pos
-	l.light_color = Color("#ffcf7a")
-	l.light_energy = 1.8
-	l.omni_range = 3.5
-	add_child(l)
-
-
-## InacioCyber: seis monitores acima da mesa, cada um com um tema da interface (vermelho, verde,
-## azul, roxo, amarelo e o seletor de temas).
-var _theme_screens: Array = []
-
-
-func _theme_wall() -> void:
-	var names := ["tema_vermelho", "tema_verde", "tema_azul", "tema_roxo", "tema_amarelo", "temas_modal"]
-	for i in names.size():
-		var path := "res://assets/museum/inaciocyber/%s.jpg" % names[i]
-		if not ResourceLoader.exists(path):
-			continue
-		var col := i % 3
-		var row := i / 3
-		var pos := Vector3(-1.5 + col * 1.5, 2.25 + (1 - row) * 0.72, -ROOM_D / 2 + 0.3)
-		_box(pos + Vector3(0, 0, -0.04), Vector3(1.42, 0.8, 0.06), _flat(Color("#0a0c12")))
-		var q := MeshInstance3D.new()
-		var qm := QuadMesh.new()
-		qm.size = Vector2(1.36, 0.6)
-		q.mesh = qm
-		var m := StandardMaterial3D.new()
-		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		m.albedo_texture = load(path)
-		m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-		q.material_override = m
-		q.position = pos
-		add_child(q)
-		_theme_screens.append(m)
-
-
-func _dust() -> void:
-	var p := CPUParticles3D.new()
-	p.amount = 28
-	p.lifetime = 7.0
-	p.local_coords = false
-	p.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
-	p.emission_box_extents = Vector3(ROOM_W / 2, ROOM_H / 2, ROOM_D / 2)
-	p.position = Vector3(0, ROOM_H / 2, 0)
-	p.gravity = Vector3.ZERO
-	p.initial_velocity_min = 0.05
-	p.initial_velocity_max = 0.15
-	p.scale_amount_min = 0.02
-	p.scale_amount_max = 0.05
-	var dm := StandardMaterial3D.new()
-	dm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	dm.albedo_color = Color(_warm, 0.14)
-	dm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	p.material_override = dm
-	add_child(p)
-
-
-# ───────────────────────────────── itens examináveis nas paredes e na sala
-func _place_items() -> void:
+# ───────────────────────────────── itens examináveis nas paredes e no centro
+func _place_items(style: String) -> void:
 	var list: Array = data.get("items", [])
 	var wall_items := []
 	var floor_items := []
 	for it in list:
 		if str(it.get("kind", "")) == "prop":
 			floor_items.append(it)
+		elif str(it.get("kind", "")) == "arcade":
+			continue   # o fliperama jogável substitui o item de parede
 		else:
 			wall_items.append(it)
-	var slots := _wall_slots(wall_items.size())
-	var all := []
-	for i in wall_items.size():
-		all.append([wall_items[i], slots[i]])
-	# objetos 3D em pedestais nas bordas do tapete
-	var spots := [Vector3(-2.3, 0, 0.9), Vector3(2.3, 0, 0.9), Vector3(-2.3, 0, 3.1), Vector3(2.3, 0, 3.1)]
+	if style == "lab":
+		wall_items = []
+	var slots := _wall_slots(style)
+	var n := mini(wall_items.size(), slots.size())
+	for i in n:
+		var node := _make_item(wall_items[i], slots[i])
+		add_entry(node, wall_items[i], slots[i]["pos"] + slots[i]["normal"] * 0.9)
+	# o que sobrar vira a galeria (um quadro que abre todas as imagens restantes)
+	var rest := wall_items.slice(n)
+	if not rest.is_empty():
+		var g := {"kind": "frame", "title": L.t("Mais da história"), "img": str(rest[0].get("img", "")), "panel": "gallery", "gallery": rest,
+			"text": str(rest[0].get("text", "")), "verb": "VER"}
+		var slot: Dictionary = Dress.extra_slot(self)
+		var node2 := _make_item(g, slot)
+		add_entry(node2, g, slot["pos"] + slot["normal"] * 0.9)
+	# objetos 3D em pedestais (ilha central): até 3
+	var spots := Dress.pedestal_spots(self, style)
 	for i in mini(floor_items.size(), spots.size()):
-		all.append([floor_items[i], {"pos": spots[i], "normal": Vector3(0, 0, 1), "yaw": 0.0, "floor": true}])
-	for pair in all:
-		var it: Dictionary = pair[0]
-		var slot: Dictionary = pair[1]
-		var node := _make_item(it, slot)
-		var light := OmniLight3D.new()
-		light.position = slot["pos"] + slot["normal"] * 0.6 + Vector3(0, 1.0 if slot.get("floor", false) else 0.3, 0)
-		light.light_color = _accent
-		light.light_energy = 0.0
-		light.omni_range = 3.0
-		light.shadow_enabled = false
-		add_child(light)
-		var look_at: Vector3 = slot["pos"] + (Vector3(0, 1.2, 0) if slot.get("floor", false) else slot["normal"] * 0.9)
-		items.append({"node": node, "item": it, "light": light, "seen": false, "pos": look_at})
-	examined.emit(0, items.size())
+		var it: Dictionary = floor_items[i].duplicate()
+		it["panel"] = "inspect"
+		it["verb"] = "INSPECIONAR"
+		var node3 := _make_item(it, {"pos": spots[i], "normal": Vector3(0, 0, 1), "yaw": 0.0, "floor": true})
+		add_entry(node3, it, spots[i] + Vector3(0, 1.1, 0))
 
 
-## Até três itens por parede, a 3 m um do outro (nada se sobrepõe). Fundo primeiro (destaque);
-## no InacioCyber o fundo é a parede de monitores, então os itens vão para as laterais.
-func _wall_slots(n: int) -> Array:
+## Registra um objeto examinável/acionável. item pode ter "panel" (exhibit, inspect, terminal,
+## gallery, doc, arcade, skills, timeline, github) e "action" (phone, typewriter, drawer, switch).
+func add_entry(node: Node3D, it: Dictionary, look_pos: Vector3) -> Dictionary:
+	var l := OmniLight3D.new()
+	l.position = look_pos + Vector3(0, 0.4, 0)
+	l.light_color = _accent
+	l.light_energy = 0.0
+	l.omni_range = 2.6
+	add_child(l)
+	var e := {"node": node, "item": it, "light": l, "seen": false, "pos": look_pos}
+	items.append(e)
+	return e
+
+
+func _wall_slots(style: String) -> Array:
 	var out := []
-	var back := [Vector3(-3.0, 1.75, -ROOM_D / 2 + 0.25), Vector3(0, 1.75, -ROOM_D / 2 + 0.25), Vector3(3.0, 1.75, -ROOM_D / 2 + 0.25)]
-	var left := [Vector3(-ROOM_W / 2 + 0.25, 1.75, -3.4), Vector3(-ROOM_W / 2 + 0.25, 1.75, -0.4), Vector3(-ROOM_W / 2 + 0.25, 1.75, 2.8)]
-	var right := [Vector3(ROOM_W / 2 - 0.25, 1.75, -3.4), Vector3(ROOM_W / 2 - 0.25, 1.75, -0.4), Vector3(ROOM_W / 2 - 0.25, 1.75, 2.8)]
+	if style == "career":
+		var sxc := W / 2 - 0.22
+		var bzc := -D / 2 + 0.22
+		for p in [Vector3(-2.3, 1.8, bzc), Vector3(2.3, 1.8, bzc)]:
+			out.append({"pos": p, "normal": Vector3(0, 0, 1), "yaw": 0.0})
+		for z in [-4.6, -3.2, -0.8, 0.8, 3.2, 4.6]:
+			out.append({"pos": Vector3(-sxc, 1.8, z), "normal": Vector3(1, 0, 0), "yaw": PI / 2})
+			out.append({"pos": Vector3(sxc, 1.8, z), "normal": Vector3(-1, 0, 0), "yaw": -PI / 2})
+		return out
+	var y := 1.8
+	var bz := -D / 2 + 0.22
+	var sx := W / 2 - 0.22
+	var back := [Vector3(-2.3, y, bz), Vector3(0, y, bz), Vector3(2.3, y, bz)]
+	var zs := [-D / 2 + 2.2, D / 2 - 3.0] if D < 10 else [-D / 2 + 2.2, -0.6, 3.0]
+	var left := []
+	var right := []
+	for z in zs:
+		left.append(Vector3(-sx, y, z))
+		right.append(Vector3(sx, y, z))
 	var walls := []
-	var use_back := str(project.get("id", "")) != "inaciocyber"
-	if use_back:
-		walls.append([back, Vector3(0, 0, 1)])
-	walls.append([left, Vector3(1, 0, 0)])
-	walls.append([right, Vector3(-1, 0, 0)])
-	# preenche alternando as paredes para equilibrar a sala
-	var k := 0
-	while out.size() < n and k < 3:
-		for w in walls:
-			if out.size() >= n:
-				break
-			var pts: Array = w[0]
-			var order := [1, 0, 2]
-			if k < pts.size():
-				var pos: Vector3 = pts[order[k]]
-				var nrm: Vector3 = w[1]
-				out.append({"pos": pos, "normal": nrm, "yaw": atan2(nrm.x, nrm.z)})
-		k += 1
-	while out.size() < n:
-		out.append({"pos": Vector3(-ROOM_W / 2 + 0.25, 1.75, 4.6), "normal": Vector3(1, 0, 0), "yaw": PI / 2})
+	if not Dress.back_reserved(style):
+		for p in back:
+			walls.append([p, Vector3(0, 0, 1)])
+	for i in left.size():
+		walls.append([left[i], Vector3(1, 0, 0)])
+		walls.append([right[i], Vector3(-1, 0, 0)])
+	for w in walls:
+		var nrm: Vector3 = w[1]
+		out.append({"pos": w[0], "normal": nrm, "yaw": atan2(nrm.x, nrm.z)})
 	return out
 
 
-## Modelo 3D (Meshy) para cada nome de objeto do manifesto da loja
 const PROP_GLB := {"servidor": "servidor_ia", "cadeado": "cadeado", "microfone": "microfone_estudio", "monitor_cv": "monitor",
 	"maquina": "maquina_escrever", "typewriter": "maquina_escrever", "telefone": "telefone_antigo", "livro": "pilha_livros",
-	"trofeu": "trofeu", "roteador": "roteador", "carta": "mesa_cartas", "fliperama": "fliperama"}
+	"trofeu": "trofeu", "roteador": "roteador", "carta": "mesa_cartas", "fliperama": "fliperama", "rack": "rack_servidor",
+	"maquina_escrever": "maquina_escrever", "cortica": "quadro_cortica"}
 
 
-func _tex(path: String) -> Texture2D:
+func tex(path: String) -> Texture2D:
 	if path == "" or not path.begins_with("res://"):
 		return null
 	if not _tex_cache.has(path):
@@ -512,44 +328,61 @@ func _make_item(it: Dictionary, slot: Dictionary) -> Node3D:
 	add_child(holder)
 	var kind := str(it.get("kind", "frame"))
 	if not slot.get("floor", false):
-		holder.scale = Vector3.ONE * {"screen": 0.6, "frame": 0.82, "poster": 0.85, "monitor": 0.95, "plaque": 0.9}.get(kind, 0.85)
-	var tex := _tex(str(it.get("img", "")))
+		holder.scale = Vector3.ONE * {"screen": 0.62, "frame": 0.8, "poster": 0.82, "monitor": 0.9, "plaque": 0.85}.get(kind, 0.82)
+	var t := tex(str(it.get("img", "")))
 	match kind:
-		"frame": PolyFace.framed(holder, tex, _accent, _warm)
-		"screen": PolyFace.screen(holder, tex, _cool, 1.2)
-		"monitor": PolyFace.monitor(holder, tex, _accent)
-		"poster": PolyFace.poster(holder, tex, _accent)
-		"plaque": PolyFace.plaque(holder, tex, _accent)
-		"arcade": PolyFace.arcade_wall(holder, _accent)
+		"frame": PolyFace.framed(holder, t, _accent, _warm)
+		"screen": PolyFace.screen(holder, t, _cool, 1.2)
+		"monitor": PolyFace.monitor(holder, t, _accent)
+		"poster": PolyFace.poster(holder, t, _accent)
+		"plaque": PolyFace.plaque(holder, t, _accent)
 		"prop":
 			var glb: String = PROP_GLB.get(str(it.get("model", "")), "")
+			box(Vector3(0, 0.45, 0), Vector3(0.62, 0.9, 0.62), flat(Color("#16121c")), holder)
+			box(Vector3(0, 0.905, 0), Vector3(0.64, 0.02, 0.64), flat(Color("#0e0c14")), holder)
+			for e in [[Vector3(0, 0.9, 0.32), Vector3(0.66, 0.025, 0.02)], [Vector3(0, 0.9, -0.32), Vector3(0.66, 0.025, 0.02)],
+					[Vector3(0.32, 0.9, 0), Vector3(0.02, 0.025, 0.66)], [Vector3(-0.32, 0.9, 0), Vector3(0.02, 0.025, 0.66)]]:
+				box(e[0], e[1], flat(_accent, 2.4), holder)
 			if glb != "" and ResourceLoader.exists("res://assets/props/%s.glb" % glb):
-				# pedestal escuro com faixa de neon e o objeto em cima, girando devagar
-				_box(Vector3(0, 0.45, 0), Vector3(0.7, 0.9, 0.7), _flat(Color("#16121c")), holder)
-				_box(Vector3(0, 0.9, 0), Vector3(0.76, 0.04, 0.76), _flat(_accent, 2.0), holder)
-				var pm := _p(glb, Vector3.ZERO)
+				var big := glb in ["fliperama", "microfone_estudio", "servidor_ia", "rack_servidor", "quadro_cortica"]
+				var pm := prop(glb, Vector3(0, 0.93, 0), 0.0, 0.45 if big else 0.9, holder)
 				if pm:
-					remove_child(pm)
-					holder.add_child(pm)
-					var big := glb in ["fliperama", "microfone_estudio", "servidor_ia"]
-					pm.position = Vector3(0, 0.0 if big else 0.92, 0)
-					if big:
-						holder.get_child(0).visible = false
-						holder.get_child(1).visible = false
 					_spin.append(pm)
 			else:
-				PolyFace.prop(holder, str(it.get("model", "caixa")), _accent, _warm)
-		_: PolyFace.framed(holder, tex, _accent, _warm)
-	# plaquinha com o título embaixo
+				var inner := Node3D.new()
+				inner.position = Vector3(0, 0.93, 0)
+				holder.add_child(inner)
+				PolyFace.prop(inner, str(it.get("model", "caixa")), _accent, _warm)
+				_spin.append(inner)
+		_: PolyFace.framed(holder, t, _accent, _warm)
+	# item sem imagem: a tela/quadro mostra o texto (título e história), nada de cor chapada
+	if t == null and kind in ["monitor", "screen", "frame", "poster", "plaque"]:
+		var card := Label3D.new()
+		card.text = L.tx(it, "title").to_upper() + "
+
+" + L.tx(it, "text")
+		card.font = UI.font("type")
+		card.font_size = 30
+		card.pixel_size = 0.0024
+		card.width = 380
+		card.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		card.modulate = _accent.lerp(Color.WHITE, 0.55) * 1.3
+		card.position = Vector3(0, 0.1 if kind == "monitor" else 0.0, 0.135)
+		card.width = 520 if kind in ["screen", "plaque"] else 400
+		card.font_size = 30 if kind != "screen" else 34
+		card.shaded = false
+		holder.add_child(card)
 	var lbl := Label3D.new()
-	lbl.text = str(it.get("title", "")).to_upper()
+	lbl.text = L.tx(it, "title").to_upper()
 	lbl.font = UI.font("type")
 	lbl.font_size = 40
-	lbl.pixel_size = 0.0022
+	lbl.pixel_size = 0.0021
 	lbl.modulate = UI.PAPER
-	lbl.position = Vector3(0, -0.95, 0.12) if not slot.get("floor", false) else Vector3(0, 0.2, 0.45)
+	lbl.width = 900
+	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	lbl.position = Vector3(0, -0.95, 0.12) if not slot.get("floor", false) else Vector3(0, 0.62, 0.34)
 	lbl.outline_size = 8
-	lbl.outline_modulate = Color(0, 0, 0, 0.8)
+	lbl.outline_modulate = Color(0, 0, 0, 0.85)
 	lbl.shaded = false
 	lbl.double_sided = true
 	holder.add_child(lbl)
@@ -561,7 +394,11 @@ func exit_pos() -> Vector3:
 
 
 func spawn_pos() -> Vector3:
-	return Vector3(0, 1.6, ROOM_D / 2 - 1.8)
+	return Vector3(0, 1.6, D / 2 - 1.4)
+
+
+func bounds() -> Rect2:
+	return Rect2(-W / 2 + 0.45, -D / 2 + 0.45, W - 0.9, D - 0.9)
 
 
 func mark_seen(entry: Dictionary) -> void:
@@ -571,18 +408,19 @@ func mark_seen(entry: Dictionary) -> void:
 		examined.emit(_seen, items.size())
 
 
-## item mirado mais próximo à frente do jogador (para o realce e o [E] examinar)
+## item mirado mais próximo à frente do jogador
 func nearest(pos: Vector3, forward: Vector3) -> Dictionary:
 	var best := {}
 	var best_score := 0.0
 	for e in items:
 		var to: Vector3 = e["pos"] - pos
+		to.y *= 0.6
 		var d := to.length()
-		if d > 3.2:
+		if d > 3.0:
 			continue
 		var dir := to.normalized()
 		var dot := dir.dot(forward)
-		if dot < 0.55:
+		if dot < 0.6:
 			continue
 		var score := dot - d * 0.12
 		if score > best_score:
@@ -592,20 +430,48 @@ func nearest(pos: Vector3, forward: Vector3) -> Dictionary:
 
 
 func at_exit(pos: Vector3) -> bool:
-	return pos.distance_to(Vector3(0, pos.y, ROOM_D / 2)) < 1.6
+	return pos.distance_to(Vector3(0, pos.y, D / 2)) < 1.5
+
+
+## contorno pulsando no objeto mirado (material_overlay em todas as malhas do nó)
+func set_hot(entry: Dictionary) -> void:
+	var node: Node = entry.get("node") if not entry.is_empty() else null
+	if node == _hot_node:
+		return
+	if _hot_node and is_instance_valid(_hot_node):
+		_overlay(_hot_node, null)
+	_hot_node = node
+	if node:
+		_overlay(node, _hover_mat)
+
+
+func _overlay(n: Node, m: Material) -> void:
+	if n is MeshInstance3D:
+		var mi := n as MeshInstance3D
+		# não contorna vidro nem rótulos
+		if not (mi.material_override is StandardMaterial3D and (mi.material_override as StandardMaterial3D).transparency != BaseMaterial3D.TRANSPARENCY_DISABLED):
+			mi.material_overlay = m
+	for c in n.get_children():
+		_overlay(c, m)
+
+
+func toggle_lights() -> bool:
+	var on := true
+	for l in _room_lights:
+		(l as OmniLight3D).visible = not (l as OmniLight3D).visible
+		on = (l as OmniLight3D).visible
+	return on
 
 
 func _process(dt: float) -> void:
 	_t += dt
-	# realce do item mirado (luz sobe), leve respiração dos outros
 	for e in items:
 		var l: OmniLight3D = e["light"]
-		var target: float = 2.6 if e.get("_hot", false) else (0.6 if e["seen"] else 0.0)
+		var target: float = 2.2 if e.get("_hot", false) else (0.5 if e["seen"] else 0.0)
 		l.light_energy = lerpf(l.light_energy, target, clampf(dt * 6.0, 0, 1))
 	for n in _spin:
-		(n as Node3D).rotate_y(dt * 0.5)
-	# telas do InacioCyber tremulando como monitor de verdade
-	for i in _theme_screens.size():
-		var m: StandardMaterial3D = _theme_screens[i]
-		var k := 1.6 + sin(_t * 9.0 + i) * 0.05 + (0.3 if fmod(_t + i * 1.7, 6.0) < 0.06 else 0.0)
-		m.albedo_color = Color(k, k, k)
+		if is_instance_valid(n):
+			(n as Node3D).rotate_y(dt * 0.5)
+	for t in tickers:
+		if t is Callable:
+			(t as Callable).call(dt, _t)
