@@ -140,3 +140,30 @@ comparação em `docs/referencias/personagens/comparacao_elenco.jpg`. Vance (det
   diálogo com personagem em cima no celular e ao lado no PC; modal com fechar fixo; alvos de 88 px.
   Minimapa = radar centrado no jogador + mapa grande (toque ou M).
 - **Nome**: título "Gabriel Inácio" (sem "Portfólio"), subtítulo "engenharia de software · games · IA".
+
+## Animações dos personagens: o que deformava e como ficou (2026-11-01)
+- **Causa dos braços torcidos:** as 15 animações foram baixadas no esqueleto do Vance e aplicadas
+  como rotação local nos outros, que têm pose de repouso diferente (Otto/Kai até 43°, Lena até 53°).
+  **Correção:** `game/tools_dev/char_bake_anims.gd` converte a biblioteca para cada esqueleto
+  (`assets/characters/meshy/anims_<id>.res`): `qt = C(pai)^-1 * qs * C(osso)`, com
+  `C = repouso_origem^-1 * repouso_destino` em espaço de mundo; quadril pelo comprimento da perna.
+  `noir_character.gd` carrega a biblioteca do próprio personagem. Rodar de novo sempre que um
+  personagem ou `anims.glb` mudar:
+  `godot --headless --audio-driver Dummy --path game -s res://tools_dev/char_bake_anims.gd`.
+- **Braços entrando no corpo (Vance de sobretudo, Otto largo):** na mesma conversão, "espaço dos
+  braços" dependente da pose: em cada quadro braço e antebraço são empurrados para longe do tronco
+  (forte quando colados/cruzando, zero quando já abertos). Graus por personagem em `ARM_OPEN` e
+  `FORE_OPEN` (Vance 9/11, Otto 9/9, Kai 6/6, Lena 4/4).
+- **Lena (Mixamo recusou o auto-rig):** `tools/blender/char_rig_fit.py` encaixa o esqueleto Mixamo
+  na geometria dela (coluna e pernas pelo centro das fatias do corpo; braço do ombro, medido pela
+  largura do tronco, até a ponta da mão), solda vértices duplicados, calcula pesos por calor dos
+  ossos numa cópia fechada (voxel 5 mm) e transfere para a malha; dedos pesam na mão; região do braço
+  separada do tronco/pernas por raio (`R_ARM/R_FORE/R_HAND`). Sai `.blend`, e
+  `char_export.py` aceita `.blend` direto (sem FBX). Ela não usa só "pensativo" (antebraço cruzando a
+  barriga ainda puxa a barra da jaqueta).
+- **Riscos escuros no rosto:** malha da Meshy vinha partida nas emendas (frestas mostravam o lado de
+  dentro) e as ilhas coladas da textura vazavam com mipmap. `char_export.py` solda vértices
+  (0,8 mm) e o material do personagem usa filtro linear sem mipmap; os `.jpg.import` dos 4 estão no
+  repositório (sem mipmap, qualidade 0,95).
+- **Prova:** `game/tools_dev/char_anim_grid.tscn` (4 personagens x 6 animações, frente e lado, 2 momentos).
+- A Meshy não será recarregada (decisão do usuário): os 4 modelos atuais são definitivos.

@@ -13,8 +13,15 @@ const MODELS := {
 	"hacker": "res://assets/characters/meshy/kai.glb",
 }
 const ANIMS := "res://assets/characters/meshy/anims.glb"
-## Lena foi rigada por transferência (a Mixamo recusou a malha): só animações com pouco gesto de mão.
-const SAFE_ANIMS := {"couro": ["idle", "respirando", "olhando", "sim", "nao", "encostado"]}
+## biblioteca já convertida para o esqueleto de cada um (tools_dev/char_bake_anims.gd): sem isso a
+## mesma rotação aplicada a esqueletos com repouso diferente torce ombros e braços
+const BAKED := {"detetive": "vance", "couro": "lena", "bartender": "otto", "hacker": "kai"}
+static var _baked := {}
+## Restrição de animações por personagem. O rig da Lena foi refeito e encaixado no corpo
+## (tools/blender/char_rig_fit.py) e faz todos os gestos, menos "pensativo": com o antebraço
+## cruzando a barriga a barra da jaqueta ainda acompanha o braço.
+const SAFE_ANIMS := {"couro": ["idle", "respirando", "falando", "perguntando", "apontando", "sim", "nao", "olhando",
+	"encostado", "digitando", "bartender", "fumando", "sentado", "andando"]}
 ## expressão -> pesos das shape keys (contidas, adultas)
 const EXPR := {
 	"serio": {"brow_down": 0.55},
@@ -78,6 +85,9 @@ func setup(p_card: Dictionary) -> void:
 					shared.rim_enabled = true
 					shared.rim = 0.55
 					shared.rim_tint = 0.85
+					# textura da Meshy é um mosaico de ilhas coladas: com mipmaps as cores vizinhas
+					# vazam nas emendas e viram riscos no rosto. Personagem é visto de perto: sem mipmap.
+					shared.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
 				m3.set_surface_override_material(s, shared)
 	_mat = shared
 	_setup_anim()
@@ -106,6 +116,24 @@ func _setup_anim() -> void:
 		skel = s
 		break
 	if skel == null:
+		return
+	var baked_path := "res://assets/characters/meshy/anims_%s.res" % BAKED.get(_id, "vance")
+	if ResourceLoader.exists(baked_path):
+		if not _baked.has(_id):
+			_baked[_id] = load(baked_path)
+		anim = AnimationPlayer.new()
+		add_child(anim)
+		anim.root_node = anim.get_path_to(skel.get_parent())
+		var blib := AnimationLibrary.new()
+		var bsk := String(skel.name)
+		var srcb: AnimationLibrary = _baked[_id]
+		for a in srcb.get_animation_list():
+			var r := srcb.get_animation(a).duplicate() as Animation
+			for t in r.get_track_count():
+				r.track_set_path(t, NodePath(String(r.track_get_path(t)).replace("%SKEL", bsk)))
+			blib.add_animation(a, r)
+		anim.add_animation_library("", blib)
+		anim.playback_default_blend_time = 0.3
 		return
 	if _anim_lib == null:
 		var src := (load(ANIMS) as PackedScene).instantiate()

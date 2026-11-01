@@ -2,7 +2,7 @@
 shape keys de expressão feitas por código na região do rosto (o Meshy pinta o rosto na textura;
 mover os vértices do rosto move a pintura junto).
 
-blender -b -P tools/blender/char_export.py -- personagem_mixamo.fbx saida.glb [tex_px]
+blender -b -P tools/blender/char_export.py -- personagem_mixamo.(fbx|blend) saida.glb [tex_px]
 
 Shape keys: brow_down (sério/desconfiado), brow_up (intrigado), smile_r (sorriso de canto),
 squint (cansado/desconfiado), jaw (fala). Sem animação no arquivo (vem da biblioteca comum).
@@ -16,8 +16,12 @@ argv = sys.argv[sys.argv.index("--") + 1:]
 src, out = argv[0], argv[1]
 tex_px = int(argv[2]) if len(argv) > 2 else 1024
 
-bpy.ops.wm.read_factory_settings(use_empty=True)
-bpy.ops.import_scene.fbx(filepath=src)
+if src.lower().endswith(".blend"):
+    # rig feito no Blender (tools/blender/char_rig_fit.py): sem a ida e volta por FBX
+    bpy.ops.wm.open_mainfile(filepath=src)
+else:
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    bpy.ops.import_scene.fbx(filepath=src)
 arm = next(o for o in bpy.context.scene.objects if o.type == "ARMATURE")
 arm.name = "Armature"
 arm.data.name = "Armature"
@@ -35,6 +39,15 @@ if len(meshes) > 1:
     bpy.ops.object.join()
     ob = bpy.context.view_layer.objects.active
 ob.name = "Body"
+# solda vértices duplicados nas emendas (frestas finas que mostravam o lado de dentro escuro)
+bpy.ops.object.select_all(action="DESELECT")
+bpy.context.view_layer.objects.active = ob
+ob.select_set(True)
+bpy.ops.object.mode_set(mode="EDIT")
+bpy.ops.mesh.select_all(action="SELECT")
+bpy.ops.mesh.remove_doubles(threshold=0.0008)
+bpy.ops.mesh.normals_make_consistent(inside=False)
+bpy.ops.object.mode_set(mode="OBJECT")
 
 # ---------- marcos do rosto (espaço do mundo; frente = -Y no Blender)
 mw = ob.matrix_world
