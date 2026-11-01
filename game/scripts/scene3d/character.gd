@@ -13,7 +13,17 @@ const EYES := {"neutro": Vector2(0, 0), "feliz": Vector2(1, 0), "surpreso": Vect
 const MOUTH := {"neutro": Vector2(0, 0), "feliz": Vector2(1, 0), "falaA": Vector2(2, 0), "surpreso": Vector2(3, 0),
 	"triste": Vector2(0, 1), "desconfiado": Vector2(1, 1), "nervoso": Vector2(2, 1), "falaE": Vector2(3, 1), "bravo": Vector2(2, 1)}
 
+## NOIR: expressões adultas e contidas (atlas próprio) e aliases das antigas
+const EYES_NOIR := {"serio": Vector2(0, 0), "sorriso_canto": Vector2(1, 0), "intrigado": Vector2(2, 0), "desconfiado": Vector2(3, 0),
+	"pensativo": Vector2(0, 1), "cansado": Vector2(1, 1), "firme": Vector2(2, 1), "piscando": Vector2(3, 1)}
+const MOUTH_NOIR := {"serio": Vector2(0, 0), "sorriso_canto": Vector2(1, 0), "falaA": Vector2(2, 0), "intrigado": Vector2(3, 0),
+	"cansado": Vector2(0, 1), "desconfiado": Vector2(1, 1), "pensativo": Vector2(2, 1), "falaE": Vector2(3, 1), "firme": Vector2(0, 0)}
+const ALIAS_NOIR := {"neutro": "serio", "feliz": "sorriso_canto", "satisfeito": "sorriso_canto", "surpreso": "intrigado",
+	"bravo": "firme", "triste": "cansado", "nervoso": "pensativo"}
+const ProportionMod := preload("res://scripts/scene3d/proportion_mod.gd")
+
 var card: Dictionary = {}
+var noir := false
 var expression := "neutro"
 var talking := false
 var model: Node3D
@@ -31,6 +41,7 @@ var _body: Node3D
 
 func setup(p_card: Dictionary) -> void:
 	card = p_card
+	noir = str(card.get("style", "")) == "noir"
 	for c in get_children():
 		c.queue_free()
 	if ResourceLoader.exists(MODEL_PATH):
@@ -153,6 +164,8 @@ func _build_model() -> void:
 	if bool(card.get("adult", false)):
 		# adultos visivelmente mais altos que os adolescentes (~1,80 m contra ~1,60 m)
 		model.scale = Vector3.ONE * 1.12
+	if noir:
+		_noir_build()
 	var aps := model.find_children("*", "AnimationPlayer", true, false)
 	if aps.size() > 0:
 		anim = aps[0]
@@ -172,6 +185,9 @@ func _face_mat(src: Material, which: String, adult_face := false) -> ShaderMater
 	var tex: Texture2D = null
 	var sfx := "_adult" if adult_face else ""
 	var p := "res://assets/characters/%s_atlas%s.png" % [which, sfx]
+	if noir:
+		sfx = "_noir"
+		p = "res://assets/characters/%s_atlas_noir.png" % which
 	var pf := "res://assets/characters/%s_atlas%s_f.png" % [which, sfx]
 	if is_female() and ResourceLoader.exists(pf):
 		p = pf
@@ -255,7 +271,11 @@ func _sphere(r: float) -> SphereMesh:
 
 # ------------------------------------------------------------------ expressão e animação
 func set_expression(e: String) -> void:
-	expression = e if EYES.has(e) else "neutro"
+	if noir:
+		e = ALIAS_NOIR.get(e, e)
+		expression = e if EYES_NOIR.has(e) else "serio"
+	else:
+		expression = e if EYES.has(e) else "neutro"
 	_apply_face()
 
 
@@ -265,6 +285,15 @@ func set_talking(t: bool) -> void:
 
 
 func _apply_face(blink := false) -> void:
+	if noir:
+		if eyes_mat:
+			eyes_mat.set_shader_parameter("cell", EYES_NOIR["piscando"] if blink else EYES_NOIR.get(expression, Vector2.ZERO))
+		if mouth_mat:
+			var mn: Vector2 = MOUTH_NOIR.get(expression, Vector2.ZERO)
+			if talking:
+				mn = MOUTH_NOIR["falaA"] if _talk_flip else MOUTH_NOIR["falaE"]
+			mouth_mat.set_shader_parameter("cell", mn)
+		return
 	if eyes_mat:
 		eyes_mat.set_shader_parameter("cell", EYES["piscando"] if blink else EYES.get(expression, Vector2.ZERO))
 	if mouth_mat:
@@ -313,3 +342,124 @@ func _process(dt: float) -> void:
 		if _head:
 			_head.rotation.z = sin(_bob * 1.3) * (0.06 if talking else 0.02)
 			_head.rotation.x = sin(_bob * 2.6) * (0.04 if talking else 0.0)
+
+
+# ------------------------------------------------------------------ NOIR: proporções e roupas
+## Modelos do portfólio: corpo adulto alongado (modificador de esqueleto), rosto noir e peças de
+## roupa presas aos ossos (sobretudo, gola, chapéu, colete, avental, capuz). As peças são
+## desenhadas no espaço de descanso do esqueleto (cima = -Z, frente = +Y) e seguem os ossos.
+var _sk: Skeleton3D
+
+
+func _noir_build() -> void:
+	var sks := model.find_children("*", "Skeleton3D", true, false)
+	if sks.is_empty():
+		return
+	_sk = sks[0]
+	var mod := ProportionMod.new()
+	_sk.add_child(mod)
+	# pernas mais longas: sobe o modelo para o pé continuar no chão
+	model.position.y += 0.105 * model.scale.y
+	var look := _look()
+	match str(look.get("kit", "")):
+		"detetive": _kit_detetive(look)
+		"couro": _kit_couro(look)
+		"bartender": _kit_bartender(look)
+		"hacker": _kit_hacker(look)
+
+
+func _bone(suffix: String) -> int:
+	for i in _sk.get_bone_count():
+		if _sk.get_bone_name(i).ends_with("_" + suffix):
+			return i
+	return -1
+
+
+## pos/rot no espaço de descanso, com eixos "humanos": x lado (+ = esquerda do personagem),
+## y frente, z altura (positivo para cima).
+func _piece(bone: String, mesh: Mesh, col: Color, pos: Vector3, rot := Vector3.ZERO, outline := 0.006) -> MeshInstance3D:
+	var bi := _bone(bone)
+	if bi < 0:
+		return null
+	var ba := BoneAttachment3D.new()
+	_sk.add_child(ba)
+	ba.bone_name = _sk.get_bone_name(bi)
+	var mi := MeshInstance3D.new()
+	mi.mesh = mesh
+	mi.material_override = _toon(col, outline)
+	# malha: x lado, y cima, z frente  ->  esqueleto: cima = -Z, frente = +Y
+	var up := Basis(Vector3(1, 0, 0), -PI / 2.0)
+	var desired := Transform3D(up * Basis.from_euler(rot), Vector3(pos.x, pos.y, -pos.z))
+	mi.transform = _sk.get_bone_global_rest(bi).affine_inverse() * desired
+	ba.add_child(mi)
+	return mi
+
+
+func _bx(x: float, y: float, z: float) -> BoxMesh:
+	var b := BoxMesh.new()
+	b.size = Vector3(x, y, z)
+	return b
+
+
+func _cyl(rt: float, rb: float, h: float, seg := 20) -> CylinderMesh:
+	var c := CylinderMesh.new()
+	c.top_radius = rt
+	c.bottom_radius = rb
+	c.height = h
+	c.radial_segments = seg
+	c.rings = 1
+	return c
+
+
+## Sobretudo: abas que seguem as coxas (frente e lados) e o quadril (costas), gola alta, cinto.
+func _coat(col: Color, length := 0.46) -> void:
+	var top := 0.86
+	var mid := top - length / 2.0
+	var c2 := col.darkened(0.14)
+	_piece("Hips", _bx(0.4, length, 0.03), c2, Vector3(0, -0.125, mid), Vector3(-0.08, 0, 0))
+	for side in [-1.0, 1.0]:
+		var leg := "LeftUpLeg" if side > 0 else "RightUpLeg"
+		_piece(leg, _bx(0.17, length, 0.03), col, Vector3(side * 0.095, 0.115, mid), Vector3(0.07, 0, side * 0.04))
+		_piece(leg, _bx(0.03, length, 0.2), c2, Vector3(side * 0.19, -0.01, mid), Vector3(0, 0, side * 0.08))
+		_piece("Spine2", _bx(0.11, 0.13, 0.025), col.lightened(0.05), Vector3(side * 0.085, -0.02, 1.25), Vector3(-0.25, side * 0.6, 0))
+		_piece("Spine2", _bx(0.07, 0.2, 0.02), c2, Vector3(side * 0.07, 0.13, 1.13), Vector3(0.12, 0, side * 0.35))
+	_piece("Hips", _cyl(0.19, 0.19, 0.04, 24), col.darkened(0.35), Vector3(0, 0, 0.86))
+
+
+func _fedora(col: Color, band: Color) -> void:
+	_piece("Head", _cyl(0.29, 0.29, 0.016, 28), col, Vector3(0, -0.01, 1.62), Vector3(0.1, 0, 0))
+	_piece("Head", _cyl(0.17, 0.2, 0.16, 24), col, Vector3(0, -0.02, 1.7), Vector3(0.1, 0, 0))
+	_piece("Head", _cyl(0.203, 0.203, 0.035, 24), band, Vector3(0, -0.015, 1.645), Vector3(0.1, 0, 0), 0.0)
+
+
+func _kit_detetive(look: Dictionary) -> void:
+	_coat(Color(str(look.get("coat", "#4a3c2e"))), 0.5)
+	_fedora(Color("#1c1a22"), Color("#5a1f2a"))
+
+
+func _kit_couro(look: Dictionary) -> void:
+	var c := Color(str(look.get("coat", "#16131a")))
+	for side in [-1.0, 1.0]:
+		_piece("Spine2", _bx(0.12, 0.12, 0.02), c.lightened(0.1), Vector3(side * 0.09, 0.02, 1.24), Vector3(-0.3, side * 0.7, 0))
+		_piece("Spine2", _bx(0.06, 0.24, 0.02), c.lightened(0.06), Vector3(side * 0.075, 0.13, 1.1), Vector3(0.1, 0, side * 0.3))
+	_piece("Spine1", _bx(0.012, 0.3, 0.012), Color("#b8b2a6"), Vector3(0.02, 0.135, 1.0), Vector3.ZERO, 0.0)
+
+
+func _kit_bartender(look: Dictionary) -> void:
+	var vest := Color(str(look.get("vest", "#2a1c22")))
+	for side in [-1.0, 1.0]:
+		_piece("Spine1", _bx(0.12, 0.32, 0.02), vest, Vector3(side * 0.085, 0.128, 1.0), Vector3(0.06, side * -0.25, 0))
+		_piece("Spine1", _bx(0.02, 0.3, 0.2), vest.darkened(0.15), Vector3(side * 0.165, 0.0, 1.0), Vector3.ZERO)
+	_piece("Hips", _bx(0.36, 0.5, 0.02), Color("#e6e0d4"), Vector3(0, 0.13, 0.62), Vector3(-0.04, 0, 0))
+
+
+func _kit_hacker(look: Dictionary) -> void:
+	var hood := Color(str(look.get("coat", "#1d2230")))
+	var ring := TorusMesh.new()
+	ring.inner_radius = 0.1
+	ring.outer_radius = 0.19
+	ring.rings = 16
+	ring.ring_segments = 8
+	_piece("Spine2", ring, hood, Vector3(0, -0.06, 1.22), Vector3(PI / 2.0 - 0.5, 0, 0))
+	for side in [-1.0, 1.0]:
+		_piece("Spine1", _bx(0.012, 0.16, 0.012), Color("#c9ced9"), Vector3(side * 0.05, 0.14, 1.06), Vector3.ZERO, 0.0)

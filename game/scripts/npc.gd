@@ -3,7 +3,8 @@ extends Node3D
 ## em versão ADULTA e séria (sobretudo escuro, barba, cabelo grisalho, acento de neon do projeto).
 ## Fica em idle; ao se aproximar mostra um marcador; interagir abre a conversa.
 
-const Character := preload("res://scripts/scene3d/character.gd")
+const Character := preload("res://scripts/scene3d/noir_character.gd")
+const Cast := preload("res://scripts/cast.gd")
 
 var look_yaw := 0.0
 var project: Dictionary = {}
@@ -37,32 +38,18 @@ func _ready() -> void:
 	add_child(b)
 
 
-## Monta a "ficha" (look) que o Character entende: adulto, roupa escura, barba, acento do projeto.
+## Ficha do elenco noir para o guia deste projeto (cada lugar tem o seu personagem).
+const GUIDES := {"rumor": "detetive", "fortress": "bartender", "labia": "couro", "about": "detetive"}
+
+
 func _card_for(p: Dictionary) -> Dictionary:
-	var neon := str(p.get("neon", "#8899aa"))
-	# cada guia tem um visual próprio, mas sempre adulto e noir
-	var seed := hash(str(p.get("id", "x")))
-	var skins := ["#c99a74", "#a9784f", "#8a5a3a", "#d6ad86"]
-	var coats := ["#1a1f33", "#20222e", "#161a24", "#241c2c"]
-	var hairs := ["curto", "raspado", "coque"]
-	var beards := ["barba", "cavanhaque", "bigode"]
-	return {
-		"id": p.get("id", "guia"),
-		"adult": true,
-		"gender": "m",
-		"look": {
-			"skin": skins[seed % skins.size()],
-			"top": coats[seed % coats.size()],
-			"pants": "#14161f",
-			"hair": hairs[seed % hairs.size()],
-			"hair_color": "#3a3340",
-			"facial_hair": beards[seed % beards.size()],
-			"accent": neon,
-			"accessory": "nenhum",
-			"outfit": "formal",
-		},
-		"talk": {"mood": "neutro"},
-	}
+	var id := str(p.get("id", ""))
+	if p.get("special", "") == "about":
+		id = "about"
+	var who := str(GUIDES.get(id, ["detetive", "couro", "bartender", "hacker"][abs(hash(id)) % 4]))
+	var c := Cast.card(who)
+	c["rim"] = str(p.get("neon", "#ff3d8a"))
+	return c
 
 
 func set_expression(e: String) -> void:

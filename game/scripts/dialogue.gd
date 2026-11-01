@@ -53,11 +53,12 @@ func _ready() -> void:
 func _build_portrait(wide: bool) -> Control:
 	var holder := SubViewportContainer.new()
 	holder.stretch = true
+	var vs := get_viewport_rect().size
 	if wide:
-		holder.custom_minimum_size.x = 440
+		holder.custom_minimum_size.x = vs.x * 0.46
 		holder.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	else:
-		holder.custom_minimum_size.y = 420
+		holder.custom_minimum_size.y = vs.y * 0.5
 		holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_vp = SubViewport.new()
 	_vp.own_world_3d = true
@@ -92,15 +93,17 @@ func _build_portrait(wide: bool) -> Control:
 	# mesmo personagem riggado da rua, em close (usa a ficha do NPC guia)
 	var Npc := load("res://scripts/npc.gd")
 	var helper = Npc.new()
-	var Character := load("res://scripts/scene3d/character.gd")
+	var Character := load("res://scripts/scene3d/noir_character.gd")
 	_face = Character.new()
 	_face.setup(helper._card_for(npc_project))
 	world.add_child(_face)
 	helper.free()
+	# enquadramento de busto, levemente de 3/4 (o rosto e as expressões lidos de perto)
+	_face.rotation.y = 0.32
 	var cam := Camera3D.new()
-	cam.position = Vector3(0, 1.62, 1.5)
-	cam.rotation_degrees = Vector3(-4, 0, 0)
-	cam.fov = 38
+	cam.position = Vector3(0.05, 1.58, 1.15)
+	cam.fov = 30
+	cam.look_at_from_position(cam.position, Vector3(0, 1.55, 0))
 	cam.current = true
 	world.add_child(cam)
 	return holder
