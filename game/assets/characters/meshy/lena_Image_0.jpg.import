@@ -18,7 +18,7 @@ dest_files=["res://.godot/imported/lena_Image_0.jpg-5f90f24977df1c403f3d122b56e1
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.95
 compress/uastc_level=0

@@ -17,11 +17,9 @@ const ANIMS := "res://assets/characters/meshy/anims.glb"
 ## mesma rotação aplicada a esqueletos com repouso diferente torce ombros e braços
 const BAKED := {"detetive": "vance", "couro": "lena", "bartender": "otto", "hacker": "kai"}
 static var _baked := {}
-## Restrição de animações por personagem. O rig da Lena foi refeito e encaixado no corpo
-## (tools/blender/char_rig_fit.py) e faz todos os gestos, menos "pensativo": com o antebraço
-## cruzando a barriga a barra da jaqueta ainda acompanha o braço.
-const SAFE_ANIMS := {"couro": ["idle", "respirando", "falando", "perguntando", "apontando", "sim", "nao", "olhando",
-	"encostado", "digitando", "bartender", "fumando", "sentado", "andando"]}
+## Restrição de animações por personagem (vazio: os 4 rigs têm pesos separados por região,
+## tools/blender/char_rig_fit.py, e fazem todos os gestos sem puxar roupa nem atravessar o corpo).
+const SAFE_ANIMS := {}
 ## expressão -> pesos das shape keys (contidas, adultas)
 const EXPR := {
 	"serio": {"brow_down": 0.55},
@@ -78,16 +76,20 @@ func setup(p_card: Dictionary) -> void:
 			var src := m3.mesh.surface_get_material(s)
 			if src is StandardMaterial3D:
 				if shared == null:
-					shared = (src as StandardMaterial3D).duplicate() as StandardMaterial3D
-					shared.metallic = 0.0
-					shared.roughness = 0.9
-					shared.metallic_specular = 0.15
+					# o mesmo material PS1 do cenário (scripts/ps1.gd): luz por vértice, textura NEAREST na
+					# paleta do jogo (tools/blender/char_ps1_textures.py), sem brilho nem especular.
+					# NEAREST e sem mipmap também evita o vazamento entre as ilhas da textura da Meshy.
+					shared = load("res://scripts/ps1.gd").to_ps1(src as StandardMaterial3D)
+					# o contorno de neon continua: é o que liga o personagem à luz da cidade
 					shared.rim_enabled = true
 					shared.rim = 0.55
 					shared.rim_tint = 0.85
-					# textura da Meshy é um mosaico de ilhas coladas: com mipmaps as cores vizinhas
-					# vazam nas emendas e viram riscos no rosto. Personagem é visto de perto: sem mipmap.
-					shared.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
+					# luz por pixel só no personagem: por vértice o rosto fica chapado e some a leitura
+					# das expressões (são 4 personagens; o custo é pequeno)
+					shared.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+					# o contorno do Godot abre com a rugosidade: em 1,0 o personagem inteiro "estoura"
+					shared.roughness = 0.8
+					shared.rim = 0.4
 				m3.set_surface_override_material(s, shared)
 	_mat = shared
 	_setup_anim()

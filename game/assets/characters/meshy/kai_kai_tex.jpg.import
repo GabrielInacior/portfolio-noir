@@ -18,7 +18,7 @@ dest_files=["res://.godot/imported/kai_kai_tex.jpg-ca0236ec7b3ff1ff93f05687448dc
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.95
 compress/uastc_level=0

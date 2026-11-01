@@ -167,3 +167,26 @@ comparação em `docs/referencias/personagens/comparacao_elenco.jpg`. Vance (det
   repositório (sem mipmap, qualidade 0,95).
 - **Prova:** `game/tools_dev/char_anim_grid.tscn` (4 personagens x 6 animações, frente e lado, 2 momentos).
 - A Meshy não será recarregada (decisão do usuário): os 4 modelos atuais são definitivos.
+
+## Correção de raiz dos braços e grão PS1 nos personagens (2026-11-01, rodada 2)
+- **Raiz:** a malha do Meshy chega em A-pose com braço e mão encostados no tronco/casaco/coxa e
+  partida nas emendas; os pesos (Mixamo ou calor dos ossos) misturavam braço com tronco: manga do Otto
+  rasgava no ombro, barra do sobretudo do Vance e da jaqueta da Lena seguiam o braço, pele esticava.
+- **Pesos refeitos nos 4** com `tools/blender/char_rig_fit.py` (Vance/Otto/Kai com `FIT_BONES=0`,
+  mantém o esqueleto da Mixamo; Lena com encaixe próprio): solda; calor dos ossos numa cópia fechada;
+  raio de cada osso do braço medido na malha (manga grossa = raio maior, mão limitada a 8,5 cm);
+  vértice só é do braço se estiver perto do osso **e** o calor concordar (a barra do casaco ao lado da
+  mão fica com o quadril), ou colado na mão inteira e mais perto dela do que da perna; braço sem peso
+  do tronco e vice-versa (exceto junto do ombro); pele que sobrou herda o peso dos vizinhos de malha.
+  Teste de pose extrema no espaço do esqueleto (erguer, frente, cruzar) sai junto (`... debug.png`).
+  Uso: `FIT_BONES=0 blender -b -P tools/blender/char_rig_fit.py -- mixamo.fbx mixamo.fbx saida.blend prova.png`
+  e depois `char_export.py -- saida.blend personagem.glb`, e reconverter (`char_bake_anims.gd`).
+- Torção: conferida com e sem o "espaço dos braços" da conversão; não há torção nos dois. O empurrão
+  fica (tira o braço de dentro do sobretudo). Os 4 fazem todas as animações (`SAFE_ANIMS` vazio).
+- **PS1:** `tools/blender/char_ps1_textures.py` quantiza as texturas dos 4 na mesma paleta dos props
+  (`tools/props/ps1_textures.py`), 512 px (256 deixava pontos escuros nas emendas das ilhas); a pele
+  só posteriza (a paleta tem poucos tons de pele e o rosto perdia nariz/olhos/boca). Material =
+  `ps1.gd` (NEAREST, sem especular) + contorno neon, luz por pixel e rugosidade 0,8 (em 1,0 o contorno
+  do Godot estoura). Originais em `tools/props/_orig/char_*` (fora do git).
+- **Prova dentro do jogo:** `game/tools_dev/char_ingame_shot.tscn` (NPCs na rua em close, frente e 3/4,
+  e tela de diálogo; a câmera entra na SubViewport retrô do `main.gd`).

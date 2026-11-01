@@ -118,129 +118,133 @@ torso = slice_pts(z0 + (hips_z - z0) * 1.25, 0.02)
 c_t = mid_xy(clusters_x(torso, 0.03)[len(clusters_x(torso, 0.03)) // 2] if clusters_x(torso, 0.03) else torso)
 print("ESCALA", round(s, 3), "CENTRO TRONCO", tuple(round(c, 3) for c in c_t))
 
-bpy.context.view_layer.objects.active = arm
-arm.select_set(True)
-bpy.ops.object.mode_set(mode="EDIT")
-eb = arm.data.edit_bones
-mw = arm.matrix_world
-mwi = mw.inverted()
-
-
-def W(b, which="head"):
-    return mw @ getattr(eb[b], which)
-
-
-def setw(b, head=None, tail=None):
-    if head is not None:
-        eb[b].head = mwi @ head
-    if tail is not None:
-        eb[b].tail = mwi @ tail
-
-
-# escala uniforme em torno do chão e centraliza no tronco
-for b in eb:
-    h, t = mw @ b.head, mw @ b.tail
-    h = Vector((h.x * s + c_t.x, h.y * s + c_t.y, h.z * s))
-    t = Vector((t.x * s + c_t.x, t.y * s + c_t.y, t.z * s))
-    b.head, b.tail = mwi @ h, mwi @ t
-
 N = "mixamorig:"
-# --- coluna, pescoço e cabeça: centro do tronco em cada altura
-for nm in ["Hips", "Spine", "Spine1", "Spine2", "Neck", "Head"]:
-    b = N + nm
-    h = W(b)
-    sl = slice_pts(h.z, 0.015)
-    cl = clusters_x(sl, 0.03)
-    if cl:
-        mid = min(cl, key=lambda g: abs(center(g).x - c_t.x))
-        m = mid_xy(mid)
-        setw(b, head=Vector((m.x, m.y, h.z)))
-for nm in ["Hips", "Spine", "Spine1", "Spine2", "Neck"]:
-    nxt = {"Hips": "Spine", "Spine": "Spine1", "Spine1": "Spine2", "Spine2": "Neck", "Neck": "Head"}[nm]
-    setw(N + nm, tail=W(N + nxt))
-hd = W(N + "Head")
-setw(N + "Head", tail=Vector((hd.x, hd.y, z1 - 0.02)))
-if N + "HeadTop_End" in eb:
-    setw(N + "HeadTop_End", head=Vector((hd.x, hd.y, z1 - 0.02)), tail=Vector((hd.x, hd.y, z1 + 0.1)))
+FIT_BONES = os.environ.get("FIT_BONES", "1") != "0"
+# FIT_BONES=0: mantém o esqueleto da Mixamo do próprio personagem (só refaz os pesos)
+if FIT_BONES:
+    bpy.context.view_layer.objects.active = arm
+    arm.select_set(True)
+    bpy.ops.object.mode_set(mode="EDIT")
+    eb = arm.data.edit_bones
+    mw = arm.matrix_world
+    mwi = mw.inverted()
 
 
-# --- pernas: centro de cada perna (lado +x e -x) na altura de cada junta
-def leg_center(z, side):
-    sl = slice_pts(z, 0.015)
-    # perto da cintura as mãos pendentes entram na fatia: só o que está junto do tronco
-    lim = 0.17 if z > z0 + H * 0.38 else 0.5
-    pts = [p for p in sl if 0.01 < (p.x - c_t.x) * side < lim]
-    if len(pts) < 8:
-        return None
-    return mid_xy(pts)
+    def W(b, which="head"):
+        return mw @ getattr(eb[b], which)
 
 
-for side, pre in [(1, "Left"), (-1, "Right")]:
-    for nm in ["UpLeg", "Leg", "Foot"]:
-        b = N + pre + nm
+    def setw(b, head=None, tail=None):
+        if head is not None:
+            eb[b].head = mwi @ head
+        if tail is not None:
+            eb[b].tail = mwi @ tail
+
+
+    # escala uniforme em torno do chão e centraliza no tronco
+    for b in eb:
+        h, t = mw @ b.head, mw @ b.tail
+        h = Vector((h.x * s + c_t.x, h.y * s + c_t.y, h.z * s))
+        t = Vector((t.x * s + c_t.x, t.y * s + c_t.y, t.z * s))
+        b.head, b.tail = mwi @ h, mwi @ t
+
+    N = "mixamorig:"
+    # --- coluna, pescoço e cabeça: centro do tronco em cada altura
+    for nm in ["Hips", "Spine", "Spine1", "Spine2", "Neck", "Head"]:
+        b = N + nm
         h = W(b)
-        z = max(h.z, 0.06) if nm == "Foot" else h.z
-        c = leg_center(z, side)
-        if c:
-            setw(b, head=Vector((c.x, c.y if nm != "Foot" else h.y, h.z)))
-    setw(N + pre + "UpLeg", tail=W(N + pre + "Leg"))
-    setw(N + pre + "Leg", tail=W(N + pre + "Foot"))
-    # pé e dedo: frente do pé da malha
-    fh = W(N + pre + "Foot")
-    foot = [p for p in P if p.z < 0.08 and (p.x - c_t.x) * side > 0.01]
-    if foot:
-        front = min(foot, key=lambda p: p.y)  # frente = -y (Mixamo/Meshy olham para -y)
-        toe = Vector((fh.x, front.y + 0.04, 0.02))
-        setw(N + pre + "Foot", tail=toe)
-        if N + pre + "ToeBase" in eb:
-            setw(N + pre + "ToeBase", head=toe, tail=Vector((fh.x, front.y, 0.02)))
-        if N + pre + "Toe_End" in eb:
-            setw(N + pre + "Toe_End", head=Vector((fh.x, front.y, 0.02)), tail=Vector((fh.x, front.y - 0.04, 0.02)))
+        sl = slice_pts(h.z, 0.015)
+        cl = clusters_x(sl, 0.03)
+        if cl:
+            mid = min(cl, key=lambda g: abs(center(g).x - c_t.x))
+            m = mid_xy(mid)
+            setw(b, head=Vector((m.x, m.y, h.z)))
+    for nm in ["Hips", "Spine", "Spine1", "Spine2", "Neck"]:
+        nxt = {"Hips": "Spine", "Spine": "Spine1", "Spine1": "Spine2", "Spine2": "Neck", "Neck": "Head"}[nm]
+        setw(N + nm, tail=W(N + nxt))
+    hd = W(N + "Head")
+    setw(N + "Head", tail=Vector((hd.x, hd.y, z1 - 0.02)))
+    if N + "HeadTop_End" in eb:
+        setw(N + "HeadTop_End", head=Vector((hd.x, hd.y, z1 - 0.02)), tail=Vector((hd.x, hd.y, z1 + 0.1)))
 
 
-# --- braços: ombro pela largura do tronco na altura do ombro; braço como linha até a ponta da mão
-def hand_tip(side):
-    band = [p for p in P if z0 + H * 0.38 < p.z < z0 + H * 0.56 and (p.x - c_t.x) * side > 0]
-    far = sorted(band, key=lambda p: -abs(p.x - c_t.x))[:200]
-    lowest = min(far, key=lambda p: p.z)
-    return lowest
+    # --- pernas: centro de cada perna (lado +x e -x) na altura de cada junta
+    def leg_center(z, side):
+        sl = slice_pts(z, 0.015)
+        # perto da cintura as mãos pendentes entram na fatia: só o que está junto do tronco
+        lim = 0.17 if z > z0 + H * 0.38 else 0.5
+        pts = [p for p in sl if 0.01 < (p.x - c_t.x) * side < lim]
+        if len(pts) < 8:
+            return None
+        return mid_xy(pts)
 
 
-z_sh = None
-for side, pre in [(1, "Left"), (-1, "Right")]:
-    d_sh = W(N + pre + "Arm")
-    z_sh = d_sh.z
-    sl = slice_pts(z_sh, 0.015)
-    outer = max(sl, key=lambda p: (p.x - c_t.x) * side)
-    width = abs(outer.x - c_t.x)
-    yc = mid_xy([p for p in sl if abs(p.x - c_t.x) < width]).y
-    shoulder = Vector((c_t.x + side * (width - 0.055), yc, z_sh))
-    tip = hand_tip(side)
-    line = tip - shoulder
-    elbow = shoulder + line * 0.44 + Vector((0, 0.015, 0))
-    wrist = shoulder + line * 0.80
-    setw(N + pre + "Arm", head=shoulder, tail=elbow)
-    setw(N + pre + "ForeArm", head=elbow, tail=wrist)
-    hand_dir = tip - wrist
-    setw(N + pre + "Hand", head=wrist, tail=wrist + hand_dir * 0.5)
-    sp2 = W(N + "Spine2", "tail")
-    setw(N + pre + "Shoulder", head=Vector((c_t.x + side * 0.05, yc, z_sh + 0.06)), tail=shoulder)
-    up = hand_dir.normalized()
-    hl = hand_dir.length
-    for b in [b for b in eb if b.name.startswith(N + pre + "Hand") and b.name != N + pre + "Hand"]:
-        nm = b.name
-        idx = int(nm[-1]) if nm[-1].isdigit() else 1
-        lat = Vector((-0.022 * side, -0.02, 0)) if "Thumb" in nm else Vector((0, 0, 0))
-        base = wrist + up * (hl * (0.42 + 0.16 * (idx - 1))) + lat
-        b.head = mwi @ base
-        b.tail = mwi @ (base + up * hl * 0.15)
-    print("BRACO", pre, "ombro", tuple(round(c, 3) for c in shoulder), "cotovelo", tuple(round(c, 3) for c in elbow),
-          "punho", tuple(round(c, 3) for c in wrist), "ponta", tuple(round(c, 3) for c in tip))
+    for side, pre in [(1, "Left"), (-1, "Right")]:
+        for nm in ["UpLeg", "Leg", "Foot"]:
+            b = N + pre + nm
+            h = W(b)
+            z = max(h.z, 0.06) if nm == "Foot" else h.z
+            c = leg_center(z, side)
+            if c:
+                setw(b, head=Vector((c.x, c.y if nm != "Foot" else h.y, h.z)))
+        setw(N + pre + "UpLeg", tail=W(N + pre + "Leg"))
+        setw(N + pre + "Leg", tail=W(N + pre + "Foot"))
+        # pé e dedo: frente do pé da malha
+        fh = W(N + pre + "Foot")
+        foot = [p for p in P if p.z < 0.08 and (p.x - c_t.x) * side > 0.01]
+        if foot:
+            front = min(foot, key=lambda p: p.y)  # frente = -y (Mixamo/Meshy olham para -y)
+            toe = Vector((fh.x, front.y + 0.04, 0.02))
+            setw(N + pre + "Foot", tail=toe)
+            if N + pre + "ToeBase" in eb:
+                setw(N + pre + "ToeBase", head=toe, tail=Vector((fh.x, front.y, 0.02)))
+            if N + pre + "Toe_End" in eb:
+                setw(N + pre + "Toe_End", head=Vector((fh.x, front.y, 0.02)), tail=Vector((fh.x, front.y - 0.04, 0.02)))
 
-# rolagem coerente: recalcula pelo eixo Z global (o retarget no Godot compensa qualquer rolagem)
-bpy.ops.armature.select_all(action="SELECT")
-bpy.ops.armature.calculate_roll(type="GLOBAL_POS_Z")
-bpy.ops.object.mode_set(mode="OBJECT")
+
+    # --- braços: ombro pela largura do tronco na altura do ombro; braço como linha até a ponta da mão
+    def hand_tip(side):
+        band = [p for p in P if z0 + H * 0.38 < p.z < z0 + H * 0.56 and (p.x - c_t.x) * side > 0]
+        far = sorted(band, key=lambda p: -abs(p.x - c_t.x))[:200]
+        lowest = min(far, key=lambda p: p.z)
+        return lowest
+
+
+    z_sh = None
+    for side, pre in [(1, "Left"), (-1, "Right")]:
+        d_sh = W(N + pre + "Arm")
+        z_sh = d_sh.z
+        sl = slice_pts(z_sh, 0.015)
+        outer = max(sl, key=lambda p: (p.x - c_t.x) * side)
+        width = abs(outer.x - c_t.x)
+        yc = mid_xy([p for p in sl if abs(p.x - c_t.x) < width]).y
+        shoulder = Vector((c_t.x + side * (width - 0.055), yc, z_sh))
+        tip = hand_tip(side)
+        line = tip - shoulder
+        elbow = shoulder + line * 0.44 + Vector((0, 0.015, 0))
+        wrist = shoulder + line * 0.80
+        setw(N + pre + "Arm", head=shoulder, tail=elbow)
+        setw(N + pre + "ForeArm", head=elbow, tail=wrist)
+        hand_dir = tip - wrist
+        setw(N + pre + "Hand", head=wrist, tail=wrist + hand_dir * 0.5)
+        sp2 = W(N + "Spine2", "tail")
+        setw(N + pre + "Shoulder", head=Vector((c_t.x + side * 0.05, yc, z_sh + 0.06)), tail=shoulder)
+        up = hand_dir.normalized()
+        hl = hand_dir.length
+        for b in [b for b in eb if b.name.startswith(N + pre + "Hand") and b.name != N + pre + "Hand"]:
+            nm = b.name
+            idx = int(nm[-1]) if nm[-1].isdigit() else 1
+            lat = Vector((-0.022 * side, -0.02, 0)) if "Thumb" in nm else Vector((0, 0, 0))
+            base = wrist + up * (hl * (0.42 + 0.16 * (idx - 1))) + lat
+            b.head = mwi @ base
+            b.tail = mwi @ (base + up * hl * 0.15)
+        print("BRACO", pre, "ombro", tuple(round(c, 3) for c in shoulder), "cotovelo", tuple(round(c, 3) for c in elbow),
+              "punho", tuple(round(c, 3) for c in wrist), "ponta", tuple(round(c, 3) for c in tip))
+
+    # rolagem coerente: recalcula pelo eixo Z global (o retarget no Godot compensa qualquer rolagem)
+    bpy.ops.armature.select_all(action="SELECT")
+    bpy.ops.armature.calculate_roll(type="GLOBAL_POS_Z")
+    bpy.ops.object.mode_set(mode="OBJECT")
 
 # --- pesos: calor dos ossos numa cópia fechada, transferidos para a malha real
 proxy = body.copy()
@@ -320,6 +324,42 @@ ALL_ARM = ARM_CHAIN["Left"] | ARM_CHAIN["Right"]
 gidx = {g.name: g.index for g in body.vertex_groups}
 gname = {g.index: g.name for g in body.vertex_groups}
 arm_heads = {s_: arm.matrix_world @ arm.data.bones[N + s_ + "Arm"].head_local for s_ in ["Left", "Right"]}
+# raio próprio de cada osso do braço, medido na malha: manga grossa (sobretudo) tem raio maior.
+# Vértices cujo peso mais forte é o osso, numa faixa longe do tronco (meio do osso), percentil 92.
+if os.environ.get("R_AUTO", "1") != "0":
+    seg_of = {sgm[0]: sgm for sgm in segs}
+    rad = {}
+    for v in body.data.vertices:
+        if not v.groups:
+            continue
+        top = max(v.groups, key=lambda g: g.weight)
+        nm = gname[top.group]
+        if nm in ALL_ARM and top.weight > 0.6:
+            sg = seg_of[nm]
+            ab = sg[2] - sg[1]
+            p = body.matrix_world @ v.co
+            t = (p - sg[1]).dot(ab) / max(ab.length_squared, 1e-9)
+            if 0.25 < t < 0.85:
+                rad.setdefault(nm, []).append(dseg(p, sg[1], sg[2]))
+    def pct(xs, q):
+        xs = sorted(xs)
+        return xs[min(len(xs) - 1, int(len(xs) * q))] if xs else 0.0
+    def r_of(bone_suffix, fallback):
+        vals = rad.get(N + "Left" + bone_suffix, []) + rad.get(N + "Right" + bone_suffix, [])
+        r = pct(vals, 0.92)
+        return min(max(r * 1.08, fallback * 0.8), fallback * 2.2) if vals else fallback
+    R_ARM = r_of("Arm", R_ARM)
+    R_FORE = r_of("ForeArm", R_FORE)
+    R_HAND = min(r_of("Hand", R_HAND), 0.085)   # a mão é fina: raio grande pegaria a barra do casaco
+    R_FORE = min(R_FORE, 0.11)
+print("RAIOS", round(R_ARM, 3), round(R_FORE, 3), round(R_HAND, 3))
+# mão inteira (punho até a ponta dos dedos): o osso da mão para no meio da palma
+hand_seg = {}
+for s_ in ["Left", "Right"]:
+    hb = arm.data.bones[N + s_ + "Hand"]
+    h0 = arm.matrix_world @ hb.head_local
+    h1 = arm.matrix_world @ hb.tail_local
+    hand_seg[s_] = (h0, h0 + (h1 - h0) * 2.2)
 cut = 0
 for v in body.data.vertices:
     p = body.matrix_world @ v.co
@@ -328,7 +368,17 @@ for v in body.data.vertices:
     side = ""
     for s_ in ["Left", "Right"]:
         # dentro do braço de verdade (manga/pele), não a lateral do tronco que encosta nele
-        in_arm = dists[N + s_ + "Arm"] < R_ARM or dists[N + s_ + "ForeArm"] < R_FORE or dists[N + s_ + "Hand"] < R_HAND
+        # pertence ao braço: perto do osso E o calor dos ossos concorda (a barra do sobretudo ao
+        # lado da mão fica com o quadril); bem colado no osso conta sempre (mão encostada na coxa)
+        heat_top = gname[max(v.groups, key=lambda g: g.weight).group] if v.groups else ""
+        h_ok = heat_top in ARM_CHAIN[s_]
+        dA, dF, dH = dists[N + s_ + "Arm"], dists[N + s_ + "ForeArm"], dists[N + s_ + "Hand"]
+        dH = dseg(p, hand_seg[s_][0], hand_seg[s_][1])
+        # mão: perto da mão inteira e mais perto dela do que de qualquer osso de perna/quadril
+        leg_d = min(dists[n_] for n_ in dists if "Leg" in n_ or n_.endswith("Hips"))
+        hand_hit = dH < 0.09 and dH < leg_d * 0.8
+        in_arm = hand_hit or (h_ok and (dA < R_ARM * 1.3 or dF < R_FORE * 1.3 or dH < R_HAND * 1.15)) \
+            or dH < 0.06 or dF < 0.035
         if in_arm and min(dists[n_] for n_ in ARM_CHAIN[s_]) <= min(dists.values()) + 1e-6:
             side = s_
     if not side and nearest in ALL_ARM:
@@ -352,6 +402,65 @@ for v in body.data.vertices:
     if sum(g.weight for g in v.groups) < 1e-4:
         body.vertex_groups[nearest].add([v.index], 1.0, "REPLACE")
 print("PESOS CRUZADOS CORTADOS", cut)
+# pele da mão/antebraço que ficou de fora (vira fio esticado até o repouso): a malha soldada é
+# contínua do braço até a ponta dos dedos, então o peso do braço "escorre" para o vizinho que é
+# majoritariamente braço, perto da corrente do braço
+from collections import defaultdict
+nbr = defaultdict(set)
+for e in body.data.edges:
+    a_, b_ = e.vertices
+    nbr[a_].add(b_)
+    nbr[b_].add(a_)
+arm_idx = {gidx[n_]: n_ for n_ in ALL_ARM if n_ in gidx}
+
+
+def arm_side_of(v):
+    tot = {"Left": 0.0, "Right": 0.0}
+    for g in v.groups:
+        if g.group in arm_idx:
+            tot["Left" if "Left" in arm_idx[g.group] else "Right"] += g.weight
+    s_ = max(tot, key=tot.get)
+    return s_ if tot[s_] > 0.5 else ""
+
+
+grown = 0
+for _it in range(6):
+    side_of = {v.index: arm_side_of(v) for v in body.data.vertices}
+    changes = []
+    for v in body.data.vertices:
+        if side_of[v.index]:
+            continue
+        ns = nbr[v.index]
+        if not ns:
+            continue
+        cnt = {"Left": 0, "Right": 0}
+        for n_ in ns:
+            if side_of[n_]:
+                cnt[side_of[n_]] += 1
+        s_ = max(cnt, key=cnt.get)
+        if cnt[s_] * 2 < len(ns):
+            continue
+        p = body.matrix_world @ v.co
+        dch = min(dseg(p, seg_of_b[0], seg_of_b[1]) for seg_of_b in [hand_seg[s_]] + [(sg[1], sg[2]) for sg in segs if sg[0] in (N + s_ + "ForeArm", N + s_ + "Arm")])
+        if dch > 0.15:
+            continue
+        acc = defaultdict(float)
+        k = 0
+        for n_ in ns:
+            if side_of[n_] == s_:
+                for g in body.data.vertices[n_].groups:
+                    acc[g.group] += g.weight
+                k += 1
+        changes.append((v.index, {gi: w / k for gi, w in acc.items()}))
+    if not changes:
+        break
+    for vi, ws in changes:
+        for g in list(body.data.vertices[vi].groups):
+            body.vertex_groups[gname[g.group]].remove([vi])
+        for gi, w in ws.items():
+            body.vertex_groups[gname[gi]].add([vi], w, "REPLACE")
+    grown += len(changes)
+print("PELE DO BRACO RECUPERADA", grown)
 bpy.ops.object.mode_set(mode="WEIGHT_PAINT")
 bpy.ops.object.vertex_group_smooth(group_select_mode="ALL", factor=0.5, repeat=2)
 bpy.ops.object.vertex_group_limit_total(group_select_mode="ALL", limit=4)
@@ -379,28 +488,33 @@ def render_debug(path, poses):
     cam.data.ortho_scale = 2.0
     import os
     base, ext = os.path.splitext(path)
+    from mathutils import Quaternion as Q
     for i, (name, rots) in enumerate(poses):
         for pb in arm.pose.bones:
-            pb.rotation_mode = "XYZ"
-            pb.rotation_euler = (0, 0, 0)
-        for bn, eul in rots.items():
+            pb.rotation_mode = "QUATERNION"
+            pb.rotation_quaternion = (1, 0, 0, 0)
+        # rotações no espaço do esqueleto (independe da rolagem de cada osso): só os braços
+        for bn, (axis, deg) in rots.items():
             pb = arm.pose.bones.get(N + bn)
             if pb:
-                pb.rotation_euler = tuple(math.radians(v) for v in eul)
+                rest = arm.data.bones[N + bn].matrix_local.to_quaternion()
+                rw = Q(axis, math.radians(deg))
+                pb.rotation_quaternion = rest.inverted() @ rw @ rest
         for view, loc, rot in [("f", (c_t.x, -4, 0.95), (90, 0, 0)), ("l", (c_t.x + 4, c_t.y, 0.95), (90, 0, 90))]:
             cam.location = loc
             cam.rotation_euler = tuple(math.radians(v) for v in rot)
             sc.render.filepath = f"{base}_{name}_{view}{ext}"
             bpy.ops.render.render(write_still=True)
     for pb in arm.pose.bones:
-        pb.rotation_euler = (0, 0, 0)
+        pb.rotation_quaternion = (1, 0, 0, 0)
 
 
 if debug_png:
     render_debug(debug_png, [
         ("repouso", {}),
-        ("ergue", {"LeftArm": (0, 0, 70), "RightArm": (0, 0, -70), "LeftForeArm": (0, 0, 30), "RightForeArm": (0, 0, -30)}),
-        ("frente", {"LeftArm": (70, 0, 0), "RightArm": (70, 0, 0), "LeftForeArm": (0, 0, 60), "RightForeArm": (0, 0, -60)}),
+        ("ergue", {"LeftArm": ((0, 1, 0), -70), "RightArm": ((0, 1, 0), 70)}),
+        ("frente", {"LeftArm": ((1, 0, 0), -75), "RightArm": ((1, 0, 0), -75)}),
+        ("cruza", {"LeftArm": ((0.6, 0, 0.8), -70), "RightArm": ((0.6, 0, -0.8), -70)}),
     ])
 
 if out.lower().endswith(".blend"):
