@@ -70,3 +70,43 @@ em qualquer frente. Quem continuar o trabalho numa sessão nova começa por aqui
   elenco (`docs/elenco_wip.png`) como card do portfólio; quando a cidade tiver um hero bonito, avisar
   para trocar.
 - Prints reais do InacioCyber (só a interface, 6 temas): `data/captures/inaciocyber/`.
+
+## Personagens: pipeline final (rodada 3C)
+Resultado aprovado na régua: 4 personagens no estilo da referência (`docs/referencias/personagem_referencia.png`),
+comparação em `docs/referencias/personagens/comparacao_elenco.jpg`. Vance (detetive), Otto (bartender), Kai
+(hacker) e Lena (couro). GLBs em `game/assets/characters/meshy/`, script `game/scripts/scene3d/noir_character.gd`.
+
+1. **Arte conceito**: `tools/ai_art/gen_image.ps1 -Model gpt-image-2 -Quality medium -Size 1024x1536`
+   (gpt-image-1 foi desativado na API). Prompts em `tools/meshy_prompt_<nome>.txt`: frente, A-pose,
+   braços a 45 graus, fundo cinza, estilo "modular character". Conceitos em `docs/referencias/personagens/`.
+2. **Meshy image-to-3D**: `python tools/meshy_image_to_3d.py arte.png saida.glb 12000` (chave em
+   `~/.meshy_key`, nunca no repo). Parâmetros: `ai_model=latest, topology=triangle, target_polycount=12000,
+   should_remesh=true, should_texture=true, enable_pbr=false, symmetry_mode=on`. ~2 min por modelo.
+   ATENÇÃO: os créditos da conta acabaram em 01/11 (HTTP 402) depois dos 4 personagens + 31 props.
+3. **Blender (prep)**: `blender -b -P tools/blender/char_prep.py -- in.glb out_base 12000 1024 [clean]`
+   (altura 1,80, pés no chão, decima, textura 1024, FBX para a Mixamo). Render de prova:
+   `tools/blender/char_render.py`.
+4. **Mixamo (Claude in Chrome, conta do usuário já logada)**: UPLOAD CHARACTER, enviar o FBX pelo input de
+   arquivo, NEXT, arrastar marcadores (queixo embaixo do queixo, pulsos, cotovelos, joelhos, virilha ENTRE as
+   pernas), Standard Skeleton, NEXT, revisar, NEXT, "proceed". Animações pela API interna da página
+   (`window.MX` no console: `characters/primary`, `products/{id}?character_id=`, `animations/export` com
+   `preferences {format:'fbx7_2019', skin:'false', fps:'30'}`, `characters/{id}/monitor`); o download cai em
+   `~/Downloads`. Brutos da Mixamo NÃO vão para o repo (`tools/mixamo_raw/*.fbx` ignorado).
+   A Lena foi recusada pelo auto-rig ("Unknown error while generating motion", 4 tentativas, inclusive malha
+   limpa e esqueleto sem dedos): rigada por transferência em `tools/blender/char_rig_transfer.py -- kai.fbx
+   lena.glb lena_rig.fbx arms` (esqueleto do Kai, pesos copiados por proximidade, braços pelo osso mais
+   próximo). Ainda estica a mão em gestos amplos: o jogo só toca nela animações seguras (`SAFE_ANIMS`).
+   Para resolver de vez: regerar a Lena no Meshy (cabelo preso, `lena2.png` já existe no scratchpad) quando
+   houver créditos, e rigar na Mixamo.
+5. **Exportação para o jogo**: `blender -b -P tools/blender/char_export.py -- personagem_mixamo.fbx saida.glb 1024`:
+   cabeça separada numa malha própria com 5 shape keys feitas por código na região do rosto (brow_down,
+   brow_up, smile_r, squint, jaw), textura JPEG. Biblioteca de animações comum:
+   `tools/blender/char_anims.py -- pasta_fbx anims.glb base_skin.fbx` (15: idle, respirando, falando,
+   perguntando, pensativo, sim, nao, olhando, apontando, encostado, digitando, bartender, fumando, sentado,
+   andando). No Godot só entram trilhas de rotação (e posição do quadril), então a mesma animação serve
+   aos quatro sem deformar proporções.
+6. **Peso**: 12k tris por personagem; importado no Godot = 4,7 MB no total (4 personagens + animações),
+   texturas em modo com perda (WebP 0,8), sem tangentes, LOD gerado na importação, animação pausa fora da
+   tela, sombra só no PC.
+7. **Provas**: `tools_dev/char_sheet.tscn` (elenco, bustos, expressões, poses) e
+   `tools_dev/char_dialogue_shot.tscn` (tela de diálogo com 3 expressões), sempre mudas.

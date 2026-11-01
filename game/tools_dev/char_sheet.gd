@@ -52,12 +52,27 @@ func _ready() -> void:
 			_shot_at(Vector3(x + sin(a) * 1.25, 1.45, cos(a) * 1.25), Vector3(x, 1.42, 0), 34)
 			await get_tree().create_timer(0.35).timeout
 			_save("g1_busto_%d_%d" % [i, k])
-	var x0: float = chars[3].position.x
-	_shot_at(Vector3(x0 + 0.25, 1.62, 0.75), Vector3(x0, 1.6, 0), 30)
-	for k in 3:
-		chars[3].set_expression(["serio", "desconfiado", "sorriso_canto"][k])
-		await get_tree().create_timer(0.35).timeout
-		_save("g1_expr_%d" % k)
+	# expressões (rosto) no Otto e no Vance
+	for ci in [2, 0]:
+		var x0: float = chars[ci].position.x
+		_shot_at(Vector3(x0 + 0.2, 1.66, 0.7), Vector3(x0, 1.63, 0), 30)
+		for k in 3:
+			chars[ci].play("idle")
+			chars[ci].set_expression(["serio", "desconfiado", "sorriso_canto"][k])
+			chars[ci].anim.seek(0.5, true)
+			chars[ci].anim.pause()
+			await get_tree().create_timer(0.7).timeout
+			_save("g1_expr_%d_%d" % [ci, k])
+			chars[ci].anim.play()
+	# poses animadas (todos)
+	for p in ["pensativo", "falando", "apontando"]:
+		for c in chars:
+			c.set_expression("serio")
+			c.play(p)
+		await get_tree().create_timer(1.3).timeout
+		_shot_at(Vector3(0, 1.0, 7.2), Vector3(0, 0.95, 0), 38)
+		await get_tree().create_timer(0.2).timeout
+		_save("g1_pose_" + p)
 	get_tree().quit()
 
 

@@ -15,6 +15,7 @@ argv = sys.argv[sys.argv.index("--") + 1:]
 src, base = argv[0], argv[1]
 tris_max = int(argv[2]) if len(argv) > 2 else 12000
 tex_px = int(argv[3]) if len(argv) > 3 else 1024
+clean = len(argv) > 4 and argv[4] == "clean"
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.gltf(filepath=src)
@@ -42,6 +43,17 @@ s = 1.80 / (zmax - zmin)
 for v in ob.data.vertices:
     v.co = Vector(((v.co.x - cx) * s, (v.co.y - cy) * s, (v.co.z - zmin) * s))
 ob.location = (0, 0, 0)
+
+# limpeza opcional (malhas que o auto-rig da Mixamo recusa): funde vértices e tira soltos
+if clean:
+    bm = bmesh.new()
+    bm.from_mesh(ob.data)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.002)
+    loose = [v for v in bm.verts if not v.link_faces]
+    bmesh.ops.delete(bm, geom=loose, context="VERTS")
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.to_mesh(ob.data)
+    bm.free()
 
 # triângulos atuais e decimação
 bm = bmesh.new()
