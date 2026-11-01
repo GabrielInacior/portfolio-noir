@@ -235,7 +235,7 @@ func _sbox(pos: Vector3, size: Vector3, mat: Material, yaw := 0.0) -> void:
 		var vv := v * h
 		var pts := [c - uu - vv, c + uu - vv, c + uu + vv, c - uu + vv]
 		var wn := basis * n
-		var idx := [0, 1, 2, 0, 2, 3]
+		var idx := [0, 2, 1, 0, 3, 2]   # horário = frente no Godot
 		for i in idx:
 			st.set_normal(wn)
 			st.add_vertex(pos + basis * pts[i])
@@ -623,6 +623,13 @@ func _build_blocks() -> void:
 	# fim da transversal à direita (parede com outdoor) e começo da avenida (atrás do jogador)
 	segs.append([Vector3(CROSS_END, 0, zn), Vector3(CROSS_END, 0, zs), Vector3(-1, 0, 0)])
 	segs.append([Vector3(-FAC, 0, AVE_START), Vector3(FAC, 0, AVE_START), Vector3(0, 0, -1)])
+	# praça: prédios nos lados norte, sul e oeste (o outdoor fica na fachada oeste)
+	segs.append([Vector3(PLAZA.position.x, 0, PLAZA.end.y), Vector3(PLAZA.end.x, 0, PLAZA.end.y), Vector3(0, 0, -1)])
+	segs.append([Vector3(PLAZA.position.x, 0, PLAZA.position.y), Vector3(PLAZA.end.x, 0, PLAZA.position.y), Vector3(0, 0, 1)])
+	segs.append([Vector3(PLAZA.position.x, 0, PLAZA.end.y), Vector3(PLAZA.position.x, 0, PLAZA.position.y), Vector3(1, 0, 0)])
+	# fecha as quinas entre a transversal e a praça
+	segs.append([Vector3(PLAZA.end.x, 0, PLAZA.end.y), Vector3(PLAZA.end.x, 0, zn), Vector3(-1, 0, 0)])
+	segs.append([Vector3(PLAZA.end.x, 0, zs), Vector3(PLAZA.end.x, 0, PLAZA.position.y), Vector3(-1, 0, 0)])
 	for s in segs:
 		_facade_row(s[0], s[1], s[2])
 	# fundo do beco (loja do InacioCyber fica aqui, é um prédio próprio)
