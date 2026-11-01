@@ -193,3 +193,26 @@ comparação em `docs/referencias/personagens/comparacao_elenco.jpg`. Vance (det
 - Branco nunca puro nas texturas dos personagens (cinza claro quente, máx. 214) e contorno neon
   pesado pelo inverso da claridade (`*_rim.png` gerado junto, usado como `rim_texture`): a manga do
   Otto parou de estourar.
+
+## Rodada 5 (lojas lotadas, interação, GitHub, skills, carreira, i18n, retrô PS1)
+- **Lojas**: salas de 7,2 x 9 m (carreira 7,2 x 13) com identidade por estilo em `game/scripts/museum_dress.gd`
+  (`LOOKS`: detetive, cyber, arcade, bar, studio, study, startup, lab, career). Tudo sinaliza skills: estante com
+  livros nomeados por tecnologia, pôsteres de stack, adesivos em racks/laptops, quadro branco de arquitetura,
+  neons com nomes de tecnologias, telas procedurais (`shaders/matrix_rain`, `code_scroll`, `chart_screen`, `led_panel`).
+- **Interação**: contorno pulsando no objeto mirado (`shaders/hover_outline.gdshader` via material_overlay),
+  retícula central, verbo no aviso ("[E] atender", "toque para jogar"). Itens com `panel` abrem `scripts/panels.gd`
+  (inspect, terminal, gallery, doc, skills, timeline, contact, arcade); itens com `action` fazem algo físico
+  (telefone toca, gaveta abre, máquina datilografa, interruptor apaga a sala). Fliperamas jogáveis em `scripts/arcade/`.
+- **GitHub**: `scripts/gh_screen.gd` (telão por loja, renderizado uma vez numa SubViewport e rolado por UV) e
+  painel terminal; `GithubLive` é autoload; README ao vivo só no navegador (repo público), snapshot nos demais.
+- **Carreira**: prédio CARREIRA na transversal (`special: career`), conteúdo em `tools/museum/build_career.py`.
+  DÚVIDAS para o usuário confirmar: "imp" (projeto de análise de licitações) e "SysGuide" não aparecem no currículo
+  nem no LinkedIn; foram colocados como projetos da Sys Evolution conforme a mensagem dele.
+- **i18n**: `scripts/i18n.gd` (autoload `L`); texto-fonte é o português; `tools/i18n/build_i18n.py` extrai tudo e
+  traduz com gpt-4.1 (cache em `tools/i18n/cache_en.json`), além de corrigir acentos que faltavam nos roteiros.
+  UI.label/button traduzem sozinhos. Idioma: escolha salva (pf_lang), ?lang=, /en, navegador, sistema; fallback en.
+  As páginas de SEO abrem na língua do navegador (sem redirecionar robôs).
+- **Retrô PS1**: o 3D roda numa SubViewport em baixa resolução (forte 360p, suave 540p, HD) ampliada com NEAREST,
+  com `shaders/retro_ps1.gdshader` (quantização + Bayer 4x4 + vinheta); a interface fica nítida por cima.
+  Botão na barra de cima e escolha salva (pf_retro). Props: `scripts/ps1.gd` (material único, luz por vértice,
+  sem PBR, nearest) e `tools/props/ps1_textures.py` (texturas da Meshy na paleta única; originais em tools/props/_orig).

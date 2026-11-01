@@ -82,3 +82,14 @@ criando modelos NOVOS e mais sérios:
    (12k tris cada, sombra) e skyline; medir com e sem pedestres, LOD/impostor nos pedestres distantes,
    sombra só perto. Testar no navegador do celular real.
 6. Acabamento da rua: fachadas modulares por Blender (portas, marquises, letreiros 3D), banca/caixas com textura.
+
+
+## Depois da rodada 5 (abertos)
+1. **Performance**: rua ~1,4 milhão de primitivas por quadro (meta < 300 mil). A maior parte vem dos
+   MultiMesh e dos pedestres (cada personagem ~10 mil tris, sem LOD aplicado na rua). Próximo: LOD dos
+   personagens na rua (ou menos figurantes no celular), impostores no skyline, medir no celular real.
+2. **Barra de cima no celular** não apareceu nas capturas 405x720 (no PC aparece com som, idioma, retrô e
+   projetos); no celular o idioma se escolhe na tela de entrada. Investigar.
+3. **Confirmar com o usuário** os nomes "imp" e "SysGuide" na carreira.
+4. Meio da sala da CARREIRA ainda pouco preenchido; LAB e CARREIRA podem ganhar mais objetos.
+5. Imagens do README no painel terminal (extração pronta em `gh_screen.readme_images`, falta exibir).
