@@ -29,10 +29,11 @@ func _ready() -> void:
 
 # ───────────────────────────────── visual retrô (PS1): 3D em baixa resolução, ampliado sem borrar
 ## O 3D renderiza numa SubViewport pequena (altura interna 360 no "forte", 540 no "suave") e é
-## ampliado com filtro NEAREST, com quantização de cor e pontilhado Bayer. A interface fica por
+## ampliado com filtro NEAREST, com quantização de cor e pontilhado Bayer. Altura mínima de 540 para que
+## imagens, telões, outdoors, letreiros e placas (conteúdo informativo) continuem nítidos (regra do usuário). A interface fica por
 ## cima em resolução cheia (texto nunca pixela). Escolha salva no navegador (pf_retro).
 const RETRO := preload("res://shaders/retro_ps1.gdshader")
-const RETRO_H := {"forte": 360, "suave": 540}
+const RETRO_H := {"forte": 540, "suave": 720}
 var _world_vp: SubViewport
 var _world_rect: TextureRect
 var retro := "forte"
