@@ -28,3 +28,19 @@ Medido em desktop (RTX 4070 Ti, 1280x720, Godot 4.7.1 GL Compatibility) com `too
 - **Resolução adaptativa por FPS** (como no RUMOR) e um **modo leve** automático em celular fraco
   (menos partículas, sem feixes de luz, menos janelas acesas).
 - Medir de novo no navegador do celular, não só no desktop.
+
+
+## Rodada 4A (bairro com esquinas, vida, lojas novas)
+Medido com `tools_dev/district_shot.tscn` (PERF=1, ponto z=-30 olhando o cruzamento), RTX 4070 Ti:
+
+| Resolução | FPS | Draw calls | Objetos | Primitivas | VRAM |
+|---|---|---|---|---|---|
+| 1920x1080 (PC, glow + sombra) | 164 | 422 | 501 | 897 mil | 197 MB |
+| 405x720 (em pé) | 176 | 266 | 345 | 880 mil | 172 MB |
+| rua reta antiga (referência) | 151 | 669 | 758 | 97 mil | 83 MB |
+
+- Draw calls caíram mesmo com o bairro ~4x maior: geometria estática fundida por pedaço de 16 m, MultiMesh
+  para props, skyline e janelas em lote.
+- Primitivas subiram muito: investigar personagens (12k tris, sombra) e o skyline com recuos; meta < 300 mil.
+- Peso: props 5,6 MB (44 GLB), texturas 6,4 MB. No celular real (`UI.is_mobile()`): sem glow, sem sombra,
+  menos chuva/vapor/carros/pedestres, metade dos postes sem luz real.

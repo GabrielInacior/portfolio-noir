@@ -62,3 +62,23 @@ criando modelos NOVOS e mais sérios:
 - Minimapa mais legível (ruas, ícones dos lugares com rótulo, seta do jogador).
 - Riqueza da rua: portas, toldos, escadas de incêndio, placas, lixeiras, fios, calçada detalhada.
 - Animações Mixamo variadas (idle, conversar, apontar) e gesto por fala.
+
+
+## Depois da rodada 4A (prioridade, pedidos do usuário ainda abertos)
+1. **Identidade própria de cada loja** (hoje parecem o mesmo molde): RUMOR madeira escura + âmbar + persiana
+   com faixas de luz; Lábia tijolo + neon rosa/roxo + balcão iluminado por baixo + garrafas retroiluminadas;
+   FormataAI espuma acústica + luz fria/LED; InacioCyber escuro, luz de monitor verde/vermelha, cabos no chão.
+   Salas menores (~6x8 m, hoje 10x12), ilhas de exposição e vitrines de vidro no meio, spots nos objetos.
+2. **Interação 3D com painéis variados**: contorno colorido no objeto mirado + retícula; prompt "[E] examinar /
+   abrir / ligar / atender" (PC) e botão grande no celular; painéis por tipo (inspeção 3D girando, leitor de
+   documento, tela de monitor com README rolando, galeria de prints, linha do tempo, placa de stack, cartão
+   de contato). Interações: gaveta abre, telefone toca, máquina de escrever digita, interruptor.
+3. **GitHub no jogo**: telão por loja com o README (render simples de markdown) via
+   `scripts/data/github_live.gd`, estrelas/último commit em LED, barra de linguagens, ticker de atividade na rua.
+4. **LAB / Sobre mim como ponto alto das skills**: galeria de tecnologias (de `data/profile.json` e currículo)
+   ligadas aos projetos, linha do tempo profissional, botões LinkedIn/GitHub/contato; lojas dos projetos de
+   software tão caprichadas quanto as dos jogos (diagramas de arquitetura, placas de stack, terminal, métricas).
+5. **Performance**: 897 mil primitivas por quadro na rua (draws ok: 422 PC / 266 celular). Suspeitos: personagens
+   (12k tris cada, sombra) e skyline; medir com e sem pedestres, LOD/impostor nos pedestres distantes,
+   sombra só perto. Testar no navegador do celular real.
+6. Acabamento da rua: fachadas modulares por Blender (portas, marquises, letreiros 3D), banca/caixas com textura.

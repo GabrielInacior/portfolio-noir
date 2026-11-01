@@ -110,3 +110,33 @@ comparação em `docs/referencias/personagens/comparacao_elenco.jpg`. Vance (det
    tela, sombra só no PC.
 7. **Provas**: `tools_dev/char_sheet.tscn` (elenco, bustos, expressões, poses) e
    `tools_dev/char_dialogue_shot.tscn` (tela de diálogo com 3 expressões), sempre mudas.
+
+## Rodada 4A (lojas, bairro, interface): o que foi decidido e feito
+- **Bairro com esquinas** (`game/scripts/city.gd`, reescrito): avenida (x ±7, z 8 a -72), transversal em
+  z -42 (de x -48 a 48), beco à direita em z -20 (fundo = loja do InacioCyber), praça à esquerda
+  (x -66..-48, z -56..-28) com fonte, árvores, bancos, cabine de CONTATO e outdoor com a foto; prédio do LAB
+  no fim da avenida. Andar = união de retângulos (`player.walk_rects`), a museu troca para a sala.
+- **Lojas por projeto** em pontos fixos (`_place_shops`): fachada com porta, vitrine com a colagem
+  (`assets/data/collages/<id>.png`, UV em "cover"), letreiro de neon com halo, toldo, placa de bandeira
+  balançando, luz colorida real com corte por distância e luz falsa no chão.
+- **Vida**: carros com faróis/lanternas, pedestres andando e duplas conversando (personagens do agente de
+  personagens via `noir_character.gd`), vapor de bueiro, respingos, neons com falha, janelas vivas, ventiladores,
+  pombos, névoa em cartões, varal de lâmpadas no beco, letreiros no topo dos prédios distantes.
+- **Janelas** com interior falso: atlas 4x4 gerado no SD local (`assets/tex/janelas_atlas.png`,
+  `tools/art/window_atlas.py`).
+- **Geometria estática fundida** por pedaço de 16 m (`_sbox`), frente = sentido horário (bug dos prédios
+  quebrados era a ordem invertida). Props repetidos em MultiMesh (`_prop`).
+- **Props**: 31 da Meshy (interiores) + 13 da rua feitos em Blender por código
+  (`tools/props/street_props_blender.py`). A Meshy ficou sem créditos e o usuário decidiu NÃO recarregar:
+  tudo novo sai de Blender por código, SD local ou gpt-image-2 (com moderação).
+- **Interiores** (`museum.gd`): sala composta por tema com props Meshy, lambri/rodapé, tapete, luminárias,
+  janela; itens de parede no máximo 3 por parede a 3 m; objetos 3D em pedestal girando; InacioCyber com
+  parede de 6 monitores com os temas reais (`assets/museum/inaciocyber/tema_*.jpg`, faixa "backend offline"
+  recortada).
+- **Imagens em molduras**: sempre plano com UV 0..1; "cover" para quadros/fotos/colagens, "contain" para
+  prints com texto (`museum_objects.gd: img()`, `city.gd: _cover()`). Nunca BoxMesh com textura.
+- **Interface responsiva**: escala lógica por orientação (720x1280 em pé, 960x540 celular deitado,
+  1280x720 PC) em `main.gd`, vigia de texto vertical, `TouchScroll` (do RUMOR) em `scripts/touch_scroll.gd`;
+  diálogo com personagem em cima no celular e ao lado no PC; modal com fechar fixo; alvos de 88 px.
+  Minimapa = radar centrado no jogador + mapa grande (toque ou M).
+- **Nome**: título "Gabriel Inácio" (sem "Portfólio"), subtítulo "engenharia de software · games · IA".
