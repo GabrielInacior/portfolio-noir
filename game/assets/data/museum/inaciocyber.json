@@ -1,0 +1,37 @@
+{
+  "id": "inaciocyber",
+  "loja": "Laboratorio Blackwall",
+  "ambiente": "Um laboratorio escuro com terminais verdes e relatorios.",
+  "pieces": [
+    {
+      "titulo": "A ferramenta",
+      "texto": "InacioCyber e um agente de seguranca que roda inteiro na sua maquina. Voce conversa num chat com estetica de terminal e define um alvo que voce possui ou tem autorizacao para testar.",
+      "tipo": "quadro"
+    },
+    {
+      "titulo": "Agente que encadeia ferramentas",
+      "texto": "Um modelo de IA local, via Ollama, decide e encadeia ferramentas de reconhecimento, varredura e auditoria de codigo, e no fim escreve um relatorio em markdown.",
+      "tipo": "telao"
+    },
+    {
+      "titulo": "Tudo local",
+      "texto": "Roda em containers Docker na sua maquina. Nada sai para fora, so as requisicoes que o proprio agente faz contra o alvo autorizado.",
+      "tipo": "relatorio"
+    },
+    {
+      "titulo": "Uso responsavel",
+      "texto": "Feito apenas para uso autorizado. Cada sessao exige uma confirmacao por escrito de que voce tem permissao para testar aquele alvo, e tudo fica auditado.",
+      "tipo": "placa_stack"
+    },
+    {
+      "titulo": "App de verdade",
+      "texto": "Tem app desktop proprio em Electron, chat em tempo real por WebSocket, historico de sessoes e barra de metricas de maquina.",
+      "tipo": "objeto"
+    },
+    {
+      "titulo": "Como foi feito",
+      "texto": "Python no agente e nas ferramentas, modelo local via Ollama, Docker para tudo, Postgres para auditoria e Electron no desktop.",
+      "tipo": "placa_stack"
+    }
+  ]
+}

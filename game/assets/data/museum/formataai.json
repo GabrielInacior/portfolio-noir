@@ -1,0 +1,32 @@
+{
+  "id": "formataai",
+  "loja": "Estudio de Voz",
+  "ambiente": "Um estudio com microfones e telas de transcricao.",
+  "pieces": [
+    {
+      "titulo": "O app",
+      "texto": "FormataAI transforma uma fala informal em e-mail, mensagem, orcamento ou receita prontos para usar. Foi o meu trabalho de conclusao de curso.",
+      "tipo": "quadro"
+    },
+    {
+      "titulo": "Voz vira texto",
+      "texto": "Voce grava a voz, o app transcreve com o Whisper e formata com o GPT-4o-mini, entregando um texto estruturado e limpo.",
+      "tipo": "telao"
+    },
+    {
+      "titulo": "Pensado para incluir",
+      "texto": "Feito para quem tem menos fluencia digital: em vez de digitar e formatar, a pessoa so fala e recebe o texto pronto.",
+      "tipo": "foto"
+    },
+    {
+      "titulo": "Design de prompt",
+      "texto": "O segredo esta no desenho dos prompts e na gestao de contexto, para a saida sair sempre no formato certo.",
+      "tipo": "relatorio"
+    },
+    {
+      "titulo": "Como foi feito",
+      "texto": "App em Flutter, backend Node com Prisma e PostgreSQL, OpenAI Whisper e GPT, armazenamento em AWS S3 e notificacoes push.",
+      "tipo": "placa_stack"
+    }
+  ]
+}

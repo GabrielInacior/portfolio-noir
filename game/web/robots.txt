@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://inaciodev.online/sitemap.xml
