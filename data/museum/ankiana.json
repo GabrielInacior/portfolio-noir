@@ -1,0 +1,27 @@
+{
+  "id": "ankiana",
+  "loja": "Sala de Estudos",
+  "ambiente": "Uma biblioteca silenciosa com fichas e lousas.",
+  "pieces": [
+    {
+      "titulo": "O app",
+      "texto": "AnkiAna vira um tema, um texto ou um PDF em dezenas de flashcards com IA, para voce estudar sem montar os cartoes na mao.",
+      "tipo": "quadro"
+    },
+    {
+      "titulo": "Repeticao espacada",
+      "texto": "Usa repeticao espacada, o metodo SM-2, para mostrar cada cartao na hora certa de lembrar e fixar melhor o conteudo.",
+      "tipo": "telao"
+    },
+    {
+      "titulo": "Interface moderna",
+      "texto": "Visual Material 3 moderno e acessivel, pensado para estudar no celular com conforto.",
+      "tipo": "foto"
+    },
+    {
+      "titulo": "Como foi feito",
+      "texto": "App em Flutter com Dart, integracao com IA para gerar os cartoes e design Material 3.",
+      "tipo": "placa_stack"
+    }
+  ]
+}
