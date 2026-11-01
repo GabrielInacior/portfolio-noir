@@ -216,3 +216,17 @@ comparação em `docs/referencias/personagens/comparacao_elenco.jpg`. Vance (det
   com `shaders/retro_ps1.gdshader` (quantização + Bayer 4x4 + vinheta); a interface fica nítida por cima.
   Botão na barra de cima e escolha salva (pf_retro). Props: `scripts/ps1.gd` (material único, luz por vértice,
   sem PBR, nearest) e `tools/props/ps1_textures.py` (texturas da Meshy na paleta única; originais em tools/props/_orig).
+
+## Braço x tronco "assado" nas animações (2026-11-01, rodada 3)
+- `game/tools_dev/char_bake_anims.gd` mede o volume do tronco de cada personagem na malha (elipse em
+  6 fatias da cintura ao pescoço: largura limitada pelo ombro, profundidade frente/trás) e, em cada
+  chave, gira braço e antebraço o mínimo para tirar cotovelo, meio do antebraço, punho e ponta da mão
+  de dentro dele (3 passadas, até 10 iterações). Só conta o que CRUZA o corpo (na frente/atrás);
+  mão ao lado da coxa é postura normal. Lena com volume ×0,78 (jaqueta aberta inflava a medida).
+  Depois mede a cada 0,1 s e imprime o que sobrar (`resto de penetração ... cm`).
+- Fora da biblioteca (bizarras sem cenário): encostado (parede), sentado e digitando (cadeira).
+  Trocas no jogo (`noir_character.gd`, SUBST): encostado→respirando, sentado→idle,
+  digitando→olhando, perguntando→falando (só Lena), bartender→respirando (bartender só no Otto,
+  ONLY_FOR). Lena não usa perguntando nem bartender (resto de 4 a 5 cm).
+- Prova: `char_anim_grid.tscn` (4 personagens, 12 animações) e `char_ingame_shot.tscn` (rua e
+  diálogo, pelo `play()` do personagem, com as trocas valendo como no jogo).

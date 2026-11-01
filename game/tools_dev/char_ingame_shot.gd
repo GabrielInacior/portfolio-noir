@@ -4,7 +4,7 @@ extends Node
 ## Sempre mudo.
 ##   RUMOR_SHOT=<pasta> godot --audio-driver Dummy --path . --resolution 900x1100 res://tools_dev/char_ingame_shot.tscn
 
-const ANIMS := ["idle", "falando", "perguntando", "encostado", "andando", "apontando"]
+const ANIMS := ["idle", "respirando", "falando", "perguntando", "pensativo", "sim", "nao", "olhando", "apontando", "bartender", "fumando", "andando"]
 var main: Node
 var dir := ""
 
@@ -46,9 +46,12 @@ func _ready() -> void:
 		var ap: AnimationPlayer = ch.anim
 		cam.current = true
 		for an in ANIMS:
-			if ap == null or not ap.has_animation(an):
+			if ap == null:
 				continue
-			ap.play(an, 0.0)
+			# pelo play() do personagem: as trocas por personagem (SAFE_ANIMS/SUBST) valem como no jogo
+			ch.play(an)
+			ap.playback_default_blend_time = 0.0
+			var cur := ap.current_animation
 			for view in ["frente", "34"]:
 				var fwd: Vector3 = ch.global_transform.basis.z.normalized()
 				var side: Vector3 = ch.global_transform.basis.x.normalized()
@@ -57,7 +60,7 @@ func _ready() -> void:
 				cam.global_position = target + dir_v * 2.3 + Vector3(0, 0.1, 0)
 				cam.look_at(target)
 				for frac in [0.35, 0.75]:
-					ap.seek(ap.get_animation(an).length * frac, true)
+					ap.seek(ap.get_animation(cur).length * frac, true)
 					await get_tree().process_frame
 					await get_tree().process_frame
 					_save("rua_%s_%s_%s_%d" % [id, an, view, int(frac * 100)])

@@ -17,9 +17,17 @@ const ANIMS := "res://assets/characters/meshy/anims.glb"
 ## mesma rotação aplicada a esqueletos com repouso diferente torce ombros e braços
 const BAKED := {"detetive": "vance", "couro": "lena", "bartender": "otto", "hacker": "kai"}
 static var _baked := {}
-## Restrição de animações por personagem (vazio: os 4 rigs têm pesos separados por região,
-## tools/blender/char_rig_fit.py, e fazem todos os gestos sem puxar roupa nem atravessar o corpo).
-const SAFE_ANIMS := {}
+## Animações por personagem. Ficaram fora da biblioteca (tools_dev/char_bake_anims.gd, DROP):
+## encostado (precisa de parede), sentado e digitando (precisam de cadeira). A conversão aplica uma
+## restrição braço x tronco e mede o que sobra: na Lena, "perguntando" e "bartender" ainda encostam
+## a mão na jaqueta, então ela usa "falando" no lugar.
+const SAFE_ANIMS := {"couro": ["idle", "respirando", "falando", "pensativo", "sim", "nao", "olhando", "apontando",
+	"fumando", "andando"]}
+## animação que só faz sentido para um personagem (bartender se curva sobre um balcão)
+const ONLY_FOR := {"bartender": ["bartender"]}
+## troca de animação que saiu ou não serve para o personagem
+const SUBST := {"encostado": "respirando", "sentado": "idle", "digitando": "olhando", "perguntando": "falando",
+	"bartender": "respirando"}
 ## expressão -> pesos das shape keys (contidas, adultas)
 const EXPR := {
 	"serio": {"brow_down": 0.55},
@@ -204,10 +212,16 @@ func set_talking(t: bool) -> void:
 func play(name: String) -> void:
 	if anim == null:
 		return
+	if ONLY_FOR.has(name) and not (ONLY_FOR[name] as Array).has(_id):
+		name = SUBST.get(name, "idle")
 	if SAFE_ANIMS.has(_id) and not (SAFE_ANIMS[_id] as Array).has(name):
-		name = "idle"
+		name = SUBST.get(name, "idle")
+		if not (SAFE_ANIMS[_id] as Array).has(name):
+			name = "idle"
 	if not anim.has_animation(name):
-		name = "idle"
+		name = SUBST.get(name, "idle")
+		if not anim.has_animation(name):
+			name = "idle"
 	if anim.current_animation != name:
 		anim.play(name, 0.35)
 		if name == "apontando":

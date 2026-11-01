@@ -120,6 +120,7 @@ var _fixed_total := 0
 ## Animações que não servem em pé, sem cenário (encostar precisa de parede, sentar e digitar
 ## precisam de cadeira): não entram na biblioteca; o personagem usa outra no lugar (noir_character.gd).
 const DROP := ["encostado", "sentado", "digitando"]
+const TORSO_SCALE := {"lena": 0.78}
 
 
 ## pose global (no espaço do esqueleto) de um osso no instante t, cinemática direta com as trilhas
@@ -155,9 +156,17 @@ func _measure_torso(ts: Skeleton3D) -> Dictionary:
 	var neck := ts.get_bone_global_rest(ts.find_bone("mixamorig_Neck")).origin
 	var toe := ts.get_bone_global_rest(ts.find_bone("mixamorig_LeftToeBase")).origin
 	var front_pos := toe.z > hips.z
-	var xs: Array = []
-	var zf: Array = []
-	var zb: Array = []
+	# perfil por altura (6 fatias da cintura ao pescoço): barriga é mais rasa que o peito
+	const NB := 6
+	var y0 := hips.y + 0.12
+	var y1 := neck.y - 0.02
+	var bx: Array = []
+	var bf: Array = []
+	var bb: Array = []
+	for _k in NB:
+		bx.append([])
+		bf.append([])
+		bb.append([])
 	for mi in root_n.find_children("*", "MeshInstance3D", true, false):
 		var m3 := mi as MeshInstance3D
 		var xf := inv * m3.global_transform
@@ -165,25 +174,32 @@ func _measure_torso(ts: Skeleton3D) -> Dictionary:
 			var arr: Array = m3.mesh.surface_get_arrays(si)
 			for v in (arr[Mesh.ARRAY_VERTEX] as PackedVector3Array):
 				var p: Vector3 = xf * v
-				if p.y < hips.y + 0.08 or p.y > neck.y - 0.06:
+				if p.y < y0 or p.y > y1:
 					continue
 				var dx := p.x - hips.x
 				if absf(dx) > 0.2:
 					continue
-				xs.append(absf(dx))
+				var k := clampi(int((p.y - y0) / (y1 - y0) * NB), 0, NB - 1)
+				(bx[k] as Array).append(absf(dx))
 				var dz := p.z - hips.z
 				if (dz > 0) == front_pos:
-					zf.append(absf(dz))
+					(bf[k] as Array).append(absf(dz))
 				else:
-					zb.append(absf(dz))
-	xs.sort()
-	zf.sort()
-	zb.sort()
+					(bb[k] as Array).append(absf(dz))
 	# largura: a mão e o braço pendentes entram na faixa e inflariam a medida; limita pelo ombro
 	var sh := ts.get_bone_global_rest(ts.find_bone("mixamorig_LeftArm")).origin
-	var rx := minf(_pq(xs, 0.8), absf(sh.x - hips.x) * 0.82)
-	return {"rx": rx, "rf": clampf(_pq(zf, 0.85), 0.08, 0.17), "rb": clampf(_pq(zb, 0.85), 0.07, 0.16), "fz": 1.0 if front_pos else -1.0,
-		"y0": hips.y + 0.04, "y1": neck.y - 0.02}
+	var rxs: Array = []
+	var rfs: Array = []
+	var rbs: Array = []
+	for k in NB:
+		(bx[k] as Array).sort()
+		(bf[k] as Array).sort()
+		(bb[k] as Array).sort()
+		rxs.append(minf(_pq(bx[k], 0.75), absf(sh.x - hips.x) * 0.8))
+		rfs.append(clampf(_pq(bf[k], 0.8), 0.06, 0.16))
+		rbs.append(clampf(_pq(bb[k], 0.8), 0.06, 0.15))
+	return {"rx": rxs, "rf": rfs, "rb": rbs, "fz": 1.0 if front_pos else -1.0, "y0": y0, "y1": y1,
+		"hy": hips.y, "ny": neck.y}
 
 
 func _pq(a: Array, q: float) -> float:
@@ -195,10 +211,14 @@ func _p95(a: Array) -> float:
 
 
 ## posição do ponto em relação ao eixo do tronco, normalizada pela elipse (y = 1 na superfície)
-func _ell(p: Vector3, c: Vector3, yaw_q: Quaternion, tv: Dictionary, pad: float) -> Vector3:
+func _ell(p: Vector3, c: Vector3, yaw_q: Quaternion, tv: Dictionary, pad: float, frac := 0.5) -> Vector3:
 	var l := yaw_q.inverse() * (p - c)
-	var rz: float = tv["rf"] if l.z * float(tv["fz"]) > 0 else tv["rb"]
-	var ex := l.x / (float(tv["rx"]) + pad)
+	# fatia do perfil: altura equivalente no repouso (fração entre quadril e pescoço)
+	var yr := float(tv["hy"]) + frac * (float(tv["ny"]) - float(tv["hy"]))
+	var nb := (tv["rx"] as Array).size()
+	var k := clampi(int((yr - float(tv["y0"])) / (float(tv["y1"]) - float(tv["y0"])) * nb), 0, nb - 1)
+	var rz: float = (tv["rf"] as Array)[k] if l.z * float(tv["fz"]) > 0 else (tv["rb"] as Array)[k]
+	var ex := l.x / (float((tv["rx"] as Array)[k]) + pad)
 	var ez := l.z / (rz + pad)
 	return Vector3(ex, sqrt(ex * ex + ez * ez), ez)
 
@@ -214,14 +234,16 @@ func _avoid_torso(an: Animation, ts: Skeleton3D, tv: Dictionary) -> void:
 		var arm_i := ts.find_bone("mixamorig_" + side + "Arm")
 		var fore_i := ts.find_bone("mixamorig_" + side + "ForeArm")
 		var hand_i := ts.find_bone("mixamorig_" + side + "Hand")
-		for pass_i in 2:
-			var bi := arm_i if pass_i == 0 else fore_i
+		# 0: braço afasta o cotovelo; 1: antebraço afasta punho e mão; 2: braço de novo, agora pela
+		# mão (quando só o antebraço não consegue, o braço inteiro abre)
+		for pass_i in 3:
+			var bi := arm_i if pass_i != 1 else fore_i
 			var tr := an.find_track(NodePath("%SKEL:" + ts.get_bone_name(bi)), Animation.TYPE_ROTATION_3D)
 			if tr < 0:
 				continue
 			for k in an.track_get_key_count(tr):
 				var t := an.track_get_key_time(tr, k)
-				for _iter in 4:
+				for _iter in 10:
 					var hx := _gxf(an, ts, hips_i, t)
 					var nx := _gxf(an, ts, neck_i, t)
 					var yq := hx.basis.get_rotation_quaternion() * hips_rest_q.inverse()
@@ -232,33 +254,42 @@ func _avoid_torso(an: Animation, ts: Skeleton3D, tv: Dictionary) -> void:
 					var bx := _gxf(an, ts, bi, t)
 					var pivot := bx.origin
 					var pts: Array = []
+					var fo_o := _gxf(an, ts, fore_i, t).origin
 					if pass_i == 0:
-						pts = [[_gxf(an, ts, fore_i, t).origin, 0.065]]
+						pts = [[fo_o, 0.05]]
 					else:
 						var hxf := _gxf(an, ts, hand_i, t)
-						var tip := hxf.origin + (hxf.origin - bx.origin).normalized() * 0.16
-						pts = [[hxf.origin, 0.05], [tip, 0.03], [bx.origin.lerp(hxf.origin, 0.5), 0.06]]
+						var tip := hxf.origin + (hxf.origin - fo_o).normalized() * 0.16
+						pts = [[hxf.origin, 0.035], [tip, 0.02], [fo_o.lerp(hxf.origin, 0.5), 0.045]]
+						if pass_i == 2:
+							pts.append([fo_o, 0.05])
 					var worst := 0.0
 					var target := Vector3.ZERO
 					var src := Vector3.ZERO
 					for pp in pts:
 						var p: Vector3 = pp[0]
-						if p.y < float(tv["y0"]) or p.y > float(tv["y1"]):
+						var a := (p.y - hx.origin.y) / maxf(nx.origin.y - hx.origin.y, 0.01)
+						var yr := float(tv["hy"]) + a * (float(tv["ny"]) - float(tv["hy"]))
+						if yr < float(tv["y0"]) or yr > float(tv["y1"]):
 							continue
-						var a := clampf((p.y - hx.origin.y) / maxf(nx.origin.y - hx.origin.y, 0.01), 0.0, 1.0)
+						a = clampf(a, 0.0, 1.0)
 						var c := hx.origin.lerp(nx.origin, a)
 						c.y = p.y
-						var e := _ell(p, c, yaw_q, tv, float(pp[1]))
+						var e := _ell(p, c, yaw_q, tv, float(pp[1]), a)
+						# só o que cruza o corpo (na frente ou atrás do tronco); mão ao lado da coxa
+						# ou braço encostado de lado é postura normal, não atravessa
+						if absf(e.x) > 0.78:
+							continue
 						if e.y < 1.0 and (1.0 - e.y) > worst:
 							worst = 1.0 - e.y
 							var l := yaw_q.inverse() * (p - c)
 							var out := l / maxf(e.y, 0.05) * 1.03
 							if e.y < 0.05:
-								out = Vector3(0, 0, (float(tv["rf"]) + float(pp[1])) * float(tv["fz"]) * 1.03)
+								out = Vector3(0, 0, 0.2 * float(tv["fz"]))
 							out.y = l.y
 							target = c + yaw_q * out
 							src = p
-					if worst <= 0.0:
+					if worst <= 0.0 or (src - pivot).length() < 0.03 or (target - pivot).length() < 0.03:
 						break
 					var v0 := (src - pivot).normalized()
 					var v1 := (target - pivot).normalized()
@@ -269,6 +300,41 @@ func _avoid_torso(an: Animation, ts: Skeleton3D, tv: Dictionary) -> void:
 					var q: Quaternion = an.track_get_key_value(tr, k)
 					an.track_set_key_value(tr, k, (gpar.inverse() * rw * gpar * q).normalized())
 					_fixed_total += 1
+
+
+## Prova numérica: amostra a animação a cada 0,1 s e devolve a maior penetração (m) de cotovelo,
+## punho, meio do antebraço ou ponta da mão no volume do tronco (sem a folga da grossura do braço).
+func _residual(an: Animation, ts: Skeleton3D, tv: Dictionary) -> float:
+	var hips_i := ts.find_bone("mixamorig_Hips")
+	var neck_i := ts.find_bone("mixamorig_Neck")
+	var hips_rest_q := ts.get_bone_global_rest(hips_i).basis.get_rotation_quaternion()
+	var worst := 0.0
+	var t := 0.0
+	while t <= an.length:
+		var hx := _gxf(an, ts, hips_i, t)
+		var nx := _gxf(an, ts, neck_i, t)
+		var fwd := (hx.basis.get_rotation_quaternion() * hips_rest_q.inverse()) * Vector3(0, 0, 1)
+		var yaw_q := Quaternion(Vector3.UP, atan2(fwd.x, fwd.z))
+		for side in ["Left", "Right"]:
+			var fo := _gxf(an, ts, ts.find_bone("mixamorig_" + side + "ForeArm"), t).origin
+			var ha := _gxf(an, ts, ts.find_bone("mixamorig_" + side + "Hand"), t).origin
+			var tip := ha + (ha - fo).normalized() * 0.16
+			for pv in [fo, ha, tip, fo.lerp(ha, 0.5)]:
+				var p: Vector3 = pv
+				var a := (p.y - hx.origin.y) / maxf(nx.origin.y - hx.origin.y, 0.01)
+				var yr := float(tv["hy"]) + a * (float(tv["ny"]) - float(tv["hy"]))
+				if yr < float(tv["y0"]) or yr > float(tv["y1"]):
+					continue
+				a = clampf(a, 0.0, 1.0)
+				var c := hx.origin.lerp(nx.origin, a)
+				c.y = p.y
+				var e := _ell(p, c, yaw_q, tv, 0.0, a)
+				if e.y < 1.0 and absf(e.x) <= 0.78:
+					var l := yaw_q.inverse() * (p - c)
+					l.y = 0.0
+					worst = maxf(worst, l.length() * (1.0 / maxf(e.y, 0.01) - 1.0))
+		t += 0.1
+	return worst
 
 
 func _init() -> void:
@@ -289,6 +355,13 @@ func _init() -> void:
 		var sk_t := _skq(ts)
 		var root_pre := sk_t.inverse() * sk_s   # raiz: muda do espaço do esqueleto de origem para o de destino
 		_torso[id] = _measure_torso(ts)
+		# Lena: jaqueta aberta e busto entram na medida da frente e o volume sai fundo demais (as mãos
+		# na frente da barriga, que não atravessam, eram empurradas e os braços abriam)
+		if TORSO_SCALE.has(id):
+			for key in ["rx", "rf", "rb"]:
+				var arr: Array = _torso[id][key]
+				for k in arr.size():
+					arr[k] = float(arr[k]) * float(TORSO_SCALE[id])
 		print("  tronco ", id, " ", _torso[id])
 		# correção por osso (nome -> C)
 		var corr := {}
@@ -330,6 +403,9 @@ func _init() -> void:
 							an.track_set_key_value(t, k, hip_rest_t + root_pre * ((p - hip_rest_s) * k_hip))
 				_open_arms(an, ts, id)
 				_avoid_torso(an, ts, _torso[id])
+				var pen := _residual(an, ts, _torso[id])
+				if pen > 0.0:
+					print("    resto de penetração ", id, " ", a, ": ", snappedf(pen * 100.0, 0.1), " cm")
 				an.loop_mode = Animation.LOOP_LINEAR if a != "apontando" else Animation.LOOP_NONE
 				lib.add_animation(a, an)
 		var out := "res://assets/characters/meshy/anims_%s.res" % id
