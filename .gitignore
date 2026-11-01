@@ -1,0 +1,22 @@
+# Godot
+.godot/
+*.import
+export/
+build/
+
+# Python
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+
+# Segredos e originais pesados (nunca versionar)
+*.wav
+*.key
+.openai_key
+*.secret
+
+# Logs e temporários
+*.log
+override.cfg

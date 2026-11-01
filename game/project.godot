@@ -1,0 +1,82 @@
+; Engine configuration file.
+config_version=5
+
+[application]
+
+config/name="Gabriel Inácio — Portfólio"
+config/description="Portfólio interativo em primeira pessoa: uma cidade noir dos projetos do Gabriel."
+run/main_scene="res://scenes/city.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+config/icon="res://assets/icon.png"
+boot_splash/bg_color=Color(0.027, 0.031, 0.055, 1)
+boot_splash/show_image=false
+
+[autoload]
+
+Data="*res://scripts/data.gd"
+UI="*res://scripts/ui.gd"
+Audio="*res://scripts/audio.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/size/resizable=true
+
+[gui]
+
+common/drop_mouse_on_gui_input_disabled=true
+theme/default_font_multichannel_signed_distance_field=false
+
+[input_devices]
+
+pointing/emulate_mouse_from_touch=true
+
+[input]
+
+move_forward={
+"deadzone": 0.2,
+"events": [
+{"type":"key","keycode":87},
+{"type":"key","keycode":4194320}
+]
+}
+move_back={
+"deadzone": 0.2,
+"events": [
+{"type":"key","keycode":83},
+{"type":"key","keycode":4194322}
+]
+}
+move_left={
+"deadzone": 0.2,
+"events": [
+{"type":"key","keycode":65},
+{"type":"key","keycode":4194319}
+]
+}
+move_right={
+"deadzone": 0.2,
+"events": [
+{"type":"key","keycode":68},
+{"type":"key","keycode":4194321}
+]
+}
+interact={
+"deadzone": 0.2,
+"events": [
+{"type":"key","keycode":69},
+{"type":"key","keycode":32}
+]
+}
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true
+anti_aliasing/quality/msaa_3d=0
+environment/defaults/default_clear_color=Color(0.027, 0.031, 0.055, 1)
+lights_and_shadows/directional_shadow/soft_shadow_filter_quality=0

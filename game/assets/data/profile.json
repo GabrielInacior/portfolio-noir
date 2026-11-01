@@ -1,0 +1,17 @@
+{
+  "name": "Gabriel Inácio",
+  "role": "Desenvolvedor Full-Stack",
+  "tagline": "+5 anos construindo aplicações web e mobile que importam",
+  "bio": [
+    "Desenvolvedor full-stack com mais de cinco anos construindo produtos de verdade, do frontend pixel-perfect ao backend que aguenta carga.",
+    "Trabalho a stack inteira: Vue, React, Nuxt, Next, Flutter no front; Node, Fastify, NestJS, Spring e Prisma no back; Postgres, Redis, Docker e AWS na base. Também mexo com segurança e pentest.",
+    "Gosto de código limpo com arquitetura que se sustenta, e de transformar ideia em coisa jogável. Cada prédio desta cidade é um projeto que construí."
+  ],
+  "stack": ["Vue", "React", "Next.js", "Nuxt", "TypeScript", "Flutter", "Node.js", "Fastify", "NestJS", "Spring", "Prisma", "PostgreSQL", "Redis", "AWS", "Docker", "Nginx", "Godot", "Linux"],
+  "links": {
+    "github": "https://github.com/GabrielInacior",
+    "linkedin": "https://linkedin.com/in/gabriel-inácio-rodrigues-silva-072029220",
+    "email": "gabrielinaciodev47@gmail.com",
+    "site": "https://inaciodev.online"
+  }
+}
