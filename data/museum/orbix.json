@@ -1,37 +1,37 @@
 {
-  "id": "orbix",
-  "loja": "Escritorio Orbix",
-  "ambiente": "Um escritorio corporativo com servidores e paineis.",
-  "pieces": [
-    {
-      "titulo": "A plataforma",
-      "texto": "OrbixHub e um SaaS multi-tenant onde varios produtos, como um CRM e uma gestao de oficinas, nascem sobre uma base comum.",
-      "tipo": "quadro"
-    },
-    {
-      "titulo": "Isolamento por tenant",
-      "texto": "Cada cliente fica isolado no proprio espaco usando Row-Level Security do Postgres, entao os dados de um nunca alcancam o do outro.",
-      "tipo": "relatorio"
-    },
-    {
-      "titulo": "API central",
-      "texto": "Uma orbix-api cuida de autenticacao, OTP, tokens e financas e serve todos os produtos, evitando reescrever o mesmo nucleo.",
-      "tipo": "objeto"
-    },
-    {
-      "titulo": "Monorepo",
-      "texto": "Backend em NestJS e apps em Flutter convivem num monorepo organizado, facil de evoluir em equipe.",
-      "tipo": "placa_stack"
-    },
-    {
-      "titulo": "Desafio tecnico",
-      "texto": "Servir produtos diferentes a partir de um nucleo so, mantendo seguranca, financas e isolamento de dados por cliente.",
-      "tipo": "relatorio"
-    },
-    {
-      "titulo": "Como foi feito",
-      "texto": "NestJS e Fastify no back, Flutter no mobile, PostgreSQL com RLS e Docker.",
-      "tipo": "placa_stack"
-    }
-  ]
+ "id": "orbix",
+ "loja": "Escritorio Orbix",
+ "ambiente": "Um escritorio corporativo com servidores e paineis.",
+ "pieces": [
+  {
+   "titulo": "A plataforma",
+   "texto": "OrbixHub é um SaaS multi-tenant onde vários produtos, como um CRM e uma gestão de oficinas, nascem sobre uma base comum.",
+   "tipo": "quadro"
+  },
+  {
+   "titulo": "Isolamento por tenant",
+   "texto": "Cada cliente fica isolado no próprio espaço usando Row-Level Security do Postgres, então os dados de um nunca alcançam o do outro.",
+   "tipo": "relatorio"
+  },
+  {
+   "titulo": "API central",
+   "texto": "Uma orbix-api cuida de autenticação, OTP, tokens e finanças e serve todos os produtos, evitando reescrever o mesmo núcleo.",
+   "tipo": "objeto"
+  },
+  {
+   "titulo": "Monorepo",
+   "texto": "Backend em NestJS e apps em Flutter convivem num monorepo organizado, facil de evoluir em equipe.",
+   "tipo": "placa_stack"
+  },
+  {
+   "titulo": "Desafio técnico",
+   "texto": "Servir produtos diferentes a partir de um núcleo só, mantendo segurança, finanças e isolamento de dados por cliente.",
+   "tipo": "relatorio"
+  },
+  {
+   "titulo": "Como foi feito",
+   "texto": "NestJS e Fastify no back, Flutter no mobile, PostgreSQL com RLS e Docker.",
+   "tipo": "placa_stack"
+  }
+ ]
 }

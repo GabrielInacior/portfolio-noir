@@ -1,32 +1,32 @@
 {
-  "id": "labia",
-  "loja": "Beco dos Vigaristas",
-  "ambiente": "Um beco com cartazes de golpes e cabines de escuta.",
-  "pieces": [
-    {
-      "titulo": "O jogo",
-      "texto": "Labia e um jogo cooperativo de comedia para 1 a 4 jogadores. Voces sao vigaristas e aplicam golpes falando de verdade, pelo microfone, com personagens de IA.",
-      "tipo": "quadro"
-    },
-    {
-      "titulo": "NPCs que ouvem",
-      "texto": "Os personagens sao movidos por IA rodando localmente: eles entendem o que voce fala, se irritam, riem e podem chamar a seguranca.",
-      "tipo": "telao"
-    },
-    {
-      "titulo": "Fale para enganar",
-      "texto": "Nao tem menu de dialogo. O jogador convence na conversa, improvisando, enquanto os colegas ajudam nos bastidores.",
-      "tipo": "objeto"
-    },
-    {
-      "titulo": "Cinco fases",
-      "texto": "Cinco fases em primeira pessoa, cada uma com um golpe e um alvo diferente.",
-      "tipo": "objeto"
-    },
-    {
-      "titulo": "Como foi feito",
-      "texto": "Godot e GDScript, com IA local para a fala e a compreensao dos personagens, sem depender de nuvem.",
-      "tipo": "placa_stack"
-    }
-  ]
+ "id": "labia",
+ "loja": "Beco dos Vigaristas",
+ "ambiente": "Um beco com cartazes de golpes e cabines de escuta.",
+ "pieces": [
+  {
+   "titulo": "O jogo",
+   "texto": "Lábia é um jogo cooperativo de comédia para 1 a 4 jogadores. Vocês são vigaristas e aplicam golpes falando de verdade, pelo microfone, com personagens de IA.",
+   "tipo": "quadro"
+  },
+  {
+   "titulo": "NPCs que ouvem",
+   "texto": "Os personagens são movidos por IA rodando localmente: eles entendem o que você fala, se irritam, riem e podem chamar a segurança.",
+   "tipo": "telao"
+  },
+  {
+   "titulo": "Fale para enganar",
+   "texto": "Não tem menu de diálogo. O jogador convence na conversa, improvisando, enquanto os colegas ajudam nos bastidores.",
+   "tipo": "objeto"
+  },
+  {
+   "titulo": "Cinco fases",
+   "texto": "Cinco fases em primeira pessoa, cada uma com um golpe e um alvo diferente.",
+   "tipo": "objeto"
+  },
+  {
+   "titulo": "Como foi feito",
+   "texto": "Godot e GDScript, com IA local para a fala e a compreensão dos personagens, sem depender de nuvem.",
+   "tipo": "placa_stack"
+  }
+ ]
 }

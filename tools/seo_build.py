@@ -27,6 +27,21 @@ KIND = {"game": "Jogo", "web": "Aplicacao web", "mobile": "Aplicativo", "securit
 SCHEMA_KIND = {"game": "VideoGame", "web": "WebApplication", "mobile": "MobileApplication", "security": "SoftwareApplication"}
 
 
+def _langjs(canonical):
+    """Abre o site na língua do visitante (navigator.languages), respeitando a escolha salva
+    (pf_lang) e sem redirecionar robôs de busca (cada língua continua indexável)."""
+    if canonical == SITE + "/":
+        cond = "s==='en'||(!s&&!/^pt/i.test(l))"
+        dest = "/en/"
+    elif canonical == SITE + "/en/":
+        cond = "s==='pt'||(!s&&/^pt/i.test(l))"
+        dest = "/"
+    else:
+        return ""
+    return ("<script>(function(){try{var s=localStorage.getItem('pf_lang');var l=(navigator.languages&&navigator.languages[0])||navigator.language||'';"
+            "if(/bot|crawl|spider|slurp|lighthouse|preview/i.test(navigator.userAgent))return;if(%s)location.replace('%s');}catch(e){}})();</script>" % (cond, dest))
+
+
 def head(title, desc, canonical, og_img="/assets/og.png", extra_ld=None, alt_lang=None):
     ld = []
     person = {
@@ -66,8 +81,9 @@ def head(title, desc, canonical, og_img="/assets/og.png", extra_ld=None, alt_lan
   <link rel="icon" href="/assets/favicon.png">
   <link rel="stylesheet" href="/assets/site.css">
   {ld}
+  {langjs}
 </head>
-<body>""".format(title=e(title), desc=e(desc), canonical=e(canonical), alt=alt,
+<body>""".format(langjs=_langjs(canonical), title=e(title), desc=e(desc), canonical=e(canonical), alt=alt,
                  site=SITE, og=og_img, ld=ld_tags)
 
 
@@ -75,7 +91,8 @@ def nav():
     return """
   <header class="top"><a class="brand" href="/">INACIODEV</a>
     <nav><a href="/#projetos">Projetos</a><a href="/#sobre">Sobre</a><a href="/#contato">Contato</a>
-    <a href="/en/">EN</a></nav></header>"""
+    <a href="/en/" onclick="try{localStorage.setItem('pf_lang','en')}catch(e){}">EN</a>
+    <a href="/" onclick="try{localStorage.setItem('pf_lang','pt')}catch(e){}">PT</a></nav></header>"""
 
 
 def footer():
@@ -157,11 +174,22 @@ def index_pt():
     return s
 
 
+def _en(t):
+    path = os.path.join(ROOT, "game", "assets", "data", "i18n", "en.json")
+    d = json.load(open(path, encoding="utf8")) if os.path.exists(path) else {}
+    return d.get(t, t)
+
+
 def index_en():
     L = profile["links"]
+    exp_html = ""
+    for x in profile["experience"]:
+        exp_html += "<article class='job'><h3>%s · %s</h3><p class='meta'>%s · %s</p><ul>%s</ul></article>" % (
+            e(_en(x["role"])), e(x["company"]), e(_en(x["period"])), e(_en(x["place"])),
+            "".join("<li>%s</li>" % e(_en(h)) for h in x.get("highlights", [])))
     cards = "".join(
         '<a class="card" href="/projetos/{id}/" style="--neon:{n}"><img loading="lazy" src="/assets/collages/{id}.webp" alt="{t}" width="1280" height="800"><div class="card-body"><h3>{t}</h3><p>{tag}</p></div></a>'.format(
-            id=p["id"], n=p.get("neon", "#ffc83d"), t=e(p["title"]), tag=e(p["tagline"])) for p in projects)
+            id=p["id"], n=p.get("neon", "#ffc83d"), t=e(p["title"]), tag=e(_en(p["tagline"]))) for p in projects)
     s = head("Gabriel Inacio · Full-Stack Software Engineer, Game Dev and AI",
              "Full-stack software engineer with 4+ years building web, mobile and backend systems, LLM integration and game development.",
              SITE + "/en/", alt_lang=("pt-BR", SITE + "/"))
@@ -176,7 +204,8 @@ def index_en():
     <section id="about"><h2>About</h2>
       <p>Full-stack software engineer with 4+ years building web, mobile and backend systems. I lead technical teams, own architecture and ship to production. Core developer at a Brazilian public procurement SaaS, original developer of ACL (Public Bidding Assistant). I work extensively with AI and LLMs, both as development tools (Claude Code, agents) and inside production apps.</p>
       <p class="links"><a href="mailto:%s">%s</a> · <a href="%s">GitHub</a> · <a href="%s">LinkedIn</a></p></section>
-  </main>""" % (cards, L["email"], L["email"], L["github"], L["linkedin"])
+    <section id="experience"><h2>Experience</h2>%s</section>
+  </main>""" % (cards, L["email"], L["email"], L["github"], L["linkedin"], exp_html)
     s += footer()
     return s
 
@@ -189,10 +218,10 @@ def project_page(p):
         body += "<section class='piece'><h2>%s</h2><p>%s</p></section>" % (e(pc["titulo"]), e(pc["texto"]))
     links = ""
     for k, v in p.get("links", {}).items():
-        label = {"site": "Acessar", "github": "Codigo no GitHub"}.get(k, k)
+        label = {"site": "Acessar", "github": "Código no GitHub"}.get(k, k)
         links += '<a class="btn" href="%s" rel="noopener">%s</a>' % (e(v), e(label))
     if p.get("private") and "github" not in p.get("links", {}):
-        links += '<span class="btn ghost">Repositorio privado</span>'
+        links += '<span class="btn ghost">Repositório privado</span>'
     app = {"@context": "https://schema.org", "@type": SCHEMA_KIND.get(p["kind"], "SoftwareApplication"),
            "name": p["title"], "description": p["desc"], "applicationCategory": KIND.get(p["kind"], "Software"),
            "operatingSystem": "Web", "author": {"@type": "Person", "name": profile["fullName"]},
@@ -210,7 +239,7 @@ def project_page(p):
     s += nav()
     s += """
   <main class="project" style="--neon:{neon}">
-    <nav class="crumb"><a href="/">Inicio</a> / <a href="/#projetos">Projetos</a> / <span>{title}</span></nav>
+    <nav class="crumb"><a href="/">Início</a> / <a href="/#projetos">Projetos</a> / <span>{title}</span></nav>
     <header class="phead"><p class="eyebrow">{kind} · {year}</p><h1>{title}</h1>
       <p class="lead">{tag}</p><div class="cta">{links}</div></header>
     <img class="shot" loading="lazy" src="/assets/collages/{id}.webp" alt="Imagens do projeto {title}" width="1280" height="800">

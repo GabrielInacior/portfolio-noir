@@ -62,6 +62,13 @@ func t(s: String) -> String:
 		return s
 	if _dict.has(s):
 		return str(_dict[s])
+	# rótulo com seta/ícone no fim ("ABRIR O SITE  ↗"): traduz a base e devolve o sufixo
+	for suf in ["  ↗", " ↗", "  ▶", " ▶"]:
+		if s.ends_with(suf):
+			var base := s.substr(0, s.length() - suf.length())
+			var tb := t(base)
+			if tb != base:
+				return tb + suf
 	# tenta sem diferença de caixa (rótulos em maiúsculas)
 	var low := s.to_lower()
 	if _dict.has(low):

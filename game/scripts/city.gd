@@ -355,6 +355,7 @@ func _prop_mesh(name: String) -> Mesh:
 			mesh = (mi as MeshInstance3D).mesh
 			break
 		sc.free()
+	load("res://scripts/ps1.gd").mesh(mesh)
 	_prop_cache[name] = mesh
 	return mesh
 
@@ -1052,7 +1053,7 @@ func _build_plaza() -> void:
 	_photo_billboard(Vector3(PLAZA.position.x + 1.4, 0, c.z), Vector3(1, 0, 0))
 	# cabine telefônica = CONTATO
 	_phone_booth(c + Vector3(5.5, 0.2, -9.0))
-	map_labels.append({"p": Vector2(c.x, c.z), "t": "PRAÇA", "c": Color("#9fdcff")})
+	map_labels.append({"p": Vector2(c.x, c.z), "t": L.t("PRAÇA"), "c": Color("#9fdcff")})
 
 
 func _tree(p: Vector3) -> void:
@@ -1102,7 +1103,7 @@ func _photo_billboard(face: Vector3, normal: Vector3) -> void:
 	nm.shaded = false
 	holder.add_child(nm)
 	var rl := Label3D.new()
-	rl.text = "GAME DEV · IA · ARQUITETURA"
+	rl.text = L.t("GAME DEV · IA · ARQUITETURA")
 	rl.font = UI.font("type")
 	rl.font_size = 70
 	rl.pixel_size = 0.004
@@ -1147,7 +1148,7 @@ func _phone_booth(p: Vector3) -> void:
 	_lbox(holder, Vector3(0, 1.25, 0), Vector3(1.1, 2.5, 1.1), red)
 	_lbox(holder, Vector3(0, 1.3, 0.56), Vector3(0.8, 1.8, 0.02), _mat(Color("#ffd28a"), 1.4, true))
 	var lb := Label3D.new()
-	lb.text = "CONTATO"
+	lb.text = L.t("CONTATO")
 	lb.font = UI.font("title")
 	lb.font_size = 120
 	lb.pixel_size = 0.003
@@ -1176,7 +1177,7 @@ func _phone_booth(p: Vector3) -> void:
 	var rp := holder.to_global(ring.position)
 	var proj := {"id": "contato", "title": "CONTATO", "neon": "#5fd38a", "special": "contact"}
 	kiosks.append({"pos": rp, "project": proj, "light": l, "ring": ring, "base_energy": 2.0, "neon": Color("#5fd38a"), "visited": false})
-	map_labels.append({"p": Vector2(rp.x, rp.z), "t": "CONTATO", "c": Color("#5fd38a")})
+	map_labels.append({"p": Vector2(rp.x, rp.z), "t": L.t("CONTATO"), "c": Color("#5fd38a")})
 
 
 # ═════════════════════════════════════════════ marco no fim da avenida e outdoor à direita

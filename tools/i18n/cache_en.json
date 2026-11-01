@@ -1,0 +1,1946 @@
+{
+"PRAÇA": {
+"pt": "PRAÇA",
+"en": "SQUARE"
+},
+"GAME DEV · IA · ARQUITETURA": {
+"pt": "GAME DEV · IA · ARQUITETURA",
+"en": "GAME DEV · AI · ARCHITECTURE"
+},
+"CONTATO": {
+"pt": "CONTATO",
+"en": "CONTACT"
+},
+"LAB · SOBRE MIM": {
+"pt": "LAB · SOBRE MIM",
+"en": "LAB · ABOUT ME"
+},
+"CARREIRA": {
+"pt": "CARREIRA",
+"en": "CAREER"
+},
+"GABRIEL\nINÁCIO": {
+"pt": "GABRIEL\nINÁCIO",
+"en": "GABRIEL\nINÁCIO"
+},
+"STACK": {
+"pt": "STACK",
+"en": "STACK"
+},
+"VER SITE  ↗": {
+"pt": "VER SITE  ↗",
+"en": "VIEW SITE  ↗"
+},
+"GITHUB  </>": {
+"pt": "GITHUB  </>",
+"en": "GITHUB  </>"
+},
+"Repositório privado. Posso mostrar numa conversa.": {
+"pt": "Repositório privado. Posso mostrar numa conversa.",
+"en": "Private repository. I can show it in a meeting."
+},
+"QUEM HABITA ESSA CIDADE": {
+"pt": "QUEM HABITA ESSA CIDADE",
+"en": "WHO LIVES IN THIS CITY"
+},
+"ARSENAL": {
+"pt": "ARSENAL",
+"en": "ARSENAL"
+},
+"VAMOS CONSTRUIR?": {
+"pt": "VAMOS CONSTRUIR?",
+"en": "LET'S BUILD?"
+},
+"Tem um projeto em mente? Me chama.": {
+"pt": "Tem um projeto em mente? Me chama.",
+"en": "Have a project in mind? Get in touch."
+},
+"ABRIR O SITE  ↗": {
+"pt": "ABRIR O SITE  ↗",
+"en": "OPEN SITE  ↗"
+},
+"GITHUB  ↗": {
+"pt": "GITHUB  ↗",
+"en": "GITHUB  ↗"
+},
+"repositório privado": {
+"pt": "repositório privado",
+"en": "private repository"
+},
+"público": {
+"pt": "público",
+"en": "public"
+},
+"GABRIEL INÁCIO": {
+"pt": "GABRIEL INÁCIO",
+"en": "GABRIEL INÁCIO"
+},
+"PROJETOS": {
+"pt": "PROJETOS",
+"en": "PROJECTS"
+},
+"toque para abrir": {
+"pt": "toque para abrir",
+"en": "tap to open"
+},
+"· %d/%d explorados": {
+"pt": "· %d/%d explorados",
+"en": "· %d/%d explored"
+},
+"· %d/%d examinados": {
+"pt": "· %d/%d examinados",
+"en": "· %d/%d examined"
+},
+"· 0/%d examinados": {
+"pt": "· 0/%d examinados",
+"en": "· 0/%d examined"
+},
+"[E] abrir  ·  toque no letreiro para ir até lá": {
+"pt": "[E] abrir  ·  toque no letreiro para ir até lá",
+"en": "[E] open  ·  tap the sign to go there"
+},
+"toque para": {
+"pt": "toque para",
+"en": "tap to"
+},
+"SAIR PARA A RUA": {
+"pt": "SAIR PARA A RUA",
+"en": "EXIT TO STREET"
+},
+"toque para sair": {
+"pt": "toque para sair",
+"en": "tap to exit"
+},
+"[E] sair": {
+"pt": "[E] sair",
+"en": "[E] exit"
+},
+"%d de %d": {
+"pt": "%d de %d",
+"en": "%d of %d"
+},
+"CONSTRUÇÕES DIGITAIS": {
+"pt": "CONSTRUÇÕES DIGITAIS",
+"en": "DIGITAL BUILDS"
+},
+"VOLTAR À CIDADE": {
+"pt": "VOLTAR À CIDADE",
+"en": "BACK TO CITY"
+},
+"engenharia de software · games · IA": {
+"pt": "engenharia de software · games · IA",
+"en": "software engineering · games · AI"
+},
+"ENTRAR NA CIDADE": {
+"pt": "ENTRAR NA CIDADE",
+"en": "ENTER CITY"
+},
+"ative o som para a experiência completa": {
+"pt": "ative o som para a experiência completa",
+"en": "turn on sound for the full experience"
+},
+"SAIR": {
+"pt": "SAIR",
+"en": "EXIT"
+},
+"Mais da história": {
+"pt": "Mais da história",
+"en": "More of the story"
+},
+"VER": {
+"pt": "VER",
+"en": "VIEW"
+},
+"DETETIVE PARTICULAR": {
+"pt": "DETETIVE PARTICULAR",
+"en": "PRIVATE DETECTIVE"
+},
+"GODOT · NODE · WEBSOCKET": {
+"pt": "GODOT · NODE · WEBSOCKET",
+"en": "GODOT · NODE · WEBSOCKET"
+},
+"ACESSO AUTORIZADO": {
+"pt": "ACESSO AUTORIZADO",
+"en": "ACCESS GRANTED"
+},
+"BLACKWALL": {
+"pt": "BLACKWALL",
+"en": "BLACKWALL"
+},
+"INSERT COIN": {
+"pt": "INSERT COIN",
+"en": "INSERT COIN"
+},
+"GAME DEV": {
+"pt": "GAME DEV",
+"en": "GAME DEV"
+},
+"LÁBIA": {
+"pt": "LÁBIA",
+"en": "LÁBIA"
+},
+"FALE PARA JOGAR": {
+"pt": "FALE PARA JOGAR",
+"en": "SPEAK TO PLAY"
+},
+"NO AR": {
+"pt": "NO AR",
+"en": "ON AIR"
+},
+"ESTUDE MELHOR": {
+"pt": "ESTUDE MELHOR",
+"en": "STUDY BETTER"
+},
+"Arquitetura": {
+"pt": "Arquitetura",
+"en": "Architecture"
+},
+"Cliente": {
+"pt": "Cliente",
+"en": "Client"
+},
+"STACK QUE EU DOMINO": {
+"pt": "STACK QUE EU DOMINO",
+"en": "STACKS I MASTER"
+},
+"Engenheiro de software full-stack · games · IA": {
+"pt": "Engenheiro de software full-stack · games · IA",
+"en": "Full-stack engineer · games · AI"
+},
+"LinkedIn · GitHub · E-mail": {
+"pt": "LinkedIn · GitHub · E-mail",
+"en": "LinkedIn · GitHub · Email"
+},
+"CLAUDE · AGENTES · IA LOCAL": {
+"pt": "CLAUDE · AGENTES · IA LOCAL",
+"en": "CLAUDE · AGENTS · LOCAL AI"
+},
+"GODOT · BLENDER": {
+"pt": "GODOT · BLENDER",
+"en": "GODOT · BLENDER"
+},
+"Como eu trabalho com IA": {
+"pt": "Como eu trabalho com IA",
+"en": "How I work with AI"
+},
+"Ideia": {
+"pt": "Ideia",
+"en": "Idea"
+},
+"Agentes": {
+"pt": "Agentes",
+"en": "Agents"
+},
+"Testes": {
+"pt": "Testes",
+"en": "Testing"
+},
+"Telefone tocando": {
+"pt": "Telefone tocando",
+"en": "Phone ringing"
+},
+"ATENDER": {
+"pt": "ATENDER",
+"en": "ANSWER"
+},
+"Alô, detetive? Aqui é o Prof. Ailson. A turma inteira jogou o RUMOR no celular hoje. Doze casos escritos à mão, servidor autoritativo em Node com WebSocket, e ninguém travou. Como você fez isso rodar em qualquer celular?": {
+"pt": "Alô, detetive? Aqui é o Prof. Ailson. A turma inteira jogou o RUMOR no celular hoje. Doze casos escritos à mão, servidor autoritativo em Node com WebSocket, e ninguém travou. Como você fez isso rodar em qualquer celular?",
+"en": "Hello, detective? This is Prof. Ailson. The whole class played RUMOR on their phones today. Twelve hand-written cases, an authoritative Node server with WebSocket, and no one crashed. How did you make it run on any phone?"
+},
+"Máquina de escrever": {
+"pt": "Máquina de escrever",
+"en": "Typewriter"
+},
+"DATILOGRAFAR": {
+"pt": "DATILOGRAFAR",
+"en": "TYPE"
+},
+"GABRIEL INÁCIO\nengenharia de software · games · IA\n\nCaso RUMOR: jogo de detetive multiplayer para a sala de aula. Godot no cliente, Node no servidor, 12 casos escritos à mão, 192 pistas com imagem.": {
+"pt": "GABRIEL INÁCIO\nengenharia de software · games · IA\n\nCaso RUMOR: jogo de detetive multiplayer para a sala de aula. Godot no cliente, Node no servidor, 12 casos escritos à mão, 192 pistas com imagem.",
+"en": "GABRIEL INÁCIO\nsoftware engineering · games · AI\n\nRUMOR Case: multiplayer detective game for classrooms. Godot on the client, Node on the server, 12 hand-written cases, 192 visual clues."
+},
+"Arquivo de casos": {
+"pt": "Arquivo de casos",
+"en": "Case files"
+},
+"ABRIR": {
+"pt": "ABRIR",
+"en": "OPEN"
+},
+"FICHA DO CASO\n\nCliente: escolas e professores\nProblema: ensinar raciocínio e trabalho em equipe\nSolução: casos de detetive jogados no celular, com quadro compartilhado de pistas\nTecnologias: Godot 4, GDScript, Node.js, WebSocket, Blender, Mixamo\nStatus: no ar em rumor.inaciodev.online": {
+"pt": "FICHA DO CASO\n\nCliente: escolas e professores\nProblema: ensinar raciocínio e trabalho em equipe\nSolução: casos de detetive jogados no celular, com quadro compartilhado de pistas\nTecnologias: Godot 4, GDScript, Node.js, WebSocket, Blender, Mixamo\nStatus: no ar em rumor.inaciodev.online",
+"en": "CASE FILE\n\nClient: schools and teachers\nProblem: teach reasoning and teamwork\nSolution: detective cases played on phones, with a shared clue board\nTech: Godot 4, GDScript, Node.js, WebSocket, Blender, Mixamo\nStatus: live at rumor.inaciodev.online"
+},
+"Terminal do agente": {
+"pt": "Terminal do agente",
+"en": "Agent terminal"
+},
+"ACESSAR": {
+"pt": "ACESSAR",
+"en": "ACCESS"
+},
+"README e atividade do repositório": {
+"pt": "README e atividade do repositório",
+"en": "README and repo activity"
+},
+"JOGAR": {
+"pt": "JOGAR",
+"en": "PLAY"
+},
+"Um minijogo feito em Godot, rodando aqui dentro.": {
+"pt": "Um minijogo feito em Godot, rodando aqui dentro.",
+"en": "A Godot minigame running right here."
+},
+"Tecnologias que eu domino": {
+"pt": "Tecnologias que eu domino",
+"en": "Technologies I master"
+},
+"EXPLORAR": {
+"pt": "EXPLORAR",
+"en": "EXPLORE"
+},
+"Toque numa tecnologia para ver os projetos em que ela foi usada.": {
+"pt": "Toque numa tecnologia para ver os projetos em que ela foi usada.",
+"en": "Tap a technology to see projects that use it."
+},
+"Linha do tempo": {
+"pt": "Linha do tempo",
+"en": "Timeline"
+},
+"Contato": {
+"pt": "Contato",
+"en": "Contact"
+},
+"CONECTAR": {
+"pt": "CONECTAR",
+"en": "CONNECT"
+},
+"Interruptor": {
+"pt": "Interruptor",
+"en": "Switch"
+},
+"LIGAR / DESLIGAR": {
+"pt": "LIGAR / DESLIGAR",
+"en": "ON / OFF"
+},
+"GitHub ao vivo": {
+"pt": "GitHub ao vivo",
+"en": "Live GitHub"
+},
+"LER README": {
+"pt": "LER README",
+"en": "READ README"
+},
+"Quem é o Gabriel?": {
+"pt": "Quem é o Gabriel?",
+"en": "Who is Gabriel?"
+},
+"Dev full-stack, cinco anos nisso. Do front pixel-perfect ao back que aguenta carga. Cada prédio aqui é coisa que ele ergueu.": {
+"pt": "Dev full-stack, cinco anos nisso. Do front pixel-perfect ao back que aguenta carga. Cada prédio aqui é coisa que ele ergueu.",
+"en": "Full-stack dev, five years in. From pixel-perfect frontends to backends built for scale. Every building here is his work."
+},
+"Com o que ele trabalha?": {
+"pt": "Com o que ele trabalha?",
+"en": "What does he work with?"
+},
+"Vue, React, Nuxt, Next e Flutter na frente. Node, Fastify, NestJS, Spring e Prisma atrás. Postgres, Redis, Docker e AWS na base. E Godot, quando a ideia pede jogo.": {
+"pt": "Vue, React, Nuxt, Next e Flutter na frente. Node, Fastify, NestJS, Spring e Prisma atrás. Postgres, Redis, Docker e AWS na base. E Godot, quando a ideia pede jogo.",
+"en": "Vue, React, Nuxt, Next, and Flutter on the front. Node, Fastify, NestJS, Spring, and Prisma on the back. Postgres, Redis, Docker, and AWS at the base. And Godot, when it's time for games."
+},
+"Por que uma cidade?": {
+"pt": "Por que uma cidade?",
+"en": "Why a city?"
+},
+"Porque portfólio em lista todo mundo tem. Aqui você caminha pelo trabalho dele. Dá um passo e vê.": {
+"pt": "Porque portfólio em lista todo mundo tem. Aqui você caminha pelo trabalho dele. Dá um passo e vê.",
+"en": "Everyone has a list portfolio. Here, you walk through his work. Take a step and see."
+},
+"O que é o RUMOR?": {
+"pt": "O que é o RUMOR?",
+"en": "What is RUMOR?"
+},
+"Jogo de detetive multiplayer pra sala de aula. Cada aluno no próprio celular, investigando o mesmo mistério em 3D.": {
+"pt": "Jogo de detetive multiplayer pra sala de aula. Cada aluno no próprio celular, investigando o mesmo mistério em 3D.",
+"en": "Multiplayer detective game for classrooms. Each student on their own phone, investigating the same 3D mystery."
+},
+"Qual foi o desafio?": {
+"pt": "Qual foi o desafio?",
+"en": "What was the challenge?"
+},
+"Servidor autoritativo em Node pra turma inteira ao mesmo tempo, quadro compartilhado com fios e provas, e cenas 3D que rodam lisas no navegador do celular.": {
+"pt": "Servidor autoritativo em Node pra turma inteira ao mesmo tempo, quadro compartilhado com fios e provas, e cenas 3D que rodam lisas no navegador do celular.",
+"en": "Authoritative Node server for the whole class at once, shared board with threads and evidence, and smooth 3D scenes on mobile browsers."
+},
+"Dá pra jogar?": {
+"pt": "Dá pra jogar?",
+"en": "Can you play it?"
+},
+"Dá. Abre o dossiê e toca em VER SITE. Roda direto no navegador.": {
+"pt": "Dá. Abre o dossiê e toca em VER SITE. Roda direto no navegador.",
+"en": "Yes. Open the dossier and tap VIEW SITE. It runs right in your browser."
+},
+"Que jogo é esse?": {
+"pt": "Que jogo é esse?",
+"en": "What game is this?"
+},
+"Roguelite 3D low-poly de construção de fortaleza e tower defense, com interface em pixel art feita à mão.": {
+"pt": "Roguelite 3D low-poly de construção de fortaleza e tower defense, com interface em pixel art feita à mão.",
+"en": "3D low-poly roguelite for building fortresses and tower defense, with hand-drawn pixel art UI."
+},
+"Como foi feito?": {
+"pt": "Como foi feito?",
+"en": "How was it made?"
+},
+"Godot puro, modelos em Blender por script, cartas e sinergias, civilizações e biomas. Windows e Android.": {
+"pt": "Godot puro, modelos em Blender por script, cartas e sinergias, civilizações e biomas. Windows e Android.",
+"en": "Pure Godot, scripted Blender models, cards and synergies, civilizations and biomes. For Windows and Android."
+},
+"Qual foi o difícil?": {
+"pt": "Qual foi o difícil?",
+"en": "What was hard?"
+},
+"Equilíbrio. Roguelite que nunca é fácil demais nem injusto. Isso se ajusta no detalhe, partida após partida.": {
+"pt": "Equilíbrio. Roguelite que nunca é fácil demais nem injusto. Isso se ajusta no detalhe, partida após partida.",
+"en": "Balance. A roguelite that's never too easy or unfair. It fine-tunes itself every run."
+},
+"Como assim?": {
+"pt": "Como assim?",
+"en": "What do you mean?"
+},
+"Jogo cooperativo de golpe em que você fala de verdade, pelo microfone, com NPCs de IA local. Eles entendem, se irritam e chamam a segurança.": {
+"pt": "Jogo cooperativo de golpe em que você fala de verdade, pelo microfone, com NPCs de IA local. Eles entendem, se irritam e chamam a segurança.",
+"en": "A co-op heist game where you actually talk to local AI NPCs through your mic. They understand, get annoyed, and call security."
+},
+"Qual a sacada técnica?": {
+"pt": "Qual a sacada técnica?",
+"en": "What's the technical trick?"
+},
+"A IA interpreta a fala. O código decide as consequências. Cinco fases, primeira pessoa, três idiomas.": {
+"pt": "A IA interpreta a fala. O código decide as consequências. Cinco fases, primeira pessoa, três idiomas.",
+"en": "AI interprets your speech. Code handles the consequences. Five levels, first-person, three languages."
+},
+"Me conta": {
+"pt": "Me conta",
+"en": "Tell me"
+},
+"o guia da cidade": {
+"pt": "o guia da cidade",
+"en": "the city guide"
+},
+"Então você quer saber quem construiu essa cidade.": {
+"pt": "Então você quer saber quem construiu essa cidade.",
+"en": "So you want to know who built this city."
+},
+"conhece esse projeto": {
+"pt": "conhece esse projeto",
+"en": "know this project"
+},
+"detetive da esquina": {
+"pt": "detetive da esquina",
+"en": "corner detective"
+},
+"RUMOR. Melhor caso que já passou por essa rua.": {
+"pt": "RUMOR. Melhor caso que já passou por essa rua.",
+"en": "RUMOR. The best case this street's ever seen."
+},
+"o mestre de obras": {
+"pt": "o mestre de obras",
+"en": "the foreman"
+},
+"Fortress Chaos. Ergue a fortaleza e aguenta o caos.": {
+"pt": "Fortress Chaos. Ergue a fortaleza e aguenta o caos.",
+"en": "Fortress Chaos. Build your fortress and survive the chaos."
+},
+"o vigarista": {
+"pt": "o vigarista",
+"en": "the con artist"
+},
+"Lábia. Aqui a conversa é a arma.": {
+"pt": "Lábia. Aqui a conversa é a arma.",
+"en": "Lábia. Here, words are your weapon."
+},
+"Esse projeto aqui tem história.": {
+"pt": "Esse projeto aqui tem história.",
+"en": "This project has a story."
+},
+"VER NO GITHUB  ↗": {
+"pt": "VER NO GITHUB  ↗",
+"en": "VIEW ON GITHUB  ↗"
+},
+"Repositório privado": {
+"pt": "Repositório privado",
+"en": "Private repository"
+},
+"Arraste para girar": {
+"pt": "Arraste para girar",
+"en": "Drag to rotate"
+},
+"$ cat %s/README.md": {
+"pt": "$ cat %s/README.md",
+"en": "$ cat %s/README.md"
+},
+"★ %d   ·   %s   ·   %s %s": {
+"pt": "★ %d   ·   %s   ·   %s %s",
+"en": "★ %d   ·   %s   ·   %s %s"
+},
+"Repositório privado: o código não é público, só a descrição.": {
+"pt": "Repositório privado: o código não é público, só a descrição.",
+"en": "Private repository: only the description is public, not the code."
+},
+"Chamada recebida": {
+"pt": "Chamada recebida",
+"en": "Call received"
+},
+"Usada no trabalho profissional (veja a CARREIRA).": {
+"pt": "Usada no trabalho profissional (veja a CARREIRA).",
+"en": "Used professionally (see CAREER)."
+},
+"%s  ·  %s  ·  %s": {
+"pt": "%s  ·  %s  ·  %s",
+"en": "%s  ·  %s  ·  %s"
+},
+"Formação": {
+"pt": "Formação",
+"en": "Education"
+},
+"Gabriel Inácio": {
+"pt": "Gabriel Inácio",
+"en": "Gabriel Inácio"
+},
+"Arraste o dedo para mover a raquete. Toque para lançar.": {
+"pt": "Arraste o dedo para mover a raquete. Toque para lançar.",
+"en": "Swipe to move the paddle. Tap to launch."
+},
+"Mouse ou setas movem a raquete. Clique ou espaço lança. ESC sai.": {
+"pt": "Mouse ou setas movem a raquete. Clique ou espaço lança. ESC sai.",
+"en": "Move the paddle with mouse or arrows. Click or space to launch. ESC to exit."
+},
+"PONTOS": {
+"pt": "PONTOS",
+"en": "SCORE"
+},
+"VIDAS": {
+"pt": "VIDAS",
+"en": "LIVES"
+},
+"FIM DE JOGO": {
+"pt": "FIM DE JOGO",
+"en": "GAME OVER"
+},
+"Toque nas bases para erguer torres (30 de ouro). Segure as ondas!": {
+"pt": "Toque nas bases para erguer torres (30 de ouro). Segure as ondas!",
+"en": "Tap bases to build towers (30 gold). Hold off the waves!"
+},
+"Clique nas bases para erguer torres (30 de ouro). Segure as ondas! ESC sai.": {
+"pt": "Clique nas bases para erguer torres (30 de ouro). Segure as ondas! ESC sai.",
+"en": "Click bases to build towers (30 gold). Hold off the waves! ESC to exit."
+},
+"ONDA": {
+"pt": "ONDA",
+"en": "WAVE"
+},
+"OURO": {
+"pt": "OURO",
+"en": "GOLD"
+},
+"A FORTALEZA CAIU": {
+"pt": "A FORTALEZA CAIU",
+"en": "THE FORTRESS FELL"
+},
+"ondas resistidas: %d · toque para recomeçar": {
+"pt": "ondas resistidas: %d · toque para recomeçar",
+"en": "waves survived: %d · tap to restart"
+},
+"Deslize o dedo para virar. Toque para recomeçar.": {
+"pt": "Deslize o dedo para virar. Toque para recomeçar.",
+"en": "Swipe to turn. Tap to restart."
+},
+"Setas ou WASD para virar. Espaço para recomeçar. ESC sai.": {
+"pt": "Setas ou WASD para virar. Espaço para recomeçar. ESC sai.",
+"en": "Turn with arrows or WASD. Space to restart. ESC to exit."
+},
+"RECORDE": {
+"pt": "RECORDE",
+"en": "HIGH SCORE"
+},
+"toque ou espaço para jogar de novo": {
+"pt": "toque ou espaço para jogar de novo",
+"en": "tap or space to play again"
+},
+"LeftUpLeg": {
+"pt": "LeftUpLeg",
+"en": "LeftUpLeg"
+},
+"RightUpLeg": {
+"pt": "RightUpLeg",
+"en": "RightUpLeg"
+},
+"EXAMINAR": {
+"pt": "EXAMINAR",
+"en": "EXAMINE"
+},
+"INSPECIONAR": {
+"pt": "INSPECIONAR",
+"en": "INSPECT"
+},
+"Engenheiro de Software Full-Stack": {
+"pt": "Engenheiro de Software Full-Stack",
+"en": "Full-Stack Software Engineer"
+},
+"Mais de 4 anos transformando ideia em produto que chega em produção": {
+"pt": "Mais de 4 anos transformando ideia em produto que chega em produção",
+"en": "Over 4 years turning ideas into products that ship"
+},
+"São Paulo, Brasil": {
+"pt": "São Paulo, Brasil",
+"en": "São Paulo, Brazil"
+},
+"Frontend": {
+"pt": "Frontend",
+"en": "Frontend"
+},
+"Backend": {
+"pt": "Backend",
+"en": "Backend"
+},
+"IA e LLM": {
+"pt": "IA e LLM",
+"en": "AI and LLM"
+},
+"Ollama e modelos locais": {
+"pt": "Ollama e modelos locais",
+"en": "Ollama and local models"
+},
+"design de prompt": {
+"pt": "design de prompt",
+"en": "Prompt design"
+},
+"gestão de contexto": {
+"pt": "gestão de contexto",
+"en": "Context management"
+},
+"saídas estruturadas": {
+"pt": "saídas estruturadas",
+"en": "Structured outputs"
+},
+"Dados e mensageria": {
+"pt": "Dados e mensageria",
+"en": "Data and messaging"
+},
+"Nuvem e DevOps": {
+"pt": "Nuvem e DevOps",
+"en": "Cloud and DevOps"
+},
+"Microsserviços": {
+"pt": "Microsserviços",
+"en": "Microservices"
+},
+"Game dev": {
+"pt": "Game dev",
+"en": "Game dev"
+},
+"pipeline 3D para web": {
+"pt": "pipeline 3D para web",
+"en": "3D pipeline for web"
+},
+"arte por código e por IA": {
+"pt": "arte por código e por IA",
+"en": "Code and AI-generated art"
+},
+"Segurança e testes": {
+"pt": "Segurança e testes",
+"en": "Security and testing"
+},
+"testes unitários e E2E": {
+"pt": "testes unitários e E2E",
+"en": "Unit and E2E testing"
+},
+"Desenvolvedor Full-Stack": {
+"pt": "Desenvolvedor Full-Stack",
+"en": "Full-Stack Developer"
+},
+"jun 2024 ate hoje": {
+"pt": "jun 2024 ate hoje",
+"en": "Jun 2024 to present"
+},
+"Remoto": {
+"pt": "Remoto",
+"en": "Remote"
+},
+"Liderança técnica de um time de 3 pessoas em mais de 6 projetos de grande porte, com decisões de arquitetura e planejamento de sprint ponta a ponta.": {
+"pt": "Liderança técnica de um time de 3 pessoas em mais de 6 projetos de grande porte, com decisões de arquitetura e planejamento de sprint ponta a ponta.",
+"en": "Technical lead for a team of 3 on 6+ large projects, handling architecture and end-to-end sprint planning."
+},
+"Desenvolvedor original do ACL, assistente de licitações que automatiza o ciclo completo de compras públicas em portais do governo: captura de editais, envio de propostas, lances e monitoramento de pregões.": {
+"pt": "Desenvolvedor original do ACL, assistente de licitações que automatiza o ciclo completo de compras públicas em portais do governo: captura de editais, envio de propostas, lances e monitoramento de pregões.",
+"en": "Original developer of ACL, a bidding assistant that automates the full public procurement cycle: capturing notices, submitting proposals, bidding and monitoring auctions."
+},
+"SaaS multi-tenant escalável em Vue, React, Node e PostgreSQL, com padrões BFF e DDD e uma biblioteca de componentes usada por mais de 20 desenvolvedores.": {
+"pt": "SaaS multi-tenant escalável em Vue, React, Node e PostgreSQL, com padrões BFF e DDD e uma biblioteca de componentes usada por mais de 20 desenvolvedores.",
+"en": "Scalable multi-tenant SaaS in Vue, React, Node and PostgreSQL, using BFF and DDD patterns and a component library used by 20+ developers."
+},
+"WebSockets para tempo real e integrações profundas entre vários sistemas, com pipeline completo de QA, Staging e Produção.": {
+"pt": "WebSockets para tempo real e integrações profundas entre vários sistemas, com pipeline completo de QA, Staging e Produção.",
+"en": "WebSockets for real-time and deep integrations across systems, with full QA, Staging and Production pipeline."
+},
+"Um dos 2 desenvolvedores do app Flutter da empresa, unindo vários aplicativos num só.": {
+"pt": "Um dos 2 desenvolvedores do app Flutter da empresa, unindo vários aplicativos num só.",
+"en": "One of two developers on the company's Flutter app, merging multiple apps into one."
+},
+"Integração do Claude Code e Codex no fluxo diário para acelerar scaffolding, refatoração e depuração.": {
+"pt": "Integração do Claude Code e Codex no fluxo diário para acelerar scaffolding, refatoração e depuração.",
+"en": "Integrated Claude Code and Codex into daily workflow to speed up scaffolding, refactoring and debugging."
+},
+"abr 2024 a jun 2024": {
+"pt": "abr 2024 a jun 2024",
+"en": "Apr 2024 to Jun 2024"
+},
+"Jales, SP": {
+"pt": "Jales, SP",
+"en": "Jales, SP"
+},
+"Desenvolvimento e manutenção de aplicações desktop WPF com arquitetura MVVM e SQL Server, entregando soluções prontas para produção.": {
+"pt": "Desenvolvimento e manutenção de aplicações desktop WPF com arquitetura MVVM e SQL Server, entregando soluções prontas para produção.",
+"en": "Developed and maintained WPF desktop apps with MVVM and SQL Server, delivering production-ready solutions."
+},
+"Bolsista de Iniciação Científica": {
+"pt": "Bolsista de Iniciação Científica",
+"en": "Scientific Research Scholar"
+},
+"set 2022 a ago 2023": {
+"pt": "set 2022 a ago 2023",
+"en": "Sep 2022 to Aug 2023"
+},
+"Brasil": {
+"pt": "Brasil",
+"en": "Brazil"
+},
+"Pesquisa sobre um compressor de CO2 supercrítico aplicado à exploração do pré-sal, com scripts próprios em Python para simulação e análise estatística, sem bibliotecas prontas de IA.": {
+"pt": "Pesquisa sobre um compressor de CO2 supercrítico aplicado à exploração do pré-sal, com scripts próprios em Python para simulação e análise estatística, sem bibliotecas prontas de IA.",
+"en": "Research on a supercritical CO2 compressor for pre-salt exploration, using custom Python scripts for simulation and statistical analysis, without AI libraries."
+},
+"Tecnólogo em Sistemas para Internet": {
+"pt": "Tecnólogo em Sistemas para Internet",
+"en": "Technologist in Internet Systems"
+},
+"FATEC-SP": {
+"pt": "FATEC-SP",
+"en": "FATEC-SP"
+},
+"2023 a 2026": {
+"pt": "2023 a 2026",
+"en": "2023 to 2026"
+},
+"Desenvolvimento web full-stack, UX/UI, bancos de dados, cibersegurança e métodos ágeis.": {
+"pt": "Desenvolvimento web full-stack, UX/UI, bancos de dados, cibersegurança e métodos ágeis.",
+"en": "Full-stack web development, UX/UI, databases, cybersecurity and agile methods."
+},
+"Engenharia Mecânica": {
+"pt": "Engenharia Mecânica",
+"en": "Mechanical Engineering"
+},
+"UNESP": {
+"pt": "UNESP",
+"en": "UNESP"
+},
+"2020 a 2023 (trancado)": {
+"pt": "2020 a 2023 (trancado)",
+"en": "2020 to 2023 (on hold)"
+},
+"Base analítica forte em matemática, termodinâmica e análise de dados, antes da transição para software.": {
+"pt": "Base analítica forte em matemática, termodinâmica e análise de dados, antes da transição para software.",
+"en": "Strong analytical background in math, thermodynamics and data analysis before moving to software."
+},
+"Português nativo": {
+"pt": "Português nativo",
+"en": "Native Portuguese"
+},
+"Inglês avançado": {
+"pt": "Inglês avançado",
+"en": "Advanced English"
+},
+"Jogo de detetive multiplayer para a sala de aula": {
+"pt": "Jogo de detetive multiplayer para a sala de aula",
+"en": "Multiplayer detective game for classrooms"
+},
+"Jogo web multiplayer de detetive em 3D, feito para rodar no celular de cada aluno. Equipes exploram a escola, interrogam personagens que mudam de expressão e montam juntas um quadro com fios e provas. Feito em Godot 4.7 + servidor Node autoritativo.": {
+"pt": "Jogo web multiplayer de detetive em 3D, feito para rodar no celular de cada aluno. Equipes exploram a escola, interrogam personagens que mudam de expressão e montam juntas um quadro com fios e provas. Feito em Godot 4.7 + servidor Node autoritativo.",
+"en": "3D multiplayer detective web game for students' phones. Teams explore the school, question characters with changing expressions and build a board with clues. Built with Godot 4.7 and an authoritative Node server."
+},
+"Roguelite 3D de construção de fortaleza e tower defense": {
+"pt": "Roguelite 3D de construção de fortaleza e tower defense",
+"en": "3D roguelite fortress builder and tower defense"
+},
+"Roguelite medieval de base-building e defesa de torres, 3D low-poly com interface em pixel art feita à mão. Cartas, sinergias, civilizações, biomas e chefes. Desenvolvimento ativo, Windows e Android.": {
+"pt": "Roguelite medieval de base-building e defesa de torres, 3D low-poly com interface em pixel art feita à mão. Cartas, sinergias, civilizações, biomas e chefes. Desenvolvimento ativo, Windows e Android.",
+"en": "Medieval base-building roguelite and tower defense in low-poly 3D with hand-drawn pixel art UI. Cards, synergies, civilizations, biomes and bosses. In active development for Windows and Android."
+},
+"Vagas de dev onde você tem chance real": {
+"pt": "Vagas de dev onde você tem chance real",
+"en": "Dev jobs where you have a real shot"
+},
+"Cruza seu currículo com vagas de 17 fontes e coloca no topo o que combina com você, tem poucos candidatos e foi publicado há pouco. Nota de oportunidade com embeddings locais, fila de sincronização e tempo real.": {
+"pt": "Cruza seu currículo com vagas de 17 fontes e coloca no topo o que combina com você, tem poucos candidatos e foi publicado há pouco. Nota de oportunidade com embeddings locais, fila de sincronização e tempo real.",
+"en": "Matches your resume with jobs from 17 sources and highlights those that fit you, have few applicants and are recent. Opportunity score with local embeddings, sync queue and real-time updates."
+},
+"SaaS multi-tenant de gestão, com API e finanças próprias": {
+"pt": "SaaS multi-tenant de gestão, com API e finanças próprias",
+"en": "Multi-tenant management SaaS with API and built-in finance"
+},
+"Plataforma SaaS multi-tenant com isolamento no banco via Row-Level Security do Postgres. Monorepo NestJS + Flutter, com orbix-api (autenticação, OTP, tokens, finanças) servindo vários produtos como CRM e gestão de oficinas.": {
+"pt": "Plataforma SaaS multi-tenant com isolamento no banco via Row-Level Security do Postgres. Monorepo NestJS + Flutter, com orbix-api (autenticação, OTP, tokens, finanças) servindo vários produtos como CRM e gestão de oficinas.",
+"en": "Multi-tenant SaaS platform with database isolation via Postgres Row-Level Security. Monorepo with NestJS and Flutter, orbix-api (auth, OTP, tokens, finance) powering products like CRM and workshop management."
+},
+"Fala virando texto formatado, por IA": {
+"pt": "Fala virando texto formatado, por IA",
+"en": "Speech to formatted text with AI"
+},
+"App mobile de TCC que transforma fala informal em e-mail, mensagem, orçamento ou receita prontos. Grava a voz, transcreve com Whisper e formata com GPT-4o-mini. Pensado para quem tem menos fluência digital.": {
+"pt": "App mobile de TCC que transforma fala informal em e-mail, mensagem, orçamento ou receita prontos. Grava a voz, transcreve com Whisper e formata com GPT-4o-mini. Pensado para quem tem menos fluência digital.",
+"en": "Mobile app that turns informal speech into ready-to-send emails, messages, quotes or recipes. Records your voice, transcribes with Whisper and formats with GPT-4o-mini. Designed for users with low digital fluency."
+},
+"Heist cooperativo em que você fala de verdade com NPCs de IA": {
+"pt": "Heist cooperativo em que você fala de verdade com NPCs de IA",
+"en": "Co-op heist where you really talk to AI NPCs"
+},
+"Jogo cooperativo de comédia (1 a 4 jogadores): vocês são vigaristas e aplicam golpes falando pelo microfone com NPCs movidos por IA local. Os NPCs entendem, se irritam, riem e chamam a segurança. Cinco fases, primeira pessoa.": {
+"pt": "Jogo cooperativo de comédia (1 a 4 jogadores): vocês são vigaristas e aplicam golpes falando pelo microfone com NPCs movidos por IA local. Os NPCs entendem, se irritam, riem e chamam a segurança. Cinco fases, primeira pessoa.",
+"en": "Comedy co-op game (1-4 players): you're con artists pulling scams by talking to local AI NPCs through your mic. NPCs react, get annoyed, laugh, and call security. Five first-person levels."
+},
+"CRM e disparo multicanal para pequenas empresas": {
+"pt": "CRM e disparo multicanal para pequenas empresas",
+"en": "CRM and multichannel messaging for small businesses"
+},
+"SaaS de CRM e campanhas por WhatsApp e SMS para clínicas, estúdios e oficinas. Mensagens diretas, campanhas agendadas e reengajamento pós-venda, com billing mensal e deploy em AWS.": {
+"pt": "SaaS de CRM e campanhas por WhatsApp e SMS para clínicas, estúdios e oficinas. Mensagens diretas, campanhas agendadas e reengajamento pós-venda, com billing mensal e deploy em AWS.",
+"en": "CRM SaaS for clinics, studios, and shops with WhatsApp and SMS campaigns. Direct messages, scheduled campaigns, post-sale reengagement, monthly billing, and AWS deployment."
+},
+"Agente de pentest autônomo, 100% local": {
+"pt": "Agente de pentest autônomo, 100% local",
+"en": "Autonomous pentest agent, fully local"
+},
+"Agente de segurança que roda inteiro na sua máquina: você conversa num chat estética terminal, define um alvo autorizado e um modelo local encadeia ferramentas reais de recon, varredura e auditoria de código, terminando com um relatório. Só para uso autorizado.": {
+"pt": "Agente de segurança que roda inteiro na sua máquina: você conversa num chat estética terminal, define um alvo autorizado e um modelo local encadeia ferramentas reais de recon, varredura e auditoria de código, terminando com um relatório. Só para uso autorizado.",
+"en": "Security agent that runs entirely on your machine: chat in a terminal UI, set an authorized target, and a local model chains real recon, scanning, and code audit tools, ending with a report. For authorized use only."
+},
+"Flashcards com IA e repetição espaçada": {
+"pt": "Flashcards com IA e repetição espaçada",
+"en": "AI flashcards with spaced repetition"
+},
+"App mobile de estudos que transforma tema, texto ou PDF em dezenas de flashcards com IA, usando repetição espaçada (SM-2). Interface Material 3 moderna e acessível.": {
+"pt": "App mobile de estudos que transforma tema, texto ou PDF em dezenas de flashcards com IA, usando repetição espaçada (SM-2). Interface Material 3 moderna e acessível.",
+"en": "Mobile study app that turns topics, text, or PDFs into dozens of AI flashcards using spaced repetition (SM-2). Modern, accessible Material 3 interface."
+},
+"Blog e landing pages com CMS completo": {
+"pt": "Blog e landing pages com CMS completo",
+"en": "Blog and landing pages with full CMS"
+},
+"Plataforma de landing pages e blog institucional para empresa de telecom, com CMS admin, newsletter, analytics e SEO dinâmico. Backend com auth JWT + 2FA, roles e upload para S3.": {
+"pt": "Plataforma de landing pages e blog institucional para empresa de telecom, com CMS admin, newsletter, analytics e SEO dinâmico. Backend com auth JWT + 2FA, roles e upload para S3.",
+"en": "Landing page and blog platform for a telecom company, with CMS admin, newsletter, analytics, and dynamic SEO. Backend with JWT + 2FA auth, roles, and S3 uploads."
+},
+"Central de mensagens": {
+"pt": "Central de mensagens",
+"en": "Messaging hub"
+},
+"AirMessage": {
+"pt": "AirMessage",
+"en": "AirMessage"
+},
+"SaaS de CRM e campanhas por WhatsApp e SMS para clínicas, estúdios e oficinas: mensagens diretas, campanhas agendadas e reengajamento.": {
+"pt": "SaaS de CRM e campanhas por WhatsApp e SMS para clínicas, estúdios e oficinas: mensagens diretas, campanhas agendadas e reengajamento.",
+"en": "CRM SaaS for clinics, studios, and shops: WhatsApp and SMS campaigns, direct messages, scheduled campaigns, and reengagement."
+},
+"Node · Flutter · AWS": {
+"pt": "Node · Flutter · AWS",
+"en": "Node · Flutter · AWS"
+},
+"Operação": {
+"pt": "Operação",
+"en": "Operation"
+},
+"Billing mensal e deploy em AWS. Pensado para pequenos negócios manterem contato com os clientes.": {
+"pt": "Billing mensal e deploy em AWS. Pensado para pequenos negócios manterem contato com os clientes.",
+"en": "Monthly billing and AWS deployment. Designed to help small businesses stay in touch with customers."
+},
+"SaaS": {
+"pt": "SaaS",
+"en": "SaaS"
+},
+"O produto": {
+"pt": "O produto",
+"en": "The product"
+},
+"AirMessage e um SaaS de CRM e disparo multicanal por WhatsApp e SMS, feito para clinicas, estudios e oficinas.": {
+"pt": "AirMessage e um SaaS de CRM e disparo multicanal por WhatsApp e SMS, feito para clinicas, estudios e oficinas.",
+"en": "AirMessage is a CRM SaaS for WhatsApp and SMS campaigns, built for clinics, studios, and shops."
+},
+"Campanhas e reengajamento": {
+"pt": "Campanhas e reengajamento",
+"en": "Campaigns and reengagement"
+},
+"Mensagens diretas, campanhas agendadas e reengajamento pos-venda, tudo organizado por cliente.": {
+"pt": "Mensagens diretas, campanhas agendadas e reengajamento pos-venda, tudo organizado por cliente.",
+"en": "Direct messages, scheduled campaigns, and post-sale reengagement, all organized by client."
+},
+"Um codigo, duas plataformas": {
+"pt": "Um codigo, duas plataformas",
+"en": "One codebase, two platforms"
+},
+"Um unico app em Flutter roda no Android e no Windows, com autenticacao em duas etapas por SMS e e-mail.": {
+"pt": "Um unico app em Flutter roda no Android e no Windows, com autenticacao em duas etapas por SMS e e-mail.",
+"en": "A single Flutter app runs on Android and Windows, with two-factor authentication via SMS and email."
+},
+"Como foi feito": {
+"pt": "Como foi feito",
+"en": "How it was built"
+},
+"Backend Node com Fastify, app Flutter, PostgreSQL, integracao com a API do WhatsApp, cobranca por assinatura e deploy em AWS.": {
+"pt": "Backend Node com Fastify, app Flutter, PostgreSQL, integracao com a API do WhatsApp, cobranca por assinatura e deploy em AWS.",
+"en": "Node backend with Fastify, Flutter app, PostgreSQL, WhatsApp API integration, subscription billing, and AWS deployment."
+},
+"Sala de estudos": {
+"pt": "Sala de estudos",
+"en": "Study room"
+},
+"AnkiAna": {
+"pt": "AnkiAna",
+"en": "AnkiAna"
+},
+"App de estudos que transforma tema, texto ou PDF em dezenas de flashcards com IA, usando repetição espaçada.": {
+"pt": "App de estudos que transforma tema, texto ou PDF em dezenas de flashcards com IA, usando repetição espaçada.",
+"en": "Study app that turns topics, text, or PDFs into dozens of AI flashcards with spaced repetition."
+},
+"Flutter · OpenAI": {
+"pt": "Flutter · OpenAI",
+"en": "Flutter · OpenAI"
+},
+"Repetição espaçada": {
+"pt": "Repetição espaçada",
+"en": "Spaced repetition"
+},
+"Algoritmo SM-2 decide quando rever cada cartão. Interface Material 3 moderna e acessível.": {
+"pt": "Algoritmo SM-2 decide quando rever cada cartão. Interface Material 3 moderna e acessível.",
+"en": "SM-2 algorithm schedules each card. Modern, accessible Material 3 interface."
+},
+"Aprendizado": {
+"pt": "Aprendizado",
+"en": "Learning"
+},
+"O app": {
+"pt": "O app",
+"en": "The app"
+},
+"AnkiAna vira um tema, um texto ou um PDF em dezenas de flashcards com IA, para voce estudar sem montar os cartoes na mao.": {
+"pt": "AnkiAna vira um tema, um texto ou um PDF em dezenas de flashcards com IA, para voce estudar sem montar os cartoes na mao.",
+"en": "AnkiAna turns a topic, text, or PDF into dozens of AI flashcards, so you can study without making cards by hand."
+},
+"Repeticao espacada": {
+"pt": "Repeticao espacada",
+"en": "Spaced repetition"
+},
+"Usa repeticao espacada, o metodo SM-2, para mostrar cada cartao na hora certa de lembrar e fixar melhor o conteudo.": {
+"pt": "Usa repeticao espacada, o metodo SM-2, para mostrar cada cartao na hora certa de lembrar e fixar melhor o conteudo.",
+"en": "Uses spaced repetition (SM-2) to show each card at the right time to help you remember and retain content."
+},
+"Interface moderna": {
+"pt": "Interface moderna",
+"en": "Modern interface"
+},
+"Visual Material 3 moderno e acessivel, pensado para estudar no celular com conforto.": {
+"pt": "Visual Material 3 moderno e acessivel, pensado para estudar no celular com conforto.",
+"en": "Modern, accessible Material 3 look, designed for comfortable mobile studying."
+},
+"App em Flutter com Dart, integracao com IA para gerar os cartoes e design Material 3.": {
+"pt": "App em Flutter com Dart, integracao com IA para gerar os cartoes e design Material 3.",
+"en": "Flutter app with Dart, AI integration for card generation, and Material 3 design."
+},
+"Agência de empregos": {
+"pt": "Agência de empregos",
+"en": "Job agency"
+},
+"Oportunidades": {
+"pt": "Oportunidades",
+"en": "Opportunities"
+},
+"Cruza seu currículo com vagas de 17 fontes e põe no topo o que combina com você, tem poucos candidatos e foi publicado há pouco.": {
+"pt": "Cruza seu currículo com vagas de 17 fontes e põe no topo o que combina com você, tem poucos candidatos e foi publicado há pouco.",
+"en": "Matches your resume with jobs from 17 sources and ranks those that fit you, have few applicants, and were posted recently."
+},
+"Nuxt · Fastify · Postgres": {
+"pt": "Nuxt · Fastify · Postgres",
+"en": "Nuxt · Fastify · Postgres"
+},
+"Poucos candidatos": {
+"pt": "Poucos candidatos",
+"en": "Few applicants"
+},
+"Vagas do LinkedIn com o número real de candidatos. Aqui, todas com menos de 25 e match alto.": {
+"pt": "Vagas do LinkedIn com o número real de candidatos. Aqui, todas com menos de 25 e match alto.",
+"en": "LinkedIn jobs with real applicant counts. All shown here have fewer than 25 applicants and a high match."
+},
+"Sinal de chance": {
+"pt": "Sinal de chance",
+"en": "Chance signal"
+},
+"Por que essa vaga": {
+"pt": "Por que essa vaga",
+"en": "Why this job"
+},
+"Match, concorrência com cada motivo, elegibilidade e o link da vaga original. A nota de oportunidade sai de embeddings locais.": {
+"pt": "Match, concorrência com cada motivo, elegibilidade e o link da vaga original. A nota de oportunidade sai de embeddings locais.",
+"en": "Match, competition with reasons, eligibility, and original job link. Opportunity score comes from local embeddings."
+},
+"Ranking": {
+"pt": "Ranking",
+"en": "Ranking"
+},
+"Tempo real sem lacunas": {
+"pt": "Tempo real sem lacunas",
+"en": "Real-time, no gaps"
+},
+"Sequência atômica no Redis, WebSocket com heartbeat, polling de reserva e ressincronização. Tudo muda em todas as abas, sem recarregar.": {
+"pt": "Sequência atômica no Redis, WebSocket com heartbeat, polling de reserva e ressincronização. Tudo muda em todas as abas, sem recarregar.",
+"en": "Atomic sequence in Redis, WebSocket with heartbeat, reservation polling and resync. Everything updates across tabs instantly."
+},
+"Kanban": {
+"pt": "Kanban",
+"en": "Kanban"
+},
+"Arraste os cards entre colunas; o quadro sincroniza entre abas e janelas.": {
+"pt": "Arraste os cards entre colunas; o quadro sincroniza entre abas e janelas.",
+"en": "Drag cards between columns; the board syncs across tabs and windows."
+},
+"UX": {
+"pt": "UX",
+"en": "UX"
+},
+"17 fontes": {
+"pt": "17 fontes",
+"en": "17 sources"
+},
+"Fontes brasileiras primeiro, liga e desliga cada uma, vagas abertas e o resultado da última execução, ao vivo.": {
+"pt": "Fontes brasileiras primeiro, liga e desliga cada uma, vagas abertas e o resultado da última execução, ao vivo.",
+"en": "Brazilian sources first, toggle each one, see open jobs and latest results live."
+},
+"Coleta": {
+"pt": "Coleta",
+"en": "Collection"
+},
+"Roda na sua máquina": {
+"pt": "Roda na sua máquina",
+"en": "Runs on your machine"
+},
+"Tudo local e de graça. A chave da OpenAI é opcional: sem ela o ranking funciona por completo com o modelo local.": {
+"pt": "Tudo local e de graça. A chave da OpenAI é opcional: sem ela o ranking funciona por completo com o modelo local.",
+"en": "Fully local and free. OpenAI key is optional: ranking works entirely with the local model."
+},
+"IA local": {
+"pt": "IA local",
+"en": "Local AI"
+},
+"A ideia": {
+"pt": "A ideia",
+"en": "The idea"
+},
+"BuscaVagas cruza o seu curriculo com vagas de desenvolvedor e coloca no topo aquelas em que voce tem chance real: combina com voce, tem poucos candidatos e foi publicada ha pouco.": {
+"pt": "BuscaVagas cruza o seu curriculo com vagas de desenvolvedor e coloca no topo aquelas em que voce tem chance real: combina com voce, tem poucos candidatos e foi publicada ha pouco.",
+"en": "BuscaVagas matches your resume with developer jobs and highlights those where you have a real shot: best fit, few applicants, and recently posted."
+},
+"Nota de oportunidade": {
+"pt": "Nota de oportunidade",
+"en": "Opportunity score"
+},
+"Uma nota de match calculada com embeddings locais compara a sua experiencia com cada vaga, sem mandar seus dados para fora.": {
+"pt": "Uma nota de match calculada com embeddings locais compara a sua experiencia com cada vaga, sem mandar seus dados para fora.",
+"en": "A match score using local embeddings compares your experience to each job, keeping your data private."
+},
+"Estúdio de voz": {
+"pt": "Estúdio de voz",
+"en": "Voice studio"
+},
+"Da voz ao texto pronto": {
+"pt": "Da voz ao texto pronto",
+"en": "From voice to ready text"
+},
+"Grava a voz, o Whisper transcreve, o GPT-4o-mini formata e você compartilha em um toque.": {
+"pt": "Grava a voz, o Whisper transcreve, o GPT-4o-mini formata e você compartilha em um toque.",
+"en": "Record your voice, Whisper transcribes, GPT-4o-mini formats, and you share with one tap."
+},
+"Nove formatos": {
+"pt": "Nove formatos",
+"en": "Nine formats"
+},
+"WhatsApp, e-mail, documento, orçamento, receita, currículo, post social, lista ou outro, da mesma fala.": {
+"pt": "WhatsApp, e-mail, documento, orçamento, receita, currículo, post social, lista ou outro, da mesma fala.",
+"en": "WhatsApp, email, document, quote, recipe, resume, social post, list or more—all from the same recording."
+},
+"Versatilidade": {
+"pt": "Versatilidade",
+"en": "Versatility"
+},
+"Flutter no celular, Nginx com SSL, Node com Express, Prisma e Postgres. A IA é orquestrada, não embutida.": {
+"pt": "Flutter no celular, Nginx com SSL, Node com Express, Prisma e Postgres. A IA é orquestrada, não embutida.",
+"en": "Flutter for mobile, Nginx with SSL, Node with Express, Prisma and Postgres. AI is orchestrated, not embedded."
+},
+"Trabalho de conclusão": {
+"pt": "Trabalho de conclusão",
+"en": "Final project"
+},
+"Feito como TCC, para quem tem menos fluência digital. Basta falar e o texto formal sai pronto.": {
+"pt": "Feito como TCC, para quem tem menos fluência digital. Basta falar e o texto formal sai pronto.",
+"en": "Created as a thesis for those less digitally fluent. Just speak and get a formal text instantly."
+},
+"Propósito": {
+"pt": "Propósito",
+"en": "Purpose"
+},
+"Acessibilidade": {
+"pt": "Acessibilidade",
+"en": "Accessibility"
+},
+"Pensado para maior faixa etária e rotinas corridas: elimina a barreira de redigir mensagens formais.": {
+"pt": "Pensado para maior faixa etária e rotinas corridas: elimina a barreira de redigir mensagens formais.",
+"en": "Designed for older users and busy routines: removes the barrier of writing formal messages."
+},
+"Inclusão": {
+"pt": "Inclusão",
+"en": "Inclusion"
+},
+"FormataAI transforma uma fala informal em e-mail, mensagem, orcamento ou receita prontos para usar. Foi o meu trabalho de conclusao de curso.": {
+"pt": "FormataAI transforma uma fala informal em e-mail, mensagem, orcamento ou receita prontos para usar. Foi o meu trabalho de conclusao de curso.",
+"en": "FormataAI turns informal speech into ready-to-use emails, messages, quotes or recipes. It was my graduation project."
+},
+"Voz vira texto": {
+"pt": "Voz vira texto",
+"en": "Voice becomes text"
+},
+"Voce grava a voz, o app transcreve com o Whisper e formata com o GPT-4o-mini, entregando um texto estruturado e limpo.": {
+"pt": "Voce grava a voz, o app transcreve com o Whisper e formata com o GPT-4o-mini, entregando um texto estruturado e limpo.",
+"en": "You record your voice, the app transcribes with Whisper and formats with GPT-4o-mini, delivering clean, structured text."
+},
+"Pensado para incluir": {
+"pt": "Pensado para incluir",
+"en": "Designed for inclusion"
+},
+"Feito para quem tem menos fluencia digital: em vez de digitar e formatar, a pessoa so fala e recebe o texto pronto.": {
+"pt": "Feito para quem tem menos fluencia digital: em vez de digitar e formatar, a pessoa so fala e recebe o texto pronto.",
+"en": "Made for those less digitally fluent: instead of typing and formatting, just speak and get the text ready."
+},
+"Design de prompt": {
+"pt": "Design de prompt",
+"en": "Prompt design"
+},
+"O segredo esta no desenho dos prompts e na gestao de contexto, para a saida sair sempre no formato certo.": {
+"pt": "O segredo esta no desenho dos prompts e na gestao de contexto, para a saida sair sempre no formato certo.",
+"en": "The secret is in prompt design and context management, so the output is always in the right format."
+},
+"Loja de jogos e fliperama": {
+"pt": "Loja de jogos e fliperama",
+"en": "Game store and arcade"
+},
+"Fortress Chaos": {
+"pt": "Fortress Chaos",
+"en": "Fortress Chaos"
+},
+"Roguelite medieval de construção de fortaleza e defesa de torres, 3D low-poly com interface em pixel art feita à mão.": {
+"pt": "Roguelite medieval de construção de fortaleza e defesa de torres, 3D low-poly com interface em pixel art feita à mão.",
+"en": "Medieval roguelite fortress builder and tower defense, 3D low-poly with hand-drawn pixel art UI."
+},
+"Godot · Steam": {
+"pt": "Godot · Steam",
+"en": "Godot · Steam"
+},
+"A horda chega": {
+"pt": "A horda chega",
+"en": "The horde arrives"
+},
+"As ondas vêm cada vez mais fortes. Torres e tropas lutam sozinhas; você intervém com magias por clique. Chefes nas ondas 5 e 10.": {
+"pt": "As ondas vêm cada vez mais fortes. Torres e tropas lutam sozinhas; você intervém com magias por clique. Chefes nas ondas 5 e 10.",
+"en": "Waves get tougher each time. Towers and troops fight on their own; you cast spells with clicks. Bosses on waves 5 and 10."
+},
+"Tower defense": {
+"pt": "Tower defense",
+"en": "Tower defense"
+},
+"Sinergias por adjacência": {
+"pt": "Sinergias por adjacência",
+"en": "Adjacency synergies"
+},
+"A muralha herda o elemento da torre ao lado: elétrica, fogo, gelo, veneno. A estratégia nasce do desenho físico da fortaleza.": {
+"pt": "A muralha herda o elemento da torre ao lado: elétrica, fogo, gelo, veneno. A estratégia nasce do desenho físico da fortaleza.",
+"en": "Walls inherit the element of adjacent towers: electric, fire, ice, poison. Strategy comes from your fortress layout."
+},
+"Sistemas": {
+"pt": "Sistemas",
+"en": "Systems"
+},
+"Campanha com Calor": {
+"pt": "Campanha com Calor",
+"en": "Campaign with Heat"
+},
+"Mapa de nós com 12 biomas, clima que muda o terreno e baús trancados. O Calor é a dificuldade opcional que paga mais Prata.": {
+"pt": "Mapa de nós com 12 biomas, clima que muda o terreno e baús trancados. O Calor é a dificuldade opcional que paga mais Prata.",
+"en": "Node map with 12 biomes, weather that changes terrain, and locked chests. Heat is an optional difficulty that pays more Silver."
+},
+"Meta": {
+"pt": "Meta",
+"en": "Meta"
+},
+"Progresso permanente": {
+"pt": "Progresso permanente",
+"en": "Permanent progress"
+},
+"A Prata de cada expedição compra civilizações, construções, magias e cosméticos para a próxima.": {
+"pt": "A Prata de cada expedição compra civilizações, construções, magias e cosméticos para a próxima.",
+"en": "Silver from each run unlocks civilizations, buildings, spells and cosmetics for the next."
+},
+"Progressão": {
+"pt": "Progressão",
+"en": "Progression"
+},
+"Seguir ou resistir": {
+"pt": "Seguir ou resistir",
+"en": "Move on or stay"
+},
+"Fase vencida: siga viagem ou fique para ondas sem fim, que pagam mais e perdoam menos.": {
+"pt": "Fase vencida: siga viagem ou fique para ondas sem fim, que pagam mais e perdoam menos.",
+"en": "Stage cleared: move on or stay for endless waves with higher rewards and tougher risks."
+},
+"Risco": {
+"pt": "Risco",
+"en": "Risk"
+},
+"Em números": {
+"pt": "Em números",
+"en": "By the numbers"
+},
+"7 civilizações, 12 biomas, 14 magias, cartas por raridade com mutações, 9 idiomas, Windows e Android.": {
+"pt": "7 civilizações, 12 biomas, 14 magias, cartas por raridade com mutações, 9 idiomas, Windows e Android.",
+"en": "7 civilizations, 12 biomes, 14 spells, cards with rarity and mutations, 9 languages, Windows and Android."
+},
+"Escopo": {
+"pt": "Escopo",
+"en": "Scope"
+},
+"No fliperama": {
+"pt": "No fliperama",
+"en": "At the arcade"
+},
+"Civilizações com arquitetura e tropas próprias, cartas de Caos para quem gosta de risco e a Oficina do Estandarte, onde você desenha o brasão pixel a pixel.": {
+"pt": "Civilizações com arquitetura e tropas próprias, cartas de Caos para quem gosta de risco e a Oficina do Estandarte, onde você desenha o brasão pixel a pixel.",
+"en": "Civilizations with unique buildings and troops, Chaos cards for risk-takers, and a Banner Workshop to design your crest pixel by pixel."
+},
+"Conteúdo": {
+"pt": "Conteúdo",
+"en": "Content"
+},
+"O jogo": {
+"pt": "O jogo",
+"en": "The game"
+},
+"Fortress Chaos e um roguelite 3D de construir fortaleza e defender de ondas de inimigos. Voce ergue muralhas, posiciona torres e sobrevive.": {
+"pt": "Fortress Chaos é um roguelite 3D de construir fortaleza e defender de ondas de inimigos. Você ergue muralhas, posiciona torres e sobrevive.",
+"en": "Fortress Chaos is a 3D roguelite where you build a fortress and defend against enemy waves. Raise walls, place towers, and survive."
+},
+"Sala de segurança": {
+"pt": "Sala de segurança",
+"en": "Security room"
+},
+"Como funciona": {
+"pt": "Como funciona",
+"en": "How it works"
+},
+"Você conversa num chat de estética terminal, define um alvo autorizado e um modelo local encadeia ferramentas reais de reconhecimento, varredura e auditoria, terminando com um relatório.": {
+"pt": "Você conversa num chat de estética terminal, define um alvo autorizado e um modelo local encadeia ferramentas reais de reconhecimento, varredura e auditoria, terminando com um relatório.",
+"en": "Chat in a terminal-style interface, set an authorized target, and a local model chains real reconnaissance, scanning, and audit tools, ending with a report."
+},
+"Python · Ollama · Docker": {
+"pt": "Python · Ollama · Docker",
+"en": "Python · Ollama · Docker"
+},
+"Só com autorização": {
+"pt": "Só com autorização",
+"en": "Authorization required"
+},
+"Cada sessão pede uma confirmação escrita de que o alvo é seu ou autorizado. Sem isso, nenhuma ferramenta roda. É uma ferramenta de defesa e teste autorizado.": {
+"pt": "Cada sessão pede uma confirmação escrita de que o alvo é seu ou autorizado. Sem isso, nenhuma ferramenta roda. É uma ferramenta de defesa e teste autorizado.",
+"en": "Each session requires written confirmation that the target is yours or authorized. Without it, nothing runs. For defense and authorized testing only."
+},
+"Uso responsável": {
+"pt": "Uso responsável",
+"en": "Responsible use"
+},
+"Painel ao vivo": {
+"pt": "Painel ao vivo",
+"en": "Live dashboard"
+},
+"CPU e RAM do host e dos containers, GPU e VRAM, tokens usados no contexto e histórico de sessões na lateral.": {
+"pt": "CPU e RAM do host e dos containers, GPU e VRAM, tokens usados no contexto e histórico de sessões na lateral.",
+"en": "Host and container CPU and RAM, GPU and VRAM, tokens used, and session history on the side."
+},
+"Observabilidade": {
+"pt": "Observabilidade",
+"en": "Observability"
+},
+"Tudo local": {
+"pt": "Tudo local",
+"en": "All local"
+},
+"Roda inteiro na sua máquina, em containers Docker. Nada sai para fora, exceto as requisições do agente contra o alvo que você autorizar.": {
+"pt": "Roda inteiro na sua máquina, em containers Docker. Nada sai para fora, exceto as requisições do agente contra o alvo que você autorizar.",
+"en": "Runs fully on your machine in Docker containers. Nothing leaves except agent requests to your authorized target."
+},
+"Privacidade": {
+"pt": "Privacidade",
+"en": "Privacy"
+},
+"Relatório final": {
+"pt": "Relatório final",
+"en": "Final report"
+},
+"O agente registra cada comando no Postgres e entrega um relatório em markdown com o que encontrou e onde esbarrou em limitações.": {
+"pt": "O agente registra cada comando no Postgres e entrega um relatório em markdown com o que encontrou e onde esbarrou em limitações.",
+"en": "The agent logs every command in Postgres and delivers a markdown report with findings and any limitations encountered."
+},
+"Auditoria": {
+"pt": "Auditoria",
+"en": "Audit"
+},
+"Blackwall": {
+"pt": "Blackwall",
+"en": "Blackwall"
+},
+"App desktop de verdade em Electron, janela sem moldura, tema terminal. Segurança ofensiva usada para o lado certo.": {
+"pt": "App desktop de verdade em Electron, janela sem moldura, tema terminal. Segurança ofensiva usada para o lado certo.",
+"en": "A real desktop app in Electron, borderless window, terminal theme. Offensive security for the right reasons."
+},
+"Desktop": {
+"pt": "Desktop",
+"en": "Desktop"
+},
+"A ferramenta": {
+"pt": "A ferramenta",
+"en": "The tool"
+},
+"InacioCyber e um agente de seguranca que roda inteiro na sua maquina. Voce conversa num chat com estetica de terminal e define um alvo que voce possui ou tem autorizacao para testar.": {
+"pt": "InacioCyber é um agente de segurança que roda inteiro na sua máquina. Você conversa num chat com estética de terminal e define um alvo que você possui ou tem autorização para testar.",
+"en": "InacioCyber is a security agent that runs fully on your machine. Chat in a terminal-style interface and set a target you own or are authorized to test."
+},
+"Agente que encadeia ferramentas": {
+"pt": "Agente que encadeia ferramentas",
+"en": "Agent that chains tools"
+},
+"Um modelo de IA local, via Ollama, decide e encadeia ferramentas de reconhecimento, varredura e auditoria de codigo, e no fim escreve um relatorio em markdown.": {
+"pt": "Um modelo de IA local, via Ollama, decide e encadeia ferramentas de reconhecimento, varredura e auditoria de código, e no fim escreve um relatório em markdown.",
+"en": "A local AI model via Ollama decides and chains reconnaissance, scanning, and code audit tools, then writes a markdown report."
+},
+"Uso responsavel": {
+"pt": "Uso responsável",
+"en": "Responsible use"
+},
+"Feito apenas para uso autorizado. Cada sessao exige uma confirmacao por escrito de que voce tem permissao para testar aquele alvo, e tudo fica auditado.": {
+"pt": "Feito apenas para uso autorizado. Cada sessão exige uma confirmação por escrito de que você tem permissão para testar aquele alvo, e tudo fica auditado.",
+"en": "For authorized use only. Each session requires written confirmation you have permission to test the target, and everything is audited."
+},
+"Bar dos vigaristas": {
+"pt": "Bar dos vigaristas",
+"en": "Con artists' bar"
+},
+"Lábia": {
+"pt": "Lábia",
+"en": "Lábia"
+},
+"Jogo cooperativo de comédia para um a quatro jogadores: vocês são vigaristas e aplicam golpes falando pelo microfone com personagens movidos por IA local.": {
+"pt": "Jogo cooperativo de comédia para um a quatro jogadores: vocês são vigaristas e aplicam golpes falando pelo microfone com personagens movidos por IA local.",
+"en": "Co-op comedy game for 1 to 4 players: you're con artists pulling scams by talking to AI-powered characters through your mic."
+},
+"Godot · IA local · Voz": {
+"pt": "Godot · IA local · Voz",
+"en": "Godot · Local AI · Voice"
+},
+"Eles reagem": {
+"pt": "Eles reagem",
+"en": "They react"
+},
+"Os personagens entendem o que você fala, se irritam, riem e chamam a segurança. Cinco fases, primeira pessoa.": {
+"pt": "Os personagens entendem o que você fala, se irritam, riem e chamam a segurança. Cinco fases, primeira pessoa.",
+"en": "Characters understand what you say, get annoyed, laugh, or call security. Five stages, first-person."
+},
+"NPCs com IA": {
+"pt": "NPCs com IA",
+"en": "AI NPCs"
+},
+"Fale para jogar": {
+"pt": "Fale para jogar",
+"en": "Talk to play"
+},
+"O jogo roda IA local para ouvir e responder em tempo real. A graça está em convencer, improvisar e não ser pego.": {
+"pt": "O jogo roda IA local para ouvir e responder em tempo real. A graça está em convencer, improvisar e não ser pego.",
+"en": "The game uses local AI to listen and reply in real time. The fun is in convincing, improvising, and not getting caught."
+},
+"Voz": {
+"pt": "Voz",
+"en": "Voice"
+},
+"Labia e um jogo cooperativo de comedia para 1 a 4 jogadores. Voces sao vigaristas e aplicam golpes falando de verdade, pelo microfone, com personagens de IA.": {
+"pt": "Lábia é um jogo cooperativo de comédia para 1 a 4 jogadores. Vocês são vigaristas e aplicam golpes falando de verdade, pelo microfone, com personagens de IA.",
+"en": "Lábia is a co-op comedy game for 1 to 4 players. You're con artists pulling scams by actually talking to AI characters through your mic."
+},
+"NPCs que ouvem": {
+"pt": "NPCs que ouvem",
+"en": "NPCs that listen"
+},
+"Os personagens sao movidos por IA rodando localmente: eles entendem o que voce fala, se irritam, riem e podem chamar a seguranca.": {
+"pt": "Os personagens são movidos por IA rodando localmente: eles entendem o que você fala, se irritam, riem e podem chamar a segurança.",
+"en": "Characters are powered by local AI: they understand what you say, get annoyed, laugh, or call security."
+},
+"Fale para enganar": {
+"pt": "Fale para enganar",
+"en": "Talk to deceive"
+},
+"Nao tem menu de dialogo. O jogador convence na conversa, improvisando, enquanto os colegas ajudam nos bastidores.": {
+"pt": "Não tem menu de diálogo. O jogador convence na conversa, improvisando, enquanto os colegas ajudam nos bastidores.",
+"en": "No dialogue menu. You persuade in real conversations, improvising, while teammates support you behind the scenes."
+},
+"Cinco fases": {
+"pt": "Cinco fases",
+"en": "Five stages"
+},
+"Cinco fases em primeira pessoa, cada uma com um golpe e um alvo diferente.": {
+"pt": "Cinco fases em primeira pessoa, cada uma com um golpe e um alvo diferente.",
+"en": "Five first-person stages, each with a unique heist and target."
+},
+"Godot e GDScript, com IA local para a fala e a compreensao dos personagens, sem depender de nuvem.": {
+"pt": "Godot e GDScript, com IA local para a fala e a compreensão dos personagens, sem depender de nuvem.",
+"en": "Godot and GDScript, with local AI for speech and character understanding. No cloud required."
+},
+"Central de operações": {
+"pt": "Central de operações",
+"en": "Operations center"
+},
+"Multi-tenant de verdade": {
+"pt": "Multi-tenant de verdade",
+"en": "True multi-tenancy"
+},
+"Isolamento por Row-Level Security no próprio PostgreSQL: cada empresa só enxerga o que é dela, mesmo se a aplicação errar.": {
+"pt": "Isolamento por Row-Level Security no próprio PostgreSQL: cada empresa só enxerga o que é dela, mesmo se a aplicação errar.",
+"en": "Row-Level Security in PostgreSQL keeps each company’s data separate, even if the app makes a mistake."
+},
+"Postgres RLS": {
+"pt": "Postgres RLS",
+"en": "Postgres RLS"
+},
+"Uma API, vários produtos": {
+"pt": "Uma API, vários produtos",
+"en": "One API, multiple products"
+},
+"O orbix-api centraliza login, OTP, tokens e finanças e serve vários produtos, como CRM e gestão de oficinas.": {
+"pt": "O orbix-api centraliza login, OTP, tokens e finanças e serve vários produtos, como CRM e gestão de oficinas.",
+"en": "orbix-api handles login, OTP, tokens, and finance for multiple products like CRM and workshop management."
+},
+"NestJS · Flutter": {
+"pt": "NestJS · Flutter",
+"en": "NestJS · Flutter"
+},
+"Entrada única": {
+"pt": "Entrada única",
+"en": "Single sign-on"
+},
+"Toda a camada de autenticação é delegada ao orbix-api via proxy. Um só lugar para login e segurança.": {
+"pt": "Toda a camada de autenticação é delegada ao orbix-api via proxy. Um só lugar para login e segurança.",
+"en": "All authentication is handled by orbix-api via proxy. One place for login and security."
+},
+"Auth": {
+"pt": "Auth",
+"en": "Auth"
+},
+"Monorepo": {
+"pt": "Monorepo",
+"en": "Monorepo"
+},
+"NestJS e Flutter no mesmo repositório, com Docker. Plataforma SaaS pensada para crescer com muitos clientes.": {
+"pt": "NestJS e Flutter no mesmo repositório, com Docker. Plataforma SaaS pensada para crescer com muitos clientes.",
+"en": "NestJS and Flutter in one repo with Docker. SaaS platform built to scale for many clients."
+},
+"Infra": {
+"pt": "Infra",
+"en": "Infra"
+},
+"A plataforma": {
+"pt": "A plataforma",
+"en": "The platform"
+},
+"OrbixHub e um SaaS multi-tenant onde varios produtos, como um CRM e uma gestao de oficinas, nascem sobre uma base comum.": {
+"pt": "OrbixHub é um SaaS multi-tenant onde vários produtos, como um CRM e uma gestão de oficinas, nascem sobre uma base comum.",
+"en": "OrbixHub is a multi-tenant SaaS where products like CRM and workshop management share a common foundation."
+},
+"Isolamento por tenant": {
+"pt": "Isolamento por tenant",
+"en": "Tenant isolation"
+},
+"Cada cliente fica isolado no proprio espaco usando Row-Level Security do Postgres, entao os dados de um nunca alcancam o do outro.": {
+"pt": "Cada cliente fica isolado no próprio espaço usando Row-Level Security do Postgres, então os dados de um nunca alcançam o do outro.",
+"en": "Each client is isolated with Postgres Row-Level Security, so data never crosses between tenants."
+},
+"API central": {
+"pt": "API central",
+"en": "Central API"
+},
+"Uma orbix-api cuida de autenticacao, OTP, tokens e financas e serve todos os produtos, evitando reescrever o mesmo nucleo.": {
+"pt": "Uma orbix-api cuida de autenticação, OTP, tokens e finanças e serve todos os produtos, evitando reescrever o mesmo núcleo.",
+"en": "A single orbix-api manages authentication, OTP, tokens, and finance for all products, avoiding duplicate code."
+},
+"Desafio tecnico": {
+"pt": "Desafio técnico",
+"en": "Technical challenge"
+},
+"Servir produtos diferentes a partir de um nucleo so, mantendo seguranca, financas e isolamento de dados por cliente.": {
+"pt": "Servir produtos diferentes a partir de um núcleo só, mantendo segurança, finanças e isolamento de dados por cliente.",
+"en": "Deliver different products from one core, while keeping security, finance, and client data isolated."
+},
+"NestJS e Fastify no back, Flutter no mobile, PostgreSQL com RLS e Docker.": {
+"pt": "NestJS e Fastify no back, Flutter no mobile, PostgreSQL com RLS e Docker.",
+"en": "NestJS and Fastify for backend, Flutter for mobile, PostgreSQL with RLS, and Docker."
+},
+"Escritório de detetive": {
+"pt": "Escritório de detetive",
+"en": "Detective office"
+},
+"O caso RUMOR": {
+"pt": "O caso RUMOR",
+"en": "The RUMOR case"
+},
+"Jogo de detetive multiplayer para a sala de aula. Equipes exploram a escola em 3D, interrogam personagens que mudam de expressão e montam juntas um quadro com fios e provas.": {
+"pt": "Jogo de detetive multiplayer para a sala de aula. Equipes exploram a escola em 3D, interrogam personagens que mudam de expressão e montam juntas um quadro com fios e provas.",
+"en": "Multiplayer detective game for classrooms. Teams explore a 3D school, question characters with changing expressions, and build a board with clues and evidence."
+},
+"Godot · Node · WebSocket": {
+"pt": "Godot · Node · WebSocket",
+"en": "Godot · Node · WebSocket"
+},
+"Quatro telas do jogo": {
+"pt": "Quatro telas do jogo",
+"en": "Four game screens"
+},
+"Explorar em 3D, interrogar, ligar os fios do quadro e compartilhar a vitória. Tudo no navegador do celular de cada aluno.": {
+"pt": "Explorar em 3D, interrogar, ligar os fios do quadro e compartilhar a vitória. Tudo no navegador do celular de cada aluno.",
+"en": "Explore in 3D, interrogate, connect clues, and share victory. All from each student’s mobile browser."
+},
+"Mobile e desktop": {
+"pt": "Mobile e desktop",
+"en": "Mobile and desktop"
+},
+"Expressões": {
+"pt": "Expressões",
+"en": "Expressions"
+},
+"O rosto do suspeito muda a cada fala: desconfiado, nervoso, triste. Mostrar a prova certa na hora certa desmonta a versão dele.": {
+"pt": "O rosto do suspeito muda a cada fala: desconfiado, nervoso, triste. Mostrar a prova certa na hora certa desmonta a versão dele.",
+"en": "The suspect’s face changes with each line: suspicious, nervous, sad. Presenting the right evidence at the right time breaks their story."
+},
+"Atlas de rostos": {
+"pt": "Atlas de rostos",
+"en": "Face atlas"
+},
+"O professor vê tudo": {
+"pt": "O professor vê tudo",
+"en": "The teacher sees everything"
+},
+"Do celular ou do telão, o professor acompanha as equipes ao vivo: radar, pistas achadas, provas e quem está parado.": {
+"pt": "Do celular ou do telão, o professor acompanha as equipes ao vivo: radar, pistas achadas, provas e quem está parado.",
+"en": "From phone or projector, the teacher tracks teams live: radar, found clues, evidence, and idle players."
+},
+"Cenário pintado": {
+"pt": "Cenário pintado",
+"en": "Painted environment"
+},
+"Doze cômodos da escola em 3D com estilo pincelado, feitos por código e Blender. Nada de asset pronto de terceiro.": {
+"pt": "Doze cômodos da escola em 3D com estilo pincelado, feitos por código e Blender. Nada de asset pronto de terceiro.",
+"en": "Twelve 3D school rooms with a painted style, created with code and Blender. No third-party assets."
+},
+"Arte própria": {
+"pt": "Arte própria",
+"en": "Original art"
+},
+"12 casos escritos à mão, 192 pistas com imagem, servidor autoritativo em Node, reconexão e votação da equipe.": {
+"pt": "12 casos escritos à mão, 192 pistas com imagem, servidor autoritativo em Node, reconexão e votação da equipe.",
+"en": "12 hand-written cases, 192 visual clues, authoritative Node server, reconnection, and team voting."
+},
+"Casos à mão": {
+"pt": "Casos à mão",
+"en": "Hand-written cases"
+},
+"Cada caso foi escrito à mão, sem IA gerando história, e verificado por scripts para não ter furo: toda pista existe e todo objetivo pode ser provado.": {
+"pt": "Cada caso foi escrito à mão, sem IA gerando história, e verificado por scripts para não ter furo: toda pista existe e todo objetivo pode ser provado.",
+"en": "Every case is hand-written, not AI-generated, and checked by scripts to ensure every clue and goal is valid."
+},
+"Design de jogo": {
+"pt": "Design de jogo",
+"en": "Game design"
+},
+"O caso": {
+"pt": "O caso",
+"en": "The case"
+},
+"RUMOR e um jogo de detetive multiplayer feito para a sala de aula. A turma se divide em equipes e cada aluno investiga pelo proprio celular.": {
+"pt": "RUMOR é um jogo de detetive multiplayer feito para a sala de aula. A turma se divide em equipes e cada aluno investiga pelo próprio celular.",
+"en": "RUMOR is a multiplayer detective game for classrooms. The class splits into teams and each student investigates on their own phone."
+},
+"A escola em 3D": {
+"pt": "A escola em 3D",
+"en": "The 3D school"
+},
+"Doze comodos da escola em 3D para explorar. O aluno arrasta para olhar em volta e toca no que brilha para achar pistas.": {
+"pt": "Doze cômodos da escola em 3D para explorar. O aluno arrasta para olhar em volta e toca no que brilha para achar pistas.",
+"en": "Explore twelve 3D school rooms. Drag to look around and tap glowing objects to find clues."
+},
+"Agência": {
+"pt": "Agência",
+"en": "Agency"
+},
+"MBM": {
+"pt": "MBM",
+"en": "MBM"
+},
+"Plataforma de landing pages e blog institucional para empresa de telecom, com CMS, newsletter, analytics e SEO dinâmico.": {
+"pt": "Plataforma de landing pages e blog institucional para empresa de telecom, com CMS, newsletter, analytics e SEO dinâmico.",
+"en": "Landing page and company blog platform for a telecom, with CMS, newsletter, analytics and dynamic SEO."
+},
+"Nuxt · Vue · AWS": {
+"pt": "Nuxt · Vue · AWS",
+"en": "Nuxt · Vue · AWS"
+},
+"Segurança": {
+"pt": "Segurança",
+"en": "Security"
+},
+"Backend com autenticação JWT e 2FA, papéis de acesso e upload para S3.": {
+"pt": "Backend com autenticação JWT e 2FA, papéis de acesso e upload para S3.",
+"en": "Backend with JWT and 2FA authentication, access roles and S3 uploads."
+},
+"MBM Site e uma plataforma de landing pages e blog institucional para uma empresa de telecom, com um painel administrativo completo.": {
+"pt": "MBM Site e uma plataforma de landing pages e blog institucional para uma empresa de telecom, com um painel administrativo completo.",
+"en": "MBM Site is a landing page and company blog platform for a telecom, with a full admin panel."
+},
+"CMS proprio": {
+"pt": "CMS proprio",
+"en": "Custom CMS"
+},
+"Um CMS feito do zero deixa a equipe criar e editar paginas e posts, com newsletter e analytics integrados.": {
+"pt": "Um CMS feito do zero deixa a equipe criar e editar paginas e posts, com newsletter e analytics integrados.",
+"en": "A CMS built from scratch lets the team create and edit pages and posts, with integrated newsletter and analytics."
+},
+"SEO dinamico": {
+"pt": "SEO dinamico",
+"en": "Dynamic SEO"
+},
+"Cada pagina gera seu proprio SEO de forma dinamica, para ranquear melhor nas buscas.": {
+"pt": "Cada pagina gera seu proprio SEO de forma dinamica, para ranquear melhor nas buscas.",
+"en": "Each page generates its own SEO dynamically for better search ranking."
+},
+"Seguranca": {
+"pt": "Seguranca",
+"en": "Security"
+},
+"Login com JWT e duas etapas, papeis de acesso e upload de arquivos para a AWS S3.": {
+"pt": "Login com JWT e duas etapas, papeis de acesso e upload de arquivos para a AWS S3.",
+"en": "Login with JWT and 2FA, access roles and file uploads to AWS S3."
+},
+"Nuxt 4 e Vue 3 no front, Node no back, PostgreSQL e armazenamento em AWS S3.": {
+"pt": "Nuxt 4 e Vue 3 no front, Node no back, PostgreSQL e armazenamento em AWS S3.",
+"en": "Nuxt 4 and Vue 3 frontend, Node backend, PostgreSQL and AWS S3 storage."
+},
+"Carreira": {
+"pt": "Carreira",
+"en": "Career"
+},
+"ACL: o assistente de licitações": {
+"pt": "ACL: o assistente de licitações",
+"en": "ACL: the bidding assistant"
+},
+"Fui o desenvolvedor original do ACL na Sys Evolution: automatiza o ciclo inteiro de compras públicas nos portais do governo, da captura dos editais ao envio de propostas, lances e monitoramento dos pregões.": {
+"pt": "Fui o desenvolvedor original do ACL na Sys Evolution: automatiza o ciclo inteiro de compras públicas nos portais do governo, da captura dos editais ao envio de propostas, lances e monitoramento dos pregões.",
+"en": "I was the original developer of ACL at Sys Evolution: automates the entire public procurement cycle on government portals, from capturing bids to submitting proposals, offers and monitoring auctions."
+},
+"Sys Evolution · LicitaSys": {
+"pt": "Sys Evolution · LicitaSys",
+"en": "Sys Evolution · LicitaSys"
+},
+"Milhões de linhas na tela": {
+"pt": "Milhões de linhas na tela",
+"en": "Millions of rows on screen"
+},
+"Projeto de análise de dados sobre a base pública do mercado de licitações: telas que mostram milhões de linhas de uma vez, com rolagem virtualizada, filtros e análises detalhadas por órgão, objeto e período.": {
+"pt": "Projeto de análise de dados sobre a base pública do mercado de licitações: telas que mostram milhões de linhas de uma vez, com rolagem virtualizada, filtros e análises detalhadas por órgão, objeto e período.",
+"en": "Data analysis project for the public bidding market: screens show millions of rows at once, with virtual scrolling, filters and detailed analysis by agency, item and period."
+},
+"Dados · performance de front": {
+"pt": "Dados · performance de front",
+"en": "Data · frontend performance"
+},
+"Liderança técnica": {
+"pt": "Liderança técnica",
+"en": "Technical leadership"
+},
+"Lidero um time de 3 desenvolvedores em mais de 6 projetos grandes: decisões de arquitetura, planejamento de sprint e entrega. Já entreguei o escopo de 2 semanas em 3 dias e migrei um sistema inteiro de Vue para React em menos de uma semana, sem regressão em produção.": {
+"pt": "Lidero um time de 3 desenvolvedores em mais de 6 projetos grandes: decisões de arquitetura, planejamento de sprint e entrega. Já entreguei o escopo de 2 semanas em 3 dias e migrei um sistema inteiro de Vue para React em menos de uma semana, sem regressão em produção.",
+"en": "I lead a team of 3 developers across 6+ major projects: architecture, sprint planning and delivery. Delivered a 2-week scope in 3 days and migrated a full system from Vue to React in under a week with zero production regression."
+},
+"Sys Evolution": {
+"pt": "Sys Evolution",
+"en": "Sys Evolution"
+},
+"SaaS multi-tenant": {
+"pt": "SaaS multi-tenant",
+"en": "Multi-tenant SaaS"
+},
+"Aplicações SaaS multi-tenant em Vue, React, Node e PostgreSQL, com BFF e DDD, tempo real por WebSockets, integrações entre vários sistemas e uma biblioteca de componentes usada por mais de 20 desenvolvedores.": {
+"pt": "Aplicações SaaS multi-tenant em Vue, React, Node e PostgreSQL, com BFF e DDD, tempo real por WebSockets, integrações entre vários sistemas e uma biblioteca de componentes usada por mais de 20 desenvolvedores.",
+"en": "Multi-tenant SaaS apps in Vue, React, Node and PostgreSQL, with BFF and DDD, real-time via WebSockets, integrations across systems and a component library used by 20+ developers."
+},
+"Vue · React · Node · Postgres": {
+"pt": "Vue · React · Node · Postgres",
+"en": "Vue · React · Node · Postgres"
+},
+"SysGuide: vídeo e streaming": {
+"pt": "SysGuide: vídeo e streaming",
+"en": "SysGuide: video and streaming"
+},
+"Servidor de vídeo e streaming com transmissão ao vivo, gravação e busca, e um app desktop em Rust com Tauri que conversa com ele.": {
+"pt": "Servidor de vídeo e streaming com transmissão ao vivo, gravação e busca, e um app desktop em Rust com Tauri que conversa com ele.",
+"en": "Video and streaming server with live broadcast, recording and search, plus a Rust desktop app with Tauri that connects to it."
+},
+"Rust · Tauri · streaming": {
+"pt": "Rust · Tauri · streaming",
+"en": "Rust · Tauri · streaming"
+},
+"IA local e Whisper": {
+"pt": "IA local e Whisper",
+"en": "Local AI and Whisper"
+},
+"No SysGuide, uma LLM rodando localmente e o Whisper transcrevendo áudio em tempo real, com resumo gerado sem mandar dados para fora.": {
+"pt": "No SysGuide, uma LLM rodando localmente e o Whisper transcrevendo áudio em tempo real, com resumo gerado sem mandar dados para fora.",
+"en": "In SysGuide, a local LLM and Whisper transcribe audio in real time, with summaries generated without sending data externally."
+},
+"LLM local · Whisper": {
+"pt": "LLM local · Whisper",
+"en": "Local LLM · Whisper"
+},
+"App Flutter e qualidade": {
+"pt": "App Flutter e qualidade",
+"en": "Flutter app and quality"
+},
+"Um dos 2 desenvolvedores do app Flutter da empresa, que juntou vários aplicativos num só. Pipelines de CI/CD no GitLab com testes unitários e E2E, desenvolvimento guiado por especificação e Claude Code e Codex no dia a dia.": {
+"pt": "Um dos 2 desenvolvedores do app Flutter da empresa, que juntou vários aplicativos num só. Pipelines de CI/CD no GitLab com testes unitários e E2E, desenvolvimento guiado por especificação e Claude Code e Codex no dia a dia.",
+"en": "One of two Flutter app developers, merging several apps into one. CI/CD pipelines in GitLab with unit and E2E tests, spec-driven development, and daily use of Claude Code and Codex."
+},
+"Flutter · GitLab CI · testes": {
+"pt": "Flutter · GitLab CI · testes",
+"en": "Flutter · GitLab CI · testing"
+},
+"Loop Sistemas": {
+"pt": "Loop Sistemas",
+"en": "Loop Sistemas"
+},
+"Aplicações desktop em WPF com arquitetura MVVM e SQL Server, da correção de bugs a entregas prontas para produção.": {
+"pt": "Aplicações desktop em WPF com arquitetura MVVM e SQL Server, da correção de bugs a entregas prontas para produção.",
+"en": "Desktop apps in WPF with MVVM architecture and SQL Server, from bug fixes to production-ready releases."
+},
+"abr a jun 2024 · Jales, SP": {
+"pt": "abr a jun 2024 · Jales, SP",
+"en": "Apr to Jun 2024 · Jales, SP"
+},
+"Pesquisa científica (CNPq / UNESP)": {
+"pt": "Pesquisa científica (CNPq / UNESP)",
+"en": "Scientific research (CNPq / UNESP)"
+},
+"Bolsista de iniciação científica: estudo de um compressor de CO2 supercrítico para o pré-sal, comparando planejamento fatorial fracionário e SS-ANOVA, com scripts próprios em Python.": {
+"pt": "Bolsista de iniciação científica: estudo de um compressor de CO2 supercrítico para o pré-sal, comparando planejamento fatorial fracionário e SS-ANOVA, com scripts próprios em Python.",
+"en": "Scientific initiation scholarship: studied a supercritical CO2 compressor for pre-salt, comparing fractional factorial design and SS-ANOVA, with custom Python scripts."
+},
+"Freelas em produção": {
+"pt": "Freelas em produção",
+"en": "Freelance projects in production"
+},
+"ATN360: site institucional com CMS próprio, SSR com nota 100 de SEO, 5 idiomas e posts gerados com Gemini. BarberCore: CRM multi-tenant para barbearias com WhatsApp, agendamento, fidelidade e assinaturas no Stripe, rodando na AWS com clientes pagantes.": {
+"pt": "ATN360: site institucional com CMS próprio, SSR com nota 100 de SEO, 5 idiomas e posts gerados com Gemini. BarberCore: CRM multi-tenant para barbearias com WhatsApp, agendamento, fidelidade e assinaturas no Stripe, rodando na AWS com clientes pagantes.",
+"en": "ATN360: company site with custom CMS, SSR, perfect SEO score, 5 languages and Gemini-generated posts. BarberCore: multi-tenant CRM for barbershops with WhatsApp, booking, loyalty and Stripe subscriptions, running on AWS with paying clients."
+},
+"Nuxt · Next · AWS · Stripe": {
+"pt": "Nuxt · Next · AWS · Stripe",
+"en": "Nuxt · Next · AWS · Stripe"
+},
+"Laboratório": {
+"pt": "Laboratório",
+"en": "Lab"
+},
+"Jogos completos em Godot: 3D para web e celular, modelos e animação em Blender, servidor autoritativo em tempo real. RUMOR, Fortress Chaos e Lábia saíram daqui.": {
+"pt": "Jogos completos em Godot: 3D para web e celular, modelos e animação em Blender, servidor autoritativo em tempo real. RUMOR, Fortress Chaos e Lábia saíram daqui.",
+"en": "Full games in Godot: 3D for web and mobile, models and animation in Blender, real-time authoritative server. RUMOR, Fortress Chaos and Lábia were built here."
+},
+"Godot · Blender · 3D web": {
+"pt": "Godot · Blender · 3D web",
+"en": "Godot · Blender · 3D web"
+},
+"IA aplicada": {
+"pt": "IA aplicada",
+"en": "Applied AI"
+},
+"Orquestração de agentes de IA (uso o Claude e o Claude Code a fundo), modelos locais via Ollama, geração de arte por IA e automação. IA como ferramenta de trabalho, não enfeite.": {
+"pt": "Orquestração de agentes de IA (uso o Claude e o Claude Code a fundo), modelos locais via Ollama, geração de arte por IA e automação. IA como ferramenta de trabalho, não enfeite.",
+"en": "AI agent orchestration (deep use of Claude and Claude Code), local models via Ollama, AI art generation and automation. AI as a work tool, not a gimmick."
+},
+"Claude · agentes · IA local": {
+"pt": "Claude · agentes · IA local",
+"en": "Claude · agents · local AI"
+},
+"Integrações e APIs": {
+"pt": "Integrações e APIs",
+"en": "Integrations and APIs"
+},
+"Tempo real com WebSocket, filas, webhooks e integrações com GitHub, WhatsApp, OpenAI e Hugging Face. Dados que batem em todas as telas, sem recarregar.": {
+"pt": "Tempo real com WebSocket, filas, webhooks e integrações com GitHub, WhatsApp, OpenAI e Hugging Face. Dados que batem em todas as telas, sem recarregar.",
+"en": "Real-time with WebSocket, queues, webhooks, and integrations with GitHub, WhatsApp, OpenAI, and Hugging Face. Data updates everywhere instantly, no reloads."
+},
+"WebSocket · REST · filas": {
+"pt": "WebSocket · REST · filas",
+"en": "WebSocket · REST · queues"
+},
+"Multi-tenant com Row-Level Security, monorepos, Docker, Postgres e Redis. Sistemas pensados para crescer e não quebrar com muitos usuários.": {
+"pt": "Multi-tenant com Row-Level Security, monorepos, Docker, Postgres e Redis. Sistemas pensados para crescer e não quebrar com muitos usuários.",
+"en": "Multi-tenant with Row-Level Security, monorepos, Docker, Postgres, and Redis. Built to scale without breaking under heavy use."
+},
+"multi-tenant · Docker · Postgres": {
+"pt": "multi-tenant · Docker · Postgres",
+"en": "multi-tenant · Docker · Postgres"
+},
+"Full-stack": {
+"pt": "Full-stack",
+"en": "Full-stack"
+},
+"Do banco ao pixel: back-end em Node e NestJS, front em Nuxt, Vue e Flutter, e a camada 3D em Godot. Entrego a coisa inteira funcionando.": {
+"pt": "Do banco ao pixel: back-end em Node e NestJS, front em Nuxt, Vue e Flutter, e a camada 3D em Godot. Entrego a coisa inteira funcionando.",
+"en": "From database to UI: backend in Node and NestJS, frontend in Nuxt, Vue, and Flutter, plus 3D in Godot. I deliver the whole thing working."
+},
+"Ponta a ponta": {
+"pt": "Ponta a ponta",
+"en": "End to end"
+},
+"Autenticação com JWT e 2FA, isolamento de dados, e segurança ofensiva autorizada no InacioCyber para encontrar falhas antes de quem quer explorá-las.": {
+"pt": "Autenticação com JWT e 2FA, isolamento de dados, e segurança ofensiva autorizada no InacioCyber para encontrar falhas antes de quem quer explorá-las.",
+"en": "Authentication with JWT and 2FA, data isolation, and authorized offensive security on InacioCyber to find vulnerabilities before attackers do."
+},
+"Defesa": {
+"pt": "Defesa",
+"en": "Defense"
+},
+"Fortress Chaos é um roguelite 3D de construir fortaleza e defender de ondas de inimigos. Você ergue muralhas, posiciona torres e sobrevive.": {
+"pt": "Fortress Chaos é um roguelite 3D de construir fortaleza e defender de ondas de inimigos. Você ergue muralhas, posiciona torres e sobrevive.",
+"en": "Fortress Chaos is a 3D roguelite where you build a fortress and defend against waves of enemies. Raise walls, place towers and survive."
+},
+"InacioCyber é um agente de segurança que roda inteiro na sua máquina. Você conversa num chat com estética de terminal e define um alvo que você possui ou tem autorização para testar.": {
+"pt": "InacioCyber é um agente de segurança que roda inteiro na sua máquina. Você conversa num chat com estética de terminal e define um alvo que você possui ou tem autorização para testar.",
+"en": "InacioCyber is a security agent that runs fully on your machine. Chat in a terminal-style interface and set a target you own or are authorized to test."
+},
+"Um modelo de IA local, via Ollama, decide e encadeia ferramentas de reconhecimento, varredura e auditoria de código, e no fim escreve um relatório em markdown.": {
+"pt": "Um modelo de IA local, via Ollama, decide e encadeia ferramentas de reconhecimento, varredura e auditoria de código, e no fim escreve um relatório em markdown.",
+"en": "A local AI model, powered by Ollama, chooses and chains recon, scanning and code audit tools, then writes a markdown report."
+},
+"Feito apenas para uso autorizado. Cada sessão exige uma confirmação por escrito de que você tem permissão para testar aquele alvo, e tudo fica auditado.": {
+"pt": "Feito apenas para uso autorizado. Cada sessão exige uma confirmação por escrito de que você tem permissão para testar aquele alvo, e tudo fica auditado.",
+"en": "For authorized use only. Each session requires written confirmation that you have permission to test the target, and everything is logged."
+},
+"Lábia é um jogo cooperativo de comédia para 1 a 4 jogadores. Vocês são vigaristas e aplicam golpes falando de verdade, pelo microfone, com personagens de IA.": {
+"pt": "Lábia é um jogo cooperativo de comédia para 1 a 4 jogadores. Vocês são vigaristas e aplicam golpes falando de verdade, pelo microfone, com personagens de IA.",
+"en": "Lábia is a co-op comedy game for 1 to 4 players. Play as con artists and pull off scams by actually talking, via microphone, to AI characters."
+},
+"Os personagens são movidos por IA rodando localmente: eles entendem o que você fala, se irritam, riem e podem chamar a segurança.": {
+"pt": "Os personagens são movidos por IA rodando localmente: eles entendem o que você fala, se irritam, riem e podem chamar a segurança.",
+"en": "Characters are powered by local AI: they understand what you say, get annoyed, laugh and can call security."
+},
+"Não tem menu de diálogo. O jogador convence na conversa, improvisando, enquanto os colegas ajudam nos bastidores.": {
+"pt": "Não tem menu de diálogo. O jogador convence na conversa, improvisando, enquanto os colegas ajudam nos bastidores.",
+"en": "No dialogue menu. Players persuade in real conversation, improvising, while teammates help behind the scenes."
+},
+"Godot e GDScript, com IA local para a fala e a compreensão dos personagens, sem depender de nuvem.": {
+"pt": "Godot e GDScript, com IA local para a fala e a compreensão dos personagens, sem depender de nuvem.",
+"en": "Built with Godot and GDScript, using local AI for speech and character understanding, no cloud needed."
+},
+"OrbixHub é um SaaS multi-tenant onde vários produtos, como um CRM e uma gestão de oficinas, nascem sobre uma base comum.": {
+"pt": "OrbixHub é um SaaS multi-tenant onde vários produtos, como um CRM e uma gestão de oficinas, nascem sobre uma base comum.",
+"en": "OrbixHub is a multi-tenant SaaS platform where products like a CRM and workshop management are built on a shared foundation."
+},
+"Cada cliente fica isolado no próprio espaço usando Row-Level Security do Postgres, então os dados de um nunca alcançam o do outro.": {
+"pt": "Cada cliente fica isolado no próprio espaço usando Row-Level Security do Postgres, então os dados de um nunca alcançam o do outro.",
+"en": "Each client is isolated using Postgres Row-Level Security, so one’s data never reaches another."
+},
+"Uma orbix-api cuida de autenticação, OTP, tokens e finanças e serve todos os produtos, evitando reescrever o mesmo núcleo.": {
+"pt": "Uma orbix-api cuida de autenticação, OTP, tokens e finanças e serve todos os produtos, evitando reescrever o mesmo núcleo.",
+"en": "A single orbix-api handles authentication, OTP, tokens and finances for all products, avoiding duplicate core logic."
+},
+"Desafio técnico": {
+"pt": "Desafio técnico",
+"en": "Technical challenge"
+},
+"Servir produtos diferentes a partir de um núcleo só, mantendo segurança, finanças e isolamento de dados por cliente.": {
+"pt": "Servir produtos diferentes a partir de um núcleo só, mantendo segurança, finanças e isolamento de dados por cliente.",
+"en": "Deliver different products from a single core, keeping security, finances and client data isolated."
+},
+"RUMOR é um jogo de detetive multiplayer feito para a sala de aula. A turma se divide em equipes e cada aluno investiga pelo próprio celular.": {
+"pt": "RUMOR é um jogo de detetive multiplayer feito para a sala de aula. A turma se divide em equipes e cada aluno investiga pelo próprio celular.",
+"en": "RUMOR is a multiplayer detective game for classrooms. The class splits into teams and each student investigates on their own phone."
+},
+"Doze cômodos da escola em 3D para explorar. O aluno arrasta para olhar em volta e toca no que brilha para achar pistas.": {
+"pt": "Doze cômodos da escola em 3D para explorar. O aluno arrasta para olhar em volta e toca no que brilha para achar pistas.",
+"en": "Twelve 3D school rooms to explore. Drag to look around and tap glowing objects to find clues."
+},
+"EN": {
+"pt": "EN",
+"en": "EN"
+},
+"ABRIR O PROJETO  ↗": {
+"pt": "ABRIR O PROJETO  ↗",
+"en": "OPEN PROJECT  ↗"
+},
+"Até mais.": {
+"pt": "Até mais.",
+"en": "See you soon."
+},
+"PRIVADO": {
+"pt": "PRIVADO",
+"en": "PRIVATE"
+},
+"PÚBLICO": {
+"pt": "PÚBLICO",
+"en": "PUBLIC"
+},
+"SysGuide: servidor de vídeo e streaming, app desktop em Rust com Tauri, LLM local e Whisper para transcrição.": {
+"pt": "SysGuide: servidor de vídeo e streaming, app desktop em Rust com Tauri, LLM local e Whisper para transcrição.",
+"en": "SysGuide: video server and streaming, desktop app in Rust with Tauri, local LLM and Whisper for transcription."
+},
+"Análise de dados sobre a base pública do mercado de licitações, com telas que mostram milhões de linhas de uma vez (rolagem virtualizada) e análises detalhadas.": {
+"pt": "Análise de dados sobre a base pública do mercado de licitações, com telas que mostram milhões de linhas de uma vez (rolagem virtualizada) e análises detalhadas.",
+"en": "Data analysis on the public bidding market database, with screens showing millions of rows at once (virtualized scrolling) and detailed insights."
+},
+"Desenvolvedor Full-Stack (freelance)": {
+"pt": "Desenvolvedor Full-Stack (freelance)",
+"en": "Full-Stack Developer (freelance)"
+},
+"2023 até hoje": {
+"pt": "2023 até hoje",
+"en": "2023 to present"
+},
+"ATN360: site institucional com CMS próprio, SSR com nota 100 de SEO, 5 idiomas e posts gerados com Gemini.": {
+"pt": "ATN360: site institucional com CMS próprio, SSR com nota 100 de SEO, 5 idiomas e posts gerados com Gemini.",
+"en": "ATN360: company website with custom CMS, SSR, perfect SEO score, 5 languages, and posts generated with Gemini."
+},
+"BarberCore: CRM multi-tenant para barbearias com WhatsApp, agendamento, fidelidade e assinaturas no Stripe, na AWS, com clientes pagantes.": {
+"pt": "BarberCore: CRM multi-tenant para barbearias com WhatsApp, agendamento, fidelidade e assinaturas no Stripe, na AWS, com clientes pagantes.",
+"en": "BarberCore: multi-tenant CRM for barbershops with WhatsApp, booking, loyalty, Stripe subscriptions, AWS, and paying clients."
+},
+"AirMessage: SaaS multiplataforma em Flutter para automação de WhatsApp com 2FA por SMS e e-mail.": {
+"pt": "AirMessage: SaaS multiplataforma em Flutter para automação de WhatsApp com 2FA por SMS e e-mail.",
+"en": "AirMessage: cross-platform SaaS in Flutter for WhatsApp automation with 2FA via SMS and email."
+}
+}

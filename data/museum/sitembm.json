@@ -1,32 +1,32 @@
 {
-  "id": "sitembm",
-  "loja": "Redacao MBM",
-  "ambiente": "Uma redacao com bancas de jornal e paineis de analytics.",
-  "pieces": [
-    {
-      "titulo": "A plataforma",
-      "texto": "MBM Site e uma plataforma de landing pages e blog institucional para uma empresa de telecom, com um painel administrativo completo.",
-      "tipo": "quadro"
-    },
-    {
-      "titulo": "CMS proprio",
-      "texto": "Um CMS feito do zero deixa a equipe criar e editar paginas e posts, com newsletter e analytics integrados.",
-      "tipo": "telao"
-    },
-    {
-      "titulo": "SEO dinamico",
-      "texto": "Cada pagina gera seu proprio SEO de forma dinamica, para ranquear melhor nas buscas.",
-      "tipo": "relatorio"
-    },
-    {
-      "titulo": "Seguranca",
-      "texto": "Login com JWT e duas etapas, papeis de acesso e upload de arquivos para a AWS S3.",
-      "tipo": "placa_stack"
-    },
-    {
-      "titulo": "Como foi feito",
-      "texto": "Nuxt 4 e Vue 3 no front, Node no back, PostgreSQL e armazenamento em AWS S3.",
-      "tipo": "placa_stack"
-    }
-  ]
+ "id": "sitembm",
+ "loja": "Redacao MBM",
+ "ambiente": "Uma redacao com bancas de jornal e paineis de analytics.",
+ "pieces": [
+  {
+   "titulo": "A plataforma",
+   "texto": "MBM Site e uma plataforma de landing pages e blog institucional para uma empresa de telecom, com um painel administrativo completo.",
+   "tipo": "quadro"
+  },
+  {
+   "titulo": "CMS proprio",
+   "texto": "Um CMS feito do zero deixa a equipe criar e editar paginas e posts, com newsletter e analytics integrados.",
+   "tipo": "telao"
+  },
+  {
+   "titulo": "SEO dinamico",
+   "texto": "Cada pagina gera seu proprio SEO de forma dinamica, para ranquear melhor nas buscas.",
+   "tipo": "relatorio"
+  },
+  {
+   "titulo": "Seguranca",
+   "texto": "Login com JWT e duas etapas, papeis de acesso e upload de arquivos para a AWS S3.",
+   "tipo": "placa_stack"
+  },
+  {
+   "titulo": "Como foi feito",
+   "texto": "Nuxt 4 e Vue 3 no front, Node no back, PostgreSQL e armazenamento em AWS S3.",
+   "tipo": "placa_stack"
+  }
+ ]
 }

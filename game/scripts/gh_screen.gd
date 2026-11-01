@@ -144,44 +144,93 @@ func _lang_bar(langs: Dictionary) -> Control:
 	return c
 
 
-## markdown simples -> bbcode (títulos, listas, negrito, código, links); imagens viram [imagem]
+## markdown/HTML de README -> bbcode: títulos, parágrafos, listas, negrito, código e links; badges
+## (shields) viram selos coloridos; imagens e tags HTML saem do texto (as imagens vão para a galeria
+## do painel via readme_images); tabelas viram linhas legíveis.
 static func md_to_bbcode(md: String, accent: Color) -> String:
 	var out := PackedStringArray()
 	var in_code := false
 	var hexa := accent.to_html(false)
 	var n := 0
-	for raw in md.split("\n"):
+	var re_badge := RegEx.create_from_string(r"\[?!\[([^\]]*)\]\(https?://img\.shields\.io[^)]*\)\]?(\([^)]*\))?")
+	var re_htmlimg := RegEx.create_from_string(r"<img[^>]*alt=\"([^\"]*)\"[^>]*>")
+	var re_tag := RegEx.create_from_string(r"<[^>]+>")
+	var re_img := RegEx.create_from_string(r"!\[([^\]]*)\]\([^)]*\)")
+	var re_link := RegEx.create_from_string(r"\[([^\]]+)\]\([^)]*\)")
+	var re_b := RegEx.create_from_string(r"\*\*([^*]+)\*\*")
+	var re_c := RegEx.create_from_string(r"`([^`]+)`")
+	var re_ent := RegEx.create_from_string(r"&[a-z]+;")
+	for raw in md.split("
+"):
 		n += 1
-		if n > 160:
+		if n > 220:
 			break
 		var line := raw.strip_edges(false, true)
-		if line.begins_with("```"):
+		if line.strip_edges().begins_with("```"):
 			in_code = not in_code
 			continue
-		line = line.replace("[", "(").replace("]", ")") if in_code else line
 		if in_code:
-			out.append("[color=#8fe3a8][code]" + line + "[/code][/color]")
+			out.append("[color=#8fe3a8][code]" + line.replace("[", "(").replace("]", ")") + "[/code][/color]")
 			continue
-		if line.strip_edges().begins_with("<") or line.strip_edges().begins_with("[!") or line.strip_edges() == "":
-			if line.strip_edges() == "":
+		# selos (shields.io) -> texto em destaque; HTML de imagem e tags somem
+		var badges := PackedStringArray()
+		for m in re_badge.search_all(line):
+			var t := m.get_string(1).strip_edges()
+			if t != "":
+				badges.append("[color=#%s][b] %s [/b][/color]" % [hexa, t])
+		line = re_badge.sub(line, "", true)
+		line = re_htmlimg.sub(line, "", true)
+		line = line.replace("<br>", " ").replace("<br/>", " ")
+		line = re_tag.sub(line, "", true)
+		line = re_ent.sub(line, "", true)
+		line = re_img.sub(line, "", true)
+		if not badges.is_empty():
+			out.append("  ".join(badges))
+		if line.strip_edges() == "":
+			if out.size() > 0 and out[out.size() - 1] != "":
 				out.append("")
 			continue
-		var re_img := RegEx.create_from_string("!\\[([^\\]]*)\\]\\([^)]*\\)")
-		line = re_img.sub(line, "[color=#7a86a8](imagem: $1)[/color]", true)
-		var re_link := RegEx.create_from_string("\\[([^\\]]+)\\]\\([^)]*\\)")
+		if line.strip_edges().begins_with("|"):
+			if line.find("---") >= 0:
+				continue
+			var cells := []
+			for c in line.split("|"):
+				if c.strip_edges() != "":
+					cells.append(c.strip_edges())
+			line = "  ·  ".join(cells)
+			line = re_link.sub(line, "[color=#5bd0ff]$1[/color]", true)
+			line = re_b.sub(line, "[b]$1[/b]", true)
+			out.append("[color=#c6cee6]" + line + "[/color]")
+			continue
 		line = re_link.sub(line, "[color=#5bd0ff]$1[/color]", true)
-		var re_b := RegEx.create_from_string("\\*\\*([^*]+)\\*\\*")
 		line = re_b.sub(line, "[b]$1[/b]", true)
-		var re_c := RegEx.create_from_string("`([^`]+)`")
 		line = re_c.sub(line, "[color=#ffc83d]$1[/color]", true)
-		if line.begins_with("#"):
-			var lvl := line.length() - line.lstrip("#").length()
-			var t := line.lstrip("#").strip_edges()
-			out.append("[b][color=#%s][font_size=%d]%s[/font_size][/color][/b]" % [hexa, 30 - lvl * 3, t])
-		elif line.strip_edges().begins_with("- ") or line.strip_edges().begins_with("* "):
-			out.append("  [color=#%s]▸[/color] %s" % [hexa, line.strip_edges().substr(2)])
-		elif line.begins_with("|"):
-			out.append("[color=#9aa6c8]" + line + "[/color]")
+		var st := line.strip_edges()
+		if st.begins_with("#"):
+			var lvl := st.length() - st.lstrip("#").length()
+			out.append("[b][color=#%s][font_size=%d]%s[/font_size][/color][/b]" % [hexa, 30 - lvl * 3, st.lstrip("#").strip_edges()])
+		elif st.begins_with("- ") or st.begins_with("* "):
+			out.append("  [color=#%s]▸[/color] %s" % [hexa, st.substr(2)])
+		elif st.begins_with(">"):
+			out.append("[i][color=#9aa6c8]" + st.lstrip("> ") + "[/color][/i]")
 		else:
-			out.append(line)
-	return "\n".join(out)
+			out.append(st)
+	return "
+".join(out)
+
+
+## URLs das imagens do README (markdown e <img>), resolvidas para o raw do GitHub (repo público)
+static func readme_images(md: String, repo: String) -> Array:
+	var out := []
+	var re1 := RegEx.create_from_string(r"!\[[^\]]*\]\(([^)\s]+)")
+	var re2 := RegEx.create_from_string(r"<img[^>]*src=\"([^\"]+)\"")
+	for rx in [re1, re2]:
+		for m in rx.search_all(md):
+			var u: String = m.get_string(1)
+			if u.find("shields.io") >= 0 or u.ends_with(".svg") or u.ends_with(".gif"):
+				continue
+			if not u.begins_with("http"):
+				u = "https://raw.githubusercontent.com/GabrielInacior/%s/HEAD/%s" % [repo, u.lstrip("./")]
+			if not out.has(u):
+				out.append(u)
+	return out.slice(0, 6)

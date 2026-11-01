@@ -63,6 +63,15 @@ func _process(dt: float) -> void:
 
 
 func _dialog_for(p: Dictionary) -> void:
+	_dialog_raw(p)
+	role = L.t(role)
+	greet = L.t(greet)
+	for l in lines:
+		l["q"] = L.t(str(l["q"]))
+		l["a"] = L.t(str(l["a"]))
+
+
+func _dialog_raw(p: Dictionary) -> void:
 	var id := str(p.get("id", ""))
 	if p.get("special", "") == "about":
 		role = "o guia da cidade"

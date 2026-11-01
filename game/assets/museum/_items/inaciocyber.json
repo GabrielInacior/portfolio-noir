@@ -54,19 +54,19 @@
   {
    "kind": "frame",
    "title": "A ferramenta",
-   "text": "InacioCyber e um agente de seguranca que roda inteiro na sua maquina. Voce conversa num chat com estetica de terminal e define um alvo que voce possui ou tem autorizacao para testar.",
+   "text": "InacioCyber é um agente de segurança que roda inteiro na sua máquina. Você conversa num chat com estética de terminal e define um alvo que você possui ou tem autorização para testar.",
    "tag": ""
   },
   {
    "kind": "screen",
    "title": "Agente que encadeia ferramentas",
-   "text": "Um modelo de IA local, via Ollama, decide e encadeia ferramentas de reconhecimento, varredura e auditoria de codigo, e no fim escreve um relatorio em markdown.",
+   "text": "Um modelo de IA local, via Ollama, decide e encadeia ferramentas de reconhecimento, varredura e auditoria de código, e no fim escreve um relatório em markdown.",
    "tag": ""
   },
   {
    "kind": "plaque",
-   "title": "Uso responsavel",
-   "text": "Feito apenas para uso autorizado. Cada sessao exige uma confirmacao por escrito de que voce tem permissao para testar aquele alvo, e tudo fica auditado.",
+   "title": "Uso responsável",
+   "text": "Feito apenas para uso autorizado. Cada sessão exige uma confirmação por escrito de que você tem permissão para testar aquele alvo, e tudo fica auditado.",
    "tag": ""
   }
  ]

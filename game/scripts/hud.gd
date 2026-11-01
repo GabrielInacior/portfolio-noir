@@ -88,6 +88,25 @@ func _build_topbar() -> void:
 		Audio.set_enabled(on)
 		snd.text = "♪" if on else "✕")
 	h.add_child(snd)
+	# idioma (PT/EN) e visual retrô (forte/suave/desligado), salvos no navegador
+	var lang := UI.ghost("EN" if L.lang == "pt" else "PT", UI.CYAN, 48)
+	lang.custom_minimum_size.x = 64
+	lang.tooltip_text = "English" if L.lang == "pt" else "Português"
+	lang.pressed.connect(func() -> void: L.set_lang("en" if L.lang == "pt" else "pt"))
+	h.add_child(lang)
+	var main_node := get_tree().current_scene
+	var names := {"forte": "RETRÔ", "suave": "RETRÔ ½", "off": "HD"}
+	var rb := UI.ghost(names.get(str(main_node.get("retro")) if main_node and main_node.get("retro") != null else "forte", "RETRÔ"), UI.GREEN, 48)
+	rb.custom_minimum_size.x = 110
+	rb.pressed.connect(func() -> void:
+		var mn := get_tree().current_scene
+		if mn == null or not mn.has_method("set_retro"):
+			return
+		var order := ["forte", "suave", "off"]
+		var nxt: String = order[(order.find(str(mn.get("retro"))) + 1) % 3]
+		mn.set_retro(nxt)
+		rb.text = L.t(names[nxt]))
+	h.add_child(rb)
 	var lst := UI.ghost("PROJETOS", UI.AMBER, 48)
 	lst.custom_minimum_size.x = 150
 	lst.pressed.connect(_open_list)
@@ -103,6 +122,7 @@ func _build_minimap() -> void:
 	minimap.offset_right = -16
 	minimap.offset_bottom = 236
 	minimap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	minimap.clip_contents = true
 	add_child(minimap)
 
 
@@ -181,7 +201,7 @@ func _on_target(project: Dictionary) -> void:
 
 
 func _on_visited(count: int, total: int) -> void:
-	counter_label.text = "· %d/%d explorados" % [count, total]
+	counter_label.text = L.tf("· %d/%d explorados", [count, total])
 
 
 func _input(e: InputEvent) -> void:
@@ -260,8 +280,8 @@ func enter_museum(project: Dictionary) -> void:
 	player.bound_min = br.position
 	player.bound_max = br.end
 	_museum.examined.connect(func(c: int, t: int) -> void:
-		counter_label.text = "· %d/%d examinados" % [c, t])
-	counter_label.text = "· 0/%d examinados" % _museum.items.size()
+		counter_label.text = L.tf("· %d/%d examinados", [c, t]))
+	counter_label.text = L.tf("· 0/%d examinados", [_museum.items.size()])
 	if minimap:
 		minimap.visible = false
 	prompt_label.text = ""
@@ -297,6 +317,8 @@ func _museum_hot_clear() -> void:
 func _activate(entry: Dictionary) -> void:
 	var it: Dictionary = entry["item"]
 	var action := str(it.get("action", ""))
+	if Audio.has_method("on_action"):
+		Audio.call("on_action", action if action != "" else str(it.get("panel", "doc")), it)
 	match action:
 		"switch":
 			var on: bool = _museum.toggle_lights()

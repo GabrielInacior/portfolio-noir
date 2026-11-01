@@ -18,7 +18,7 @@ const LOOKS := {
 	"detetive": {"wall": "papel_parede", "wall_tint": "#3e3a52", "floor": "madeira", "floor_tint": "#5a3c28", "ceil": "#221a16",
 		"wainscot": true, "wainscot_tint": "#4a2e1e", "warm": "#ffb35a", "light_e": 2.6, "ambient": "#2c2420", "fog": "#1a1410", "exposure": 1.45},
 	"cyber": {"wall": "metal", "wall_tint": "#3a4844", "wall_scale": 0.8, "floor": "ladrilho", "floor_tint": "#1c2422", "ceil": "#101414",
-		"warm": "#bfffd8", "light_e": 1.8, "ambient": "#10201a", "ambient_e": 1.1, "fog": "#06140e", "exposure": 1.50, "trim": "#0a0f0d"},
+		"warm": "#bfffd8", "light_e": 1.8, "ambient": "#1e3a2c", "ambient_e": 1.9, "fog": "#06140e", "exposure": 1.50, "trim": "#0a0f0d"},
 	"arcade": {"wall": "tijolo", "wall_tint": "#3a2a52", "floor": "azulejo", "floor_tint": "#3a3a5a", "floor_scale": 0.9, "ceil": "#16101e",
 		"warm": "#ff9a6a", "light_e": 2.4, "ambient": "#24183a", "fog": "#120a1e", "exposure": 1.50},
 	"bar": {"wall": "tijolo", "wall_tint": "#6a3036", "floor": "madeira", "floor_tint": "#3e2418", "ceil": "#1a1012",
@@ -30,9 +30,9 @@ const LOOKS := {
 	"startup": {"wall": "concreto", "wall_tint": "#5a5e6c", "floor": "madeira", "floor_tint": "#7a5a3e", "ceil": "#22242c",
 		"warm": "#ffe2b8", "light_e": 2.8, "ambient": "#2a2c38", "fog": "#12141c", "exposure": 1.45},
 	"lab": {"wall": "concreto", "wall_tint": "#454a62", "floor": "ladrilho", "floor_tint": "#262a36", "ceil": "#14161e",
-		"warm": "#d8e8ff", "light_e": 2.6, "ambient": "#1c2030", "fog": "#0c0e18", "exposure": 1.50},
+		"warm": "#d8e8ff", "light_e": 2.6, "ambient": "#2c3048", "fog": "#0c0e18", "exposure": 1.50},
 	"career": {"wall": "concreto", "wall_tint": "#3a3e50", "floor": "carpete", "floor_tint": "#3a3046", "ceil": "#16161e",
-		"warm": "#ffe0b0", "light_e": 2.7, "ambient": "#20202c", "fog": "#0e0e16", "exposure": 1.45},
+		"warm": "#ffe0b0", "light_e": 2.7, "ambient": "#34344a", "fog": "#0e0e16", "exposure": 1.45},
 }
 
 
@@ -103,6 +103,7 @@ static func label3d(m, text: String, pos: Vector3, yaw: float, size: int, col: C
 
 ## letreiro de neon com o nome de uma tecnologia (brilha no PC com glow; halo aditivo atrás)
 static func neon(m, text: String, pos: Vector3, yaw: float, col: Color, size := 90) -> Label3D:
+	text = L.t(text)
 	var l := label3d(m, text, pos, yaw, size, col * 2.2, "title", null, 0.0032)
 	var halo := MeshInstance3D.new()
 	var q := QuadMesh.new()

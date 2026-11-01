@@ -40,25 +40,25 @@
   {
    "kind": "frame",
    "title": "A plataforma",
-   "text": "OrbixHub e um SaaS multi-tenant onde varios produtos, como um CRM e uma gestao de oficinas, nascem sobre uma base comum.",
+   "text": "OrbixHub é um SaaS multi-tenant onde vários produtos, como um CRM e uma gestão de oficinas, nascem sobre uma base comum.",
    "tag": ""
   },
   {
    "kind": "frame",
    "title": "Isolamento por tenant",
-   "text": "Cada cliente fica isolado no proprio espaco usando Row-Level Security do Postgres, entao os dados de um nunca alcancam o do outro.",
+   "text": "Cada cliente fica isolado no próprio espaço usando Row-Level Security do Postgres, então os dados de um nunca alcançam o do outro.",
    "tag": ""
   },
   {
    "kind": "frame",
    "title": "API central",
-   "text": "Uma orbix-api cuida de autenticacao, OTP, tokens e financas e serve todos os produtos, evitando reescrever o mesmo nucleo.",
+   "text": "Uma orbix-api cuida de autenticação, OTP, tokens e finanças e serve todos os produtos, evitando reescrever o mesmo núcleo.",
    "tag": ""
   },
   {
    "kind": "frame",
-   "title": "Desafio tecnico",
-   "text": "Servir produtos diferentes a partir de um nucleo so, mantendo seguranca, financas e isolamento de dados por cliente.",
+   "title": "Desafio técnico",
+   "text": "Servir produtos diferentes a partir de um núcleo só, mantendo segurança, finanças e isolamento de dados por cliente.",
    "tag": ""
   },
   {

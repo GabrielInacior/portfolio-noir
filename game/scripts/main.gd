@@ -14,8 +14,9 @@ func _ready() -> void:
 	# tela lógica por orientação: celular em pé 720x1280; deitado baixo (celular) 960x540; PC 1280x720
 	get_window().size_changed.connect(_fit_scale)
 	_fit_scale()
+	_build_world_view()
 	city = City.new()
-	add_child(city)
+	_world_vp.add_child(city)
 	var layer := CanvasLayer.new()
 	add_child(layer)
 	hud = Hud.new()
@@ -24,6 +25,86 @@ func _ready() -> void:
 	await get_tree().process_frame
 	hud.setup(city.player, city)
 	_build_gate(layer)
+
+
+# ───────────────────────────────── visual retrô (PS1): 3D em baixa resolução, ampliado sem borrar
+## O 3D renderiza numa SubViewport pequena (altura interna 360 no "forte", 540 no "suave") e é
+## ampliado com filtro NEAREST, com quantização de cor e pontilhado Bayer. A interface fica por
+## cima em resolução cheia (texto nunca pixela). Escolha salva no navegador (pf_retro).
+const RETRO := preload("res://shaders/retro_ps1.gdshader")
+const RETRO_H := {"forte": 360, "suave": 540}
+var _world_vp: SubViewport
+var _world_rect: TextureRect
+var retro := "forte"
+
+
+func _build_world_view() -> void:
+	retro = _load_retro()
+	_world_vp = SubViewport.new()
+	_world_vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	_world_vp.handle_input_locally = false
+	_world_vp.audio_listener_enable_3d = true
+	add_child(_world_vp)
+	_world_rect = TextureRect.new()
+	_world_rect.texture = _world_vp.get_texture()
+	_world_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_world_rect.stretch_mode = TextureRect.STRETCH_SCALE
+	_world_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_world_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_world_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var under := CanvasLayer.new()
+	under.layer = -1
+	add_child(under)
+	under.add_child(_world_rect)
+	get_window().size_changed.connect(_fit_world)
+	_fit_world()
+
+
+func _fit_world() -> void:
+	if _world_vp == null:
+		return
+	var ws := Vector2(DisplayServer.window_get_size())
+	if ws.x <= 0 or ws.y <= 0:
+		return
+	var h: float = float(RETRO_H.get(retro, 0))
+	var short_side := minf(ws.x, ws.y)
+	var k := 1.0 if h <= 0.0 or h >= short_side else h / short_side
+	_world_vp.size = Vector2i(maxi(16, int(ws.x * k)), maxi(16, int(ws.y * k)))
+	if retro == "off":
+		_world_rect.material = null
+		_world_rect.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	else:
+		var m := ShaderMaterial.new()
+		m.shader = RETRO
+		m.set_shader_parameter("res", Vector2(_world_vp.size))
+		m.set_shader_parameter("levels", 28.0 if retro == "forte" else 48.0)
+		m.set_shader_parameter("dither", 1.0 if retro == "forte" else 0.6)
+		_world_rect.material = m
+		_world_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
+
+func set_retro(level: String) -> void:
+	retro = level if level in ["forte", "suave", "off"] else "forte"
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("try{localStorage.setItem('pf_retro','%s')}catch(e){}" % retro, true)
+	_fit_world()
+
+
+func _load_retro() -> String:
+	var env := OS.get_environment("PF_RETRO")
+	if env != "":
+		return env
+	if OS.has_feature("web"):
+		var v: Variant = JavaScriptBridge.eval("(function(){try{return localStorage.getItem('pf_retro')||''}catch(e){return ''}})()", true)
+		if v != null and str(v) in ["forte", "suave", "off"]:
+			return str(v)
+	return "forte"
+
+
+## eventos (mouse, teclado) seguem para o mundo 3D dentro da SubViewport
+func _unhandled_input(e: InputEvent) -> void:
+	if _world_vp and not (e is InputEventScreenTouch or e is InputEventScreenDrag):
+		_world_vp.push_input(e, true)
 
 
 func _build_gate(layer: CanvasLayer) -> void:
@@ -51,6 +132,14 @@ func _build_gate(layer: CanvasLayer) -> void:
 	enter.custom_minimum_size.x = 420
 	enter.pressed.connect(_enter)
 	v.add_child(enter)
+	var langs := UI.hbox(10)
+	langs.alignment = BoxContainer.ALIGNMENT_CENTER
+	for spec in [["PORTUGUÊS", "pt"], ["ENGLISH", "en"]]:
+		var lb := UI.ghost(spec[0], UI.AMBER if L.lang == spec[1] else UI.MIST, 56)
+		lb.custom_minimum_size.x = 180
+		lb.pressed.connect(func() -> void: L.set_lang(spec[1]))
+		langs.add_child(lb)
+	v.add_child(langs)
 	var hint := UI.label("ative o som para a experiência completa", 18, UI.MIST, "body")
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(hint)

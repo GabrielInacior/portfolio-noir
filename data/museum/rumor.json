@@ -1,51 +1,51 @@
 {
-  "id": "rumor",
-  "loja": "Bar do Detetive",
-  "ambiente": "Um bar noir onde cada mesa conta um caso.",
-  "pieces": [
-    {
-      "titulo": "O caso",
-      "texto": "RUMOR e um jogo de detetive multiplayer feito para a sala de aula. A turma se divide em equipes e cada aluno investiga pelo proprio celular.",
-      "tipo": "quadro",
-      "img": "banner.png"
-    },
-    {
-      "titulo": "A escola em 3D",
-      "texto": "Doze comodos da escola em 3D para explorar. O aluno arrasta para olhar em volta e toca no que brilha para achar pistas.",
-      "tipo": "telao",
-      "img": "telas.png"
-    },
-    {
-      "titulo": "Interrogatorios",
-      "texto": "Os personagens mudam de expressao conforme a conversa aperta. Mostrar a prova certa na hora certa desmonta uma mentira.",
-      "tipo": "foto",
-      "img": "expressoes.png"
-    },
-    {
-      "titulo": "O quadro de fios",
-      "texto": "As equipes montam juntas um quadro com fotos ligadas por barbante e prendem as provas em cada fio. A teoria entregue e o proprio quadro.",
-      "tipo": "objeto"
-    },
-    {
-      "titulo": "O servidor",
-      "texto": "Um servidor Node autoritativo cuida de salas, equipes, votacao e da conferencia das teorias, com a turma inteira jogando ao mesmo tempo.",
-      "tipo": "placa_stack"
-    },
-    {
-      "titulo": "O painel do professor",
-      "texto": "O professor acompanha tudo ao vivo pelo celular ou pelo projetor: radar das equipes, pistas achadas e provas cumpridas.",
-      "tipo": "telao",
-      "img": "professor.png"
-    },
-    {
-      "titulo": "Desafio tecnico",
-      "texto": "Manter dezenas de celulares em tempo real, com reconexao e estado retomado, e ainda rodar 3D nitido e leve no navegador do aluno.",
-      "tipo": "relatorio"
-    },
-    {
-      "titulo": "Como foi feito",
-      "texto": "Cliente em Godot 4.7 exportado para web, servidor Node com WebSocket, personagens e cenarios criados em Blender por codigo.",
-      "tipo": "placa_stack"
-    }
-  ]
+ "id": "rumor",
+ "loja": "Bar do Detetive",
+ "ambiente": "Um bar noir onde cada mesa conta um caso.",
+ "pieces": [
+  {
+   "titulo": "O caso",
+   "texto": "RUMOR é um jogo de detetive multiplayer feito para a sala de aula. A turma se divide em equipes e cada aluno investiga pelo próprio celular.",
+   "tipo": "quadro",
+   "img": "banner.png"
+  },
+  {
+   "titulo": "A escola em 3D",
+   "texto": "Doze cômodos da escola em 3D para explorar. O aluno arrasta para olhar em volta e toca no que brilha para achar pistas.",
+   "tipo": "telao",
+   "img": "telas.png"
+  },
+  {
+   "titulo": "Interrogatorios",
+   "texto": "Os personagens mudam de expressao conforme a conversa aperta. Mostrar a prova certa na hora certa desmonta uma mentira.",
+   "tipo": "foto",
+   "img": "expressoes.png"
+  },
+  {
+   "titulo": "O quadro de fios",
+   "texto": "As equipes montam juntas um quadro com fotos ligadas por barbante e prendem as provas em cada fio. A teoria entregue e o proprio quadro.",
+   "tipo": "objeto"
+  },
+  {
+   "titulo": "O servidor",
+   "texto": "Um servidor Node autoritativo cuida de salas, equipes, votacao e da conferencia das teorias, com a turma inteira jogando ao mesmo tempo.",
+   "tipo": "placa_stack"
+  },
+  {
+   "titulo": "O painel do professor",
+   "texto": "O professor acompanha tudo ao vivo pelo celular ou pelo projetor: radar das equipes, pistas achadas e provas cumpridas.",
+   "tipo": "telao",
+   "img": "professor.png"
+  },
+  {
+   "titulo": "Desafio técnico",
+   "texto": "Manter dezenas de celulares em tempo real, com reconexao e estado retomado, e ainda rodar 3D nitido e leve no navegador do aluno.",
+   "tipo": "relatorio"
+  },
+  {
+   "titulo": "Como foi feito",
+   "texto": "Cliente em Godot 4.7 exportado para web, servidor Node com WebSocket, personagens e cenarios criados em Blender por codigo.",
+   "tipo": "placa_stack"
+  }
+ ]
 }

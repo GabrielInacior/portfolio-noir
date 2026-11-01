@@ -14,6 +14,7 @@ signal action(entry: Dictionary)
 const PolyFace := preload("res://scripts/museum_objects.gd")
 const Dress := preload("res://scripts/museum_dress.gd")
 const HOVER := preload("res://shaders/hover_outline.gdshader")
+const PS1 := preload("res://scripts/ps1.gd")
 
 var project: Dictionary = {}
 var data: Dictionary = {}
@@ -80,14 +81,14 @@ func _build_env(look: Dictionary) -> void:
 	e.background_color = Color("#05060c")
 	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	e.ambient_light_color = Color(look.get("ambient", "#3a3850"))
-	e.ambient_light_energy = float(look.get("ambient_e", 1.45))
+	e.ambient_light_energy = float(look.get("ambient_e", 2.0))
 	e.reflected_light_source = Environment.REFLECTION_SOURCE_DISABLED
 	e.fog_enabled = true
 	e.fog_mode = Environment.FOG_MODE_DEPTH
 	e.fog_light_color = Color(look.get("fog", "#1c1a28"))
 	e.fog_depth_begin = 4.0
 	e.fog_depth_end = 20.0
-	e.fog_density = 0.8
+	e.fog_density = 0.4
 	e.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	e.tonemap_exposure = float(look.get("exposure", 1.25))
 	e.adjustment_enabled = true
@@ -149,6 +150,7 @@ func prop(name: String, pos: Vector3, yaw := 0.0, scl := 1.0, parent: Node = nul
 	if not _props_cache.has(name):
 		_props_cache[name] = load(path)
 	var n: Node3D = (_props_cache[name] as PackedScene).instantiate()
+	if OS.get_environment("PF_NOPS1") == "": PS1.node(n)
 	n.position = pos
 	n.rotation.y = yaw
 	n.scale = Vector3.ONE * scl
@@ -219,7 +221,10 @@ func _build_shell(look: Dictionary) -> void:
 	light(Vector3(0, 1.8, -D / 2 + 0.9), _cool, 1.3, 6.0)
 	# lavagem das paredes laterais (luz baixa e larga para a sala não afundar no preto)
 	for sx in [-1.0, 1.0]:
-		light(Vector3(sx * (W / 2 - 1.1), 2.4, 0), _warm.lerp(_cool, 0.3), 1.0, 5.0)
+		light(Vector3(sx * (W / 2 - 1.1), 2.4, 0), _warm.lerp(_cool, 0.3), 1.3, 6.0)
+		if D > 10:
+			light(Vector3(sx * (W / 2 - 1.1), 2.4, -D / 3), _warm, 1.2, 6.0)
+			light(Vector3(sx * (W / 2 - 1.1), 2.4, D / 3), _warm, 1.2, 6.0)
 
 
 # ───────────────────────────────── itens examináveis nas paredes e no centro

@@ -11,25 +11,147 @@
     "Trabalho muito com IA e modelos de linguagem, tanto como ferramenta de desenvolvimento quanto dentro de produtos: uso o Claude Code e agentes no dia a dia, integro APIs de LLM, desenho prompts e construo saídas estruturadas confiáveis. Também rodo modelos locais e automações. Cada prédio desta cidade é um projeto que eu construí."
   ],
   "skills": {
-    "Frontend": ["Vue.js", "Nuxt", "React", "React Native", "Angular", "Pinia", "Tailwind CSS"],
-    "Backend": ["Node.js", "Express", "Fastify", "NestJS", "FastAPI", "Spring Boot", "ASP.NET", "REST", "WebSockets", "JWT", "OAuth2", "2FA"],
-    "IA e LLM": ["Claude Code", "agentes", "OpenAI (GPT-4, Whisper)", "Gemini", "Ollama e modelos locais", "design de prompt", "gestão de contexto", "saídas estruturadas"],
-    "Dados e mensageria": ["PostgreSQL", "MongoDB", "Prisma", "Knex", "Redis", "RabbitMQ", "BullMQ", "SQL Server", "Firebase"],
-    "Nuvem e DevOps": ["AWS (EC2, S3, SQS, SNS)", "Docker", "GitHub Actions", "GitLab CI", "Nginx"],
-    "Arquitetura": ["Microsserviços", "Multi-tenant", "Row-Level Security", "Event-Driven", "BFF", "DDD", "MVC", "MVVM"],
-    "Game dev": ["Godot", "GDScript", "Blender", "pipeline 3D para web", "arte por código e por IA"],
-    "Segurança e testes": ["pentest", "hardening", "Jest", "Playwright", "testes unitários e E2E"]
+    "Frontend": [
+      "Vue.js",
+      "Nuxt",
+      "React",
+      "React Native",
+      "Angular",
+      "Pinia",
+      "Tailwind CSS"
+    ],
+    "Backend": [
+      "Node.js",
+      "Express",
+      "Fastify",
+      "NestJS",
+      "FastAPI",
+      "Spring Boot",
+      "ASP.NET",
+      "REST",
+      "WebSockets",
+      "JWT",
+      "OAuth2",
+      "2FA"
+    ],
+    "IA e LLM": [
+      "Claude Code",
+      "agentes",
+      "OpenAI (GPT-4, Whisper)",
+      "Gemini",
+      "Ollama e modelos locais",
+      "design de prompt",
+      "gestão de contexto",
+      "saídas estruturadas"
+    ],
+    "Dados e mensageria": [
+      "PostgreSQL",
+      "MongoDB",
+      "Prisma",
+      "Knex",
+      "Redis",
+      "RabbitMQ",
+      "BullMQ",
+      "SQL Server",
+      "Firebase"
+    ],
+    "Nuvem e DevOps": [
+      "AWS (EC2, S3, SQS, SNS)",
+      "Docker",
+      "GitHub Actions",
+      "GitLab CI",
+      "Nginx"
+    ],
+    "Arquitetura": [
+      "Microsserviços",
+      "Multi-tenant",
+      "Row-Level Security",
+      "Event-Driven",
+      "BFF",
+      "DDD",
+      "MVC",
+      "MVVM"
+    ],
+    "Game dev": [
+      "Godot",
+      "GDScript",
+      "Blender",
+      "pipeline 3D para web",
+      "arte por código e por IA"
+    ],
+    "Segurança e testes": [
+      "pentest",
+      "hardening",
+      "Jest",
+      "Playwright",
+      "testes unitários e E2E"
+    ]
   },
   "experience": [
-    {"role": "Desenvolvedor Full-Stack", "company": "Sys Evolution (LicitaSys)", "period": "jun 2024 ate hoje", "place": "Remoto", "highlights": ["Liderança técnica de um time de 3 pessoas em mais de 6 projetos de grande porte, com decisões de arquitetura e planejamento de sprint ponta a ponta.", "Desenvolvedor original do ACL, assistente de licitações que automatiza o ciclo completo de compras públicas em portais do governo: captura de editais, envio de propostas, lances e monitoramento de pregões.", "SaaS multi-tenant escalável em Vue, React, Node e PostgreSQL, com padrões BFF e DDD e uma biblioteca de componentes usada por mais de 20 desenvolvedores.", "WebSockets para tempo real e integrações profundas entre vários sistemas, com pipeline completo de QA, Staging e Produção.", "Um dos 2 desenvolvedores do app Flutter da empresa, unindo vários aplicativos num só.", "Integração do Claude Code e Codex no fluxo diário para acelerar scaffolding, refatoração e depuração."]},
-    {"role": "Desenvolvedor Full-Stack", "company": "Loop Sistemas", "period": "abr 2024 a jun 2024", "place": "Jales, SP", "highlights": ["Desenvolvimento e manutenção de aplicações desktop WPF com arquitetura MVVM e SQL Server, entregando soluções prontas para produção."]},
-    {"role": "Bolsista de Iniciação Científica", "company": "CNPq / UNESP", "period": "set 2022 a ago 2023", "place": "Brasil", "highlights": ["Pesquisa sobre um compressor de CO2 supercrítico aplicado à exploração do pré-sal, com scripts próprios em Python para simulação e análise estatística, sem bibliotecas prontas de IA."]}
+    {
+      "role": "Desenvolvedor Full-Stack",
+      "company": "Sys Evolution (LicitaSys)",
+      "period": "jun 2024 ate hoje",
+      "place": "Remoto",
+      "highlights": [
+        "Liderança técnica de um time de 3 pessoas em mais de 6 projetos de grande porte, com decisões de arquitetura e planejamento de sprint ponta a ponta.",
+        "Desenvolvedor original do ACL, assistente de licitações que automatiza o ciclo completo de compras públicas em portais do governo: captura de editais, envio de propostas, lances e monitoramento de pregões.",
+        "SysGuide: servidor de vídeo e streaming, app desktop em Rust com Tauri, LLM local e Whisper para transcrição.",
+        "Análise de dados sobre a base pública do mercado de licitações, com telas que mostram milhões de linhas de uma vez (rolagem virtualizada) e análises detalhadas.",
+        "SaaS multi-tenant escalável em Vue, React, Node e PostgreSQL, com padrões BFF e DDD e uma biblioteca de componentes usada por mais de 20 desenvolvedores.",
+        "WebSockets para tempo real e integrações profundas entre vários sistemas, com pipeline completo de QA, Staging e Produção.",
+        "Um dos 2 desenvolvedores do app Flutter da empresa, unindo vários aplicativos num só.",
+        "Integração do Claude Code e Codex no fluxo diário para acelerar scaffolding, refatoração e depuração."
+      ]
+    },
+    {
+      "role": "Desenvolvedor Full-Stack (freelance)",
+      "company": "Freelance",
+      "period": "2023 até hoje",
+      "place": "Remoto",
+      "highlights": [
+        "ATN360: site institucional com CMS próprio, SSR com nota 100 de SEO, 5 idiomas e posts gerados com Gemini.",
+        "BarberCore: CRM multi-tenant para barbearias com WhatsApp, agendamento, fidelidade e assinaturas no Stripe, na AWS, com clientes pagantes.",
+        "AirMessage: SaaS multiplataforma em Flutter para automação de WhatsApp com 2FA por SMS e e-mail."
+      ]
+    },
+    {
+      "role": "Desenvolvedor Full-Stack",
+      "company": "Loop Sistemas",
+      "period": "abr 2024 a jun 2024",
+      "place": "Jales, SP",
+      "highlights": [
+        "Desenvolvimento e manutenção de aplicações desktop WPF com arquitetura MVVM e SQL Server, entregando soluções prontas para produção."
+      ]
+    },
+    {
+      "role": "Bolsista de Iniciação Científica",
+      "company": "CNPq / UNESP",
+      "period": "set 2022 a ago 2023",
+      "place": "Brasil",
+      "highlights": [
+        "Pesquisa sobre um compressor de CO2 supercrítico aplicado à exploração do pré-sal, com scripts próprios em Python para simulação e análise estatística, sem bibliotecas prontas de IA."
+      ]
+    }
   ],
   "education": [
-    {"course": "Tecnólogo em Sistemas para Internet", "school": "FATEC-SP", "period": "2023 a 2026", "note": "Desenvolvimento web full-stack, UX/UI, bancos de dados, cibersegurança e métodos ágeis."},
-    {"course": "Engenharia Mecânica", "school": "UNESP", "period": "2020 a 2023 (trancado)", "note": "Base analítica forte em matemática, termodinâmica e análise de dados, antes da transição para software."}
+    {
+      "course": "Tecnólogo em Sistemas para Internet",
+      "school": "FATEC-SP",
+      "period": "2023 a 2026",
+      "note": "Desenvolvimento web full-stack, UX/UI, bancos de dados, cibersegurança e métodos ágeis."
+    },
+    {
+      "course": "Engenharia Mecânica",
+      "school": "UNESP",
+      "period": "2020 a 2023 (trancado)",
+      "note": "Base analítica forte em matemática, termodinâmica e análise de dados, antes da transição para software."
+    }
   ],
-  "languages": ["Português nativo", "Inglês avançado"],
+  "languages": [
+    "Português nativo",
+    "Inglês avançado"
+  ],
   "links": {
     "github": "https://github.com/GabrielInacior",
     "linkedin": "https://www.linkedin.com/in/gabriel-inacio-rodrigues-silva-072029220",
