@@ -135,7 +135,7 @@ def index_pt():
       <p class="lead">{tagline}</p>
       <div class="cta"><button id="jogar">Entrar na cidade</button>
         <a class="ghost" href="#projetos">Ver projetos</a></div>
-      <p class="hint">Um portfolio em forma de cidade noir 3D. Prefere ler? Esta tudo aqui embaixo.</p>
+      <p class="hint">Entre na cidade noir em 3D. Prefere ler? Está tudo aqui embaixo.</p>
     </section>
     <section id="projetos"><h2>Projetos</h2><div class="grid">{cards}</div></section>
     <section id="sobre"><h2>Sobre</h2>{bio}
@@ -298,7 +298,7 @@ def og_image():
     for off, c in [((-6, -4), (90, 170, 220)), ((6, 4), (255, 79, 163)), ((0, 0), (255, 200, 61))]:
         d.text((70 + off[0], 150 + off[1]), "GABRIEL INACIO", font=F("BebasNeue-Regular.ttf", 128), fill=c)
     d.text((74, 300), "Desenvolvedor Full-Stack · Game Dev · IA", font=F("SpecialElite-Regular.ttf", 40), fill=(232, 236, 248))
-    d.text((74, 380), "Um portfolio em forma de cidade noir 3D", font=F("Nunito-Var.ttf", 32), fill=(159, 176, 216))
+    d.text((74, 380), "Engenharia de software, games e IA", font=F("Nunito-Var.ttf", 32), fill=(159, 176, 216))
     d.text((74, 540), "inaciodev.online", font=F("BebasNeue-Regular.ttf", 52), fill=(255, 79, 163))
     img.save(os.path.join(WEB, "assets", "og.png"))
 
