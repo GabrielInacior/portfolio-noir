@@ -93,3 +93,26 @@ criando modelos NOVOS e mais sérios:
 3. **Confirmar com o usuário** os nomes "imp" e "SysGuide" na carreira.
 4. Meio da sala da CARREIRA ainda pouco preenchido; LAB e CARREIRA podem ganhar mais objetos.
 5. Imagens do README no painel terminal (extração pronta em `gh_screen.readme_images`, falta exibir).
+
+## Rodada 6 (performance, deploy, render nítido) — estado
+Feito e publicado (Vercel, deploy a cada push; `site/` gerado por `bash tools/deploy/build_site.sh`,
+de preferência a partir de um HEAD limpo, porque o export usa a árvore de trabalho):
+- Rua de 0,9–1,5 mi para 65–250 mil primitivas (respingo com esfera padrão de 4 mil tris; `scripts/lowpoly.gd`
+  limita segmentos e corta peças pequenas por distância; sombra direcional desligada no navegador).
+- Teclado: ações registradas por código em `main.gd` (`_setup_input`); o mapa do project.godot era ignorado.
+- Som no web: modo stream (`audio/general/default_playback_type.web=0`), log "AUDIO estado" no console.
+- Home e páginas de projeto abrem o jogo por cima (`/jogo/boot.js`, gerado por `tools/deploy/make_boot.py`);
+  conteúdo semântico em sr-only no mesmo documento; cartão noir sem WebGL; `/projetos/x/` entra na loja x.
+- .pck 13,5 MB (WebP com perda, limite 1024 px; trilha 128 kbps; ambientes mono).
+- Retrô ½ fixo (altura interna 432) + passada nítida (`scripts/render/sharp_pass.gd`): textos 3D, quadros,
+  colagens, telões e monitores em resolução cheia; oclusores com cor-chave magenta.
+- Fonte própria de símbolos (`assets/fonts/NoirSymbols.ttf`, `tools/fonts/build_symbols.py`).
+- Capa do LinkedIn (`docs/img/linkedin_capa*.png`, `tools/deploy/linkedin_cover.py`).
+
+Pendentes desta rodada (pedidos do usuário que chegaram no meio):
+- Portas com textura de porta (kit Blender + texturas SD) em toda a cidade e nos interiores.
+- Toldos invertidos/flutuando, elementos da fachada na frente dos letreiros, gaps gerais (varredura).
+- Letreiros e textos sempre centralizados; outdoors com fotos e skills do Gabriel (arte completa por superfície,
+  sem cortar rosto/texto); renomear "MBM Site" para ATENDE 360 (slug /projetos/atende360/ + 301).
+- Medir FPS no navegador com a janela visível (a de automação fica coberta e o Chrome limita a 1 fps);
+  ~20 s até a tela de entrada no Chrome (compilação do wasm e de shaders, não a montagem da cidade, 0,6 s nativo).
