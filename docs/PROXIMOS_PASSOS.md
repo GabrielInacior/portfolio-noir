@@ -137,3 +137,19 @@ Pendentes desta rodada (pedidos do usuário que chegaram no meio):
 - Ícones de tecnologia ainda não aplicados às lombadas da estante, adesivos dos racks e parede "MEU ARSENAL" do LAB.
 - Varredura completa de gaps fachada por fachada (frente e 45°) não foi feita; só as vistas do district_shot.
 - capa_a do hero_shot sai preta (câmera dentro de geometria perto da entrada): investigar.
+
+## Rodada 8 (entregue e publicada em inaciodev.online, commit 8673d35)
+- Pôsteres das lojas como montagens gráficas (tools/museum/posters.py): diagrama de arquitetura com logos, mockup de celular/notebook, número grande, parede de ícones; texto <= 30% (máx. medido 19%), só frases completas (sonda reprova "…"); 45/45 aprovados.
+- Corretor de acentos pt-BR (tools/text/acentos.py) aplicado em museu, perfil e projetos.
+- Cidade capitalista (tools/deploy/ads.py + city.gd `_build_ads`): 51 artes x pt/en com foto, slogan e ícones; topos de prédio, letreiros verticais, lightboxes, lambe-lambes variados (com panfletos de projetos), faixas, telões com shader de tela (screen_fx.gdshader: subpixel, scanline, glitch em rajadas e na troca), táxi com luminoso, van com anúncio, topos vivos (torres com luz piscando, antenas, parabólicas, TVs empilhadas, holofotes).
+- Trânsito sem física (scripts/traffic.gd) + sonda tools_dev/traffic_probe.gd (0 sobreposições em 3 min).
+- Lojas: selo PROJETO no letreiro, fila de ícones da stack na verga (tools/museum/tech_strips.py), anel ENTRAR pulsando no chão; ruas com nomes das seções (AV. DOS PROJETOS etc.); beco iluminado.
+- Estantes só com tecnologias (logo + nome, por categoria, caixas com logo), parede MEU ARSENAL no LAB, Plug4Sales e SistemasBr na CARREIRA.
+- Passada nítida ocluída por carros, pessoas com esqueleto e MultiMesh (sharp_pass.gd).
+- Idioma padrão inglês (jogo e carregador); buffer de áudio web 120 ms.
+
+### Pendências após a rodada 8
+- Performance: draw calls na rua ~1.570 no ponto de medição (antes da rodada 989; meta < 300); VRAM ~610 MB no PC. Falta atlas único de anúncios/MultiMesh, visibility_range e culling por quarteirão.
+- Música no web: só o buffer foi aumentado; falta pré-compilar shaders no carregamento e espalhar a montagem por quadros, e medir underruns no Chrome.
+- Painel de skills navegável, efeito VHS nos popups de tela, popup = mesma arte da tela 3D, cursor custom, transições de tela, sonda de vazio/qualidade/interação por sala, set dressing completo dos interiores (LAB e lojas de software ainda vazios no centro), glitch nos monitores do InacioCyber.
+- Portas com textura SD/CC0 e varredura completa de gaps (frente e 45°) não feitas nesta rodada.
