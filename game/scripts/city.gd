@@ -11,6 +11,7 @@ extends Node3D
 const Player := preload("res://scripts/player.gd")
 const Npc := preload("res://scripts/npc.gd")
 const NoirChar := preload("res://scripts/scene3d/noir_character.gd")
+const LowPoly := preload("res://scripts/lowpoly.gd")
 
 var player: Player
 var kiosks: Array = []        # [{pos, project, light, ring, neon, visited}]
@@ -73,6 +74,9 @@ func _ready() -> void:
 	_build_life()
 	_rain()
 	_spawn_player()
+	# teto de segmentos nas primitivas e partículas sem sombra (ver lowpoly.gd)
+	LowPoly.node(self)
+	LowPoly.cull_by_size(self, 18.0 if _light else 24.0, 32.0 if _light else 42.0)
 
 
 # ═════════════════════════════════════════════ ambiente, céu, pós
@@ -122,7 +126,7 @@ func _build_env() -> void:
 	moon.light_energy = 0.35
 	moon.rotation_degrees = Vector3(-48, 128, 0)
 	moon.shadow_enabled = not _light
-	moon.directional_shadow_max_distance = 36.0
+	moon.directional_shadow_max_distance = 26.0
 	moon.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
 	add_child(moon)
 	# vinheta (pós barato, uma textura por cima da tela)
@@ -591,6 +595,7 @@ func _steam(p: Vector3) -> void:
 	m.albedo_color = Color("#c9c6e8")
 	m.albedo_texture = _soft_dot()
 	s.material_override = m
+	s.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(s)
 
 
@@ -1544,6 +1549,7 @@ func _rain() -> void:
 	dm.albedo_color = Color("#b8c8f8", 0.4)
 	dm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	p.material_override = dm
+	p.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(p)
 	_rain_node = p
 	# respingos no chão (anéis rápidos ao redor do jogador)
@@ -1558,10 +1564,15 @@ func _rain() -> void:
 	s.initial_velocity_min = 0.6
 	s.initial_velocity_max = 1.2
 	s.gravity = Vector3(0, -6, 0)
+	# respingo é um ponto: losango de 8 triângulos (a esfera padrão tinha ~4 mil por partícula e
+	# era o maior custo da rua inteira)
 	var sm := SphereMesh.new()
 	sm.radius = 0.02
 	sm.height = 0.04
+	sm.radial_segments = 4
+	sm.rings = 1
 	s.mesh = sm
+	s.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	s.material_override = _mat(Color("#cfdcff"), 1.2, true)
 	add_child(s)
 	_splash_node = s

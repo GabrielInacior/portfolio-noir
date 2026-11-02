@@ -70,6 +70,7 @@ func _ready() -> void:
 	_build_shell(look)
 	_place_items(style)
 	Dress.dress(self, style)
+	preload("res://scripts/lowpoly.gd").node(self)
 	examined.emit(0, items.size())
 
 
