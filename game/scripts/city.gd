@@ -44,8 +44,8 @@ signal visited_changed(count: int, total: int)
 signal near_changed(project: Dictionary)
 
 # ── traçado (x, z); z negativo é "para frente" a partir do início
-## carros noir feitos no Blender (tools/blender/car_build.py): sedã, táxi, cupê e van em variações de cor
-const CARS := ["car_sedan_maroon", "car_sedan_teal", "car_sedan_cream", "car_taxi_yellow", "car_coupe_black", "car_coupe_crimson", "car_van_grey", "car_van_navy"]
+## carros noir a partir de modelos prontos CC0/CC-BY recoloridos (tools/blender/car_import.py; créditos em docs/CREDITOS.md)
+const CARS := ["car_sedan_maroon", "car_sedan_teal", "car_sedan_cream", "car_sedan_black", "car_taxi_yellow", "car_police", "car_muscle_crimson", "car_muscle_black", "car_wagon_green", "car_wagon_brown", "car_van_grey", "car_van_navy"]
 const AVE_X := 4.5            # meia largura do asfalto da avenida
 const SIDE := 2.5             # largura da calçada
 const FAC := 7.0              # linha das fachadas da avenida (x = ±7)

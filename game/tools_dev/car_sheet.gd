@@ -1,8 +1,8 @@
 extends Node3D
-## Prancha dos carros (mudo): os 8 modelos em fila, luz noturna com rim neon.
+## Prancha dos carros (mudo): os 12 modelos em fila, luz noturna com rim neon.
 ## RUMOR_SHOT=<pasta> godot --path . res://tools_dev/car_sheet.tscn
 func _ready() -> void:
-	var names := ["car_sedan_maroon", "car_sedan_teal", "car_sedan_cream", "car_taxi_yellow", "car_coupe_black", "car_coupe_crimson", "car_van_grey", "car_van_navy"]
+	var names := ["car_sedan_maroon", "car_sedan_teal", "car_sedan_cream", "car_sedan_black", "car_taxi_yellow", "car_police", "car_muscle_crimson", "car_muscle_black", "car_wagon_green", "car_wagon_brown", "car_van_grey", "car_van_navy"]
 	var we := WorldEnvironment.new()
 	var e := Environment.new()
 	e.background_mode = Environment.BG_COLOR
@@ -24,13 +24,13 @@ func _ready() -> void:
 	for i in names.size():
 		var sc: Node3D = (load("res://assets/vehicles/%s.glb" % names[i]) as PackedScene).instantiate()
 		add_child(sc)
-		sc.position = Vector3((i % 4) * 2.6 - 3.9, 0, (i / 4) * 6.0)
-		sc.rotation.y = 0.75
+		sc.position = Vector3((i % 4) * 3.4 - 5.1, 0, (i / 4) * 7.0)
+		sc.rotation.y = 2.3
 		load("res://scripts/ps1.gd").node(sc)
 	var cam := Camera3D.new()
 	add_child(cam)
-	cam.position = Vector3(0, 6.5, 14.5)
-	cam.look_at(Vector3(0, 0.4, 3.0))
+	cam.position = Vector3(0.0, 11.0, 24.0)
+	cam.look_at(Vector3(0, 0.3, 7.0))
 	cam.fov = 40
 	cam.current = true
 	await get_tree().create_timer(1.0).timeout
