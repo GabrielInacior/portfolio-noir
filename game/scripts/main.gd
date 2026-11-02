@@ -145,8 +145,10 @@ func _build_gate(layer: CanvasLayer) -> void:
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(hint)
 	layer.add_child(_gate)
-	# respiração do título
-	var tw := create_tween().set_loops()
+	# respiração do título: o tween pertence ao próprio título e morre com a tela de entrada (preso ao
+	# nó principal ele virava loop infinito instantâneo quando a tela era liberada e travava a aba no
+	# navegador; no desktop o Godot só avisa "Infinite loop detected")
+	var tw := logo.create_tween().set_loops()
 	tw.tween_property(logo, "modulate:a", 0.6, 1.4)
 	tw.tween_property(logo, "modulate:a", 1.0, 1.4)
 
