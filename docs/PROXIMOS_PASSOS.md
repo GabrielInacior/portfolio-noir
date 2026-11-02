@@ -116,3 +116,24 @@ Pendentes desta rodada (pedidos do usuário que chegaram no meio):
   sem cortar rosto/texto); renomear "MBM Site" para ATENDE 360 (slug /projetos/atende360/ + 301).
 - Medir FPS no navegador com a janela visível (a de automação fica coberta e o Chrome limita a 1 fps);
   ~20 s até a tela de entrada no Chrome (compilação do wasm e de shaders, não a montagem da cidade, 0,6 s nativo).
+
+## Rodada 7 (cenário) — entregue
+- 31 props da Meshy refeitos no Blender (`tools/blender/props_kit.py`, cor por vértice + materiais `glow_*`
+  sem luz); Meshy removida do repositório. Cadeira de barbeiro nova.
+- Anúncios de design nas lojas para peças sem print real (`tools/museum/posters.py`, 46 peças, sonda: cabe,
+  legível a 2 m, contraste, "não só texto"); Orbix e FormataAI ficaram sem imagens (só anúncios/colagem de anúncios).
+- Atlas de logos oficiais (`tools/icons/build_icons.mjs`: Simple Icons CC0 + Devicon MIT para AWS), índice em
+  `data/tech_icons.json` e `game/assets/data/tech_icons.json` (formato da UI). Créditos em `docs/CREDITOS.md`.
+- Cidade: outdoors com foto e skills em proporção exata (`tools/deploy/billboards.py`), totens, placas de rua
+  físicas com lâminas apontando para cada lugar, setas de neon e panfletos ao lado das portas, portas modeladas,
+  toldos presos na parede, letreiros centralizados que encolhem para caber, café dev, mural de stack, totens
+  "você está aqui"; nada de escada/ar-condicionado na frente dos letreiros. Placas flutuantes desligadas.
+- Atende 360 (ex-MBM) e BarberCore com loja, museu e página de SEO; 308 de /projetos/sitembm.
+- Passada nítida usa a mesma luz, névoa e correção de cor do mundo; some com modal aberto.
+- OG 1200x627 (pt/en) de captura real (`tools/deploy/og_image.py`) e capa do LinkedIn regenerada.
+
+### Pendências
+- Portas sem textura gerada por SD (são modeladas com painéis, vidro e puxador; textura de parede não há mais).
+- Ícones de tecnologia ainda não aplicados às lombadas da estante, adesivos dos racks e parede "MEU ARSENAL" do LAB.
+- Varredura completa de gaps fachada por fachada (frente e 45°) não foi feita; só as vistas do district_shot.
+- capa_a do hero_shot sai preta (câmera dentro de geometria perto da entrada): investigar.
