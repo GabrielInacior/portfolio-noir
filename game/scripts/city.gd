@@ -27,6 +27,7 @@ var _halos: Array = []
 var _flicker: Array = []
 var _broken: Array = []       # letreiros com falha (piscam de verdade)
 var _cars: Array = []
+var traffic := Traffic.new()
 var _walkers: Array = []
 var _wins: Array = []         # janelas vivas (acendem/apagam)
 var _swing: Array = []        # placas e fios balançando
@@ -1369,9 +1370,18 @@ func _street_props() -> void:
 	# mesinhas de bar na calçada em frente à Lábia
 	for p in [Vector3(5.6, 0.2, -27.6), Vector3(5.6, 0.2, -31.0)]:
 		_prop("sd_mesa_bar_rua", p, 0.0)
-	# carros estacionados (encostados no meio-fio)
-	for p in [Vector3(-3.3, 0.0, -13.5), Vector3(3.3, 0.0, -25.0), Vector3(-3.3, 0.0, -56.0), Vector3(30.0, 0.0, CROSS_Z - 2.6), Vector3(-34.0, 0.0, CROSS_Z + 2.6)]:
+	# carros estacionados: vagas rentes ao meio-fio (faixa de estacionamento, fora das faixas de
+	# rolamento); cada vaga é conferida contra os corredores do trânsito e descartada se invadir
+	_setup_traffic_lanes()
+	var park_x := AVE_X - 1.05
+	var park_z := CROSS_HW - 0.95
+	for p in [Vector3(-park_x, 0.0, -13.5), Vector3(park_x, 0.0, -25.0), Vector3(-park_x, 0.0, -56.0),
+			Vector3(park_x, 0.0, -8.0), Vector3(-park_x, 0.0, -31.0),
+			Vector3(30.0, 0.0, CROSS_Z - park_z), Vector3(-34.0, 0.0, CROSS_Z + park_z), Vector3(22.0, 0.0, CROSS_Z + park_z)]:
 		var yaw := 0.0 if absf(p.z - CROSS_Z) > 3.0 else PI / 2
+		if not traffic.valid_parking(p, yaw):
+			push_warning("vaga descartada (invade faixa): %s" % p)
+			continue
 		_prop(CARS[_rng.randi() % CARS.size()], p, yaw + (PI if p.x > 0 and yaw == 0.0 else 0.0))
 
 
@@ -1436,17 +1446,11 @@ func _beam(top: Vector3, col: Color) -> void:
 
 # ═════════════════════════════════════════════ vida: carros, pedestres, pombos, névoa
 func _build_life() -> void:
-	# carros circulando: faixa da direita da avenida (ida e volta) e da transversal
-	var lanes := [
-		[Vector3(2.2, 0, AVE_START + 30), Vector3(2.2, 0, AVE_END - 30)],
-		[Vector3(-2.2, 0, AVE_END - 30), Vector3(-2.2, 0, AVE_START + 30)],
-		[Vector3(-CROSS_END - 25, 0, CROSS_Z - 2.0), Vector3(CROSS_END + 25, 0, CROSS_Z - 2.0)],
-		[Vector3(CROSS_END + 25, 0, CROSS_Z + 2.0), Vector3(-CROSS_END - 25, 0, CROSS_Z + 2.0)],
-	]
-	var ncar := 2 if _light else 4
+	# carros circulando: só nas faixas do Traffic (sem física; nunca atravessam outro carro)
+	_setup_traffic_lanes()
+	var ncar := 4 if _light else 8
 	for i in ncar:
-		var ln: Array = lanes[i % lanes.size()]
-		_spawn_car(ln[0], ln[1], float(i) * 0.37)
+		_spawn_car(i % traffic.lanes.size(), float(i / traffic.lanes.size()) * 34.0 + 6.0 * (i % traffic.lanes.size()))
 	# pedestres andando pela calçada e duplas paradas conversando
 	var routes := [
 		[Vector3(-5.8, 0.2, 4), Vector3(-5.8, 0.2, -34)], [Vector3(5.8, 0.2, -36), Vector3(5.8, 0.2, 2)],
@@ -1495,7 +1499,24 @@ func _build_life() -> void:
 			f.add_child(mi)
 
 
-func _spawn_car(a: Vector3, b: Vector3, phase: float) -> void:
+## Faixas de rolamento (uma por sentido), afastadas da faixa de estacionamento junto ao meio-fio.
+var _lanes_ready := false
+
+
+func _setup_traffic_lanes() -> void:
+	if _lanes_ready:
+		return
+	_lanes_ready = true
+	var lx := 1.25
+	var lz := 1.25
+	traffic.add_lane(Vector3(lx, 0, AVE_START + 30), Vector3(lx, 0, AVE_END - 30), "ave")
+	traffic.add_lane(Vector3(-lx, 0, AVE_END - 30), Vector3(-lx, 0, AVE_START + 30), "ave")
+	traffic.add_lane(Vector3(-CROSS_END - 25, 0, CROSS_Z - lz), Vector3(CROSS_END + 25, 0, CROSS_Z - lz), "cross")
+	traffic.add_lane(Vector3(CROSS_END + 25, 0, CROSS_Z + lz), Vector3(-CROSS_END - 25, 0, CROSS_Z + lz), "cross")
+	traffic.set_box(Rect2(-AVE_X, CROSS_Z - CROSS_HW, AVE_X * 2, CROSS_HW * 2))
+
+
+func _spawn_car(lane: int, s: float) -> void:
 	var car := Node3D.new()
 	add_child(car)
 	var body := MeshInstance3D.new()
@@ -1515,7 +1536,14 @@ func _spawn_car(a: Vector3, b: Vector3, phase: float) -> void:
 		l.distance_fade_enabled = true
 		l.distance_fade_begin = 30.0
 		car.add_child(l)
-	_cars.append({"node": car, "a": a, "b": b, "t": phase, "speed": _rng.randf_range(7.0, 10.0) / a.distance_to(b)})
+	var clen := 5.3
+	if body.mesh:
+		var bb := body.mesh.get_aabb()
+		clen = maxf(bb.size.z, bb.size.x)
+	if not traffic.add_car(car, lane, s, clen):
+		car.queue_free()
+		return
+	_cars.append({"node": car})
 
 
 func _make_person(id: String) -> Node3D:
@@ -1673,13 +1701,7 @@ func _process(dt: float) -> void:
 		n.rotation.z = sin(_t * 1.3 + float(s["seed"])) * float(s["amp"])
 	for f in _fans:
 		(f as Node3D).rotate_object_local(Vector3.UP, dt * 9.0)
-	for c in _cars:
-		c["t"] = fmod(float(c["t"]) + dt * float(c["speed"]), 1.0)
-		var a: Vector3 = c["a"]
-		var b: Vector3 = c["b"]
-		var n: Node3D = c["node"]
-		n.position = a.lerp(b, float(c["t"]))
-		n.rotation.y = atan2((b - a).x, (b - a).z)
+	traffic.step(dt, player.global_position if player else null)
 	for w in _walkers:
 		var a: Vector3 = w["a"]
 		var b: Vector3 = w["b"]
