@@ -20,6 +20,7 @@ var cam: Camera3D
 var rect: TextureRect
 var _occ_mat: ShaderMaterial
 var _src_cam: Camera3D
+var far_limit := 34.0
 
 
 func setup(p_world_vp: SubViewport, under_layer: CanvasLayer) -> void:
@@ -81,7 +82,9 @@ func _process(_dt: float) -> void:
 	cam.global_transform = _src_cam.global_transform
 	cam.fov = _src_cam.fov
 	cam.near = _src_cam.near
-	cam.far = _src_cam.far
+	# além de ~34 m o texto já é pequeno: lá o retrô mostra a mesma peça, e a passada nítida não
+	# precisa desenhar (nem os oclusores). Corta pela metade o custo desta passada na avenida.
+	cam.far = minf(_src_cam.far, far_limit)
 	cam.keep_aspect = _src_cam.keep_aspect
 	_sync_env()
 

@@ -19,6 +19,7 @@ cd game
 cd "$ROOT"
 # boot.js: o jogo abre por cima de todas as páginas (home, /en/, projetos)
 python tools/deploy/make_boot.py
+cp game/shell/cursor_*.png site/jogo/ 2>/dev/null || true
 test -f site/jogo/index.wasm && test -f site/jogo/index.pck
 du -sh site site/jogo
 ls -la site/jogo

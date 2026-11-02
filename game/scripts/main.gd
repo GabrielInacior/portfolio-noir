@@ -19,6 +19,7 @@ func _ready() -> void:
 	city = City.new()
 	_world_vp.add_child(city)
 	_sharp.tag(city)
+	_apply_quality()
 	var layer := CanvasLayer.new()
 	add_child(layer)
 	hud = Hud.new()
@@ -88,6 +89,7 @@ var _world_vp: SubViewport
 var _world_rect: TextureRect
 var _sharp
 var retro := "forte"
+var _potato_h := 300
 
 
 func _build_world_view() -> void:
@@ -123,6 +125,9 @@ func _fit_world() -> void:
 	if ws.x <= 0 or ws.y <= 0:
 		return
 	var h: float = float(RETRO_H.get(retro, 0))
+	# perfil batata: o 3D desenha em resolução ainda menor (o retrô esconde, e a GPU agradece)
+	if UI.quality() == 0 and h > 0.0:
+		h = minf(h, float(_potato_h))
 	var short_side := minf(ws.x, ws.y)
 	var k := 1.0 if h <= 0.0 or h >= short_side else h / short_side
 	_world_vp.size = Vector2i(maxi(16, int(ws.x * k)), maxi(16, int(ws.y * k)))
@@ -207,6 +212,49 @@ func _fit_scale() -> void:
 		_watch_dirty = 3
 
 
+## perfil de qualidade aplicado ao que não é montagem: distância da passada nítida, câmera, névoa, brilho
+func _apply_quality() -> void:
+	var q := UI.quality()
+	_sharp.far_limit = [16.0, 34.0, 40.0][q]
+	if city and city.player and city.player.cam:
+		city.player.cam.far = [70.0, 140.0, 160.0][q]
+	for n in city.find_children("*", "WorldEnvironment", true, false) if city else []:
+		var e: Environment = (n as WorldEnvironment).environment
+		if e and q == 0:
+			e.glow_enabled = false
+			e.fog_depth_end = 62.0
+	_fit_world()
+
+
+## FPS baixo por alguns segundos: cai para o perfil batata em tempo real (resolução, passada nítida,
+## distância de desenho) e, se ainda pesar, baixa mais a resolução interna. Nunca volta a subir sozinho.
+var _fps_acc := 0.0
+var _fps_n := 0
+var _fps_bad := 0.0
+
+
+func _watch_fps(dt: float) -> void:
+	if hud == null or not hud.visible:
+		return
+	_fps_acc += dt
+	_fps_n += 1
+	if _fps_acc < 1.0:
+		return
+	var fps := _fps_n / _fps_acc
+	_fps_acc = 0.0
+	_fps_n = 0
+	_fps_bad = _fps_bad + 1.0 if fps < 28.0 else maxf(0.0, _fps_bad - 1.0)
+	if _fps_bad >= 4.0:
+		_fps_bad = 0.0
+		if UI.quality() > 0:
+			UI.set_quality(0)
+			_apply_quality()
+		elif _potato_h > 216:
+			_potato_h -= 42
+			_fit_world()
+			_sharp.far_limit = maxf(8.0, _sharp.far_limit - 4.0)
+
+
 ## Vigia de texto vertical (lição do RUMOR): texto que quebra linha e ficou espremido vira coluna de
 ## letras; aqui ele deixa de quebrar. Só confere quando a tela muda (nó novo ou janela girada).
 var _watch_t := 0.0
@@ -215,6 +263,7 @@ var _watch_hooked := false
 
 
 func _process(dt: float) -> void:
+	_watch_fps(dt)
 	if not _watch_hooked:
 		_watch_hooked = true
 		get_tree().node_added.connect(func(n: Node) -> void:

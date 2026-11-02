@@ -448,3 +448,62 @@ func safe_top(ctrl: CanvasItem = null) -> int:
 	var real := safe.position.y - win.y
 	var k := _vs(ctrl).y / maxf(1.0, float(DisplayServer.window_get_size().y))
 	return clampi(int(real * k), 0, 80)
+
+
+# ───────────────────────────────── preferência: sensibilidade da câmera no toque
+static var _look_sens := -1.0
+
+
+static func look_sens() -> float:
+	if _look_sens < 0.0:
+		_look_sens = 1.0
+		if OS.has_feature("web"):
+			var v: Variant = JavaScriptBridge.eval("(function(){try{return localStorage.getItem('pf_look_sens')||''}catch(e){return ''}})()", true)
+			if str(v) != "" and str(v).is_valid_float():
+				_look_sens = clampf(float(str(v)), 0.3, 2.0)
+	return _look_sens
+
+
+static func set_look_sens(v: float) -> void:
+	_look_sens = clampf(v, 0.3, 2.0)
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("try{localStorage.setItem('pf_look_sens','%s')}catch(e){}" % str(snappedf(_look_sens, 0.05)), true)
+
+
+# ───────────────────────────────── perfil de qualidade (performance)
+## 2 = alto (PC nativo), 1 = padrão (navegador no PC), 0 = batata (celular, GPU fraca ou FPS baixo).
+## PF_QUALITY=batata|padrao|alto (capturas), ?q= na página ou pf_q no navegador forçam.
+static var _quality := -1
+
+
+static func quality() -> int:
+	if _quality >= 0:
+		return _quality
+	var force := OS.get_environment("PF_QUALITY")
+	if OS.has_feature("web") and force == "":
+		var v: Variant = JavaScriptBridge.eval("(function(){try{var q=new URLSearchParams(location.search).get('q');return q||localStorage.getItem('pf_q')||''}catch(e){return ''}})()", true)
+		force = str(v) if v != null else ""
+	match force:
+		"batata", "low", "0":
+			_quality = 0
+		"padrao", "medium", "1":
+			_quality = 1
+		"alto", "high", "2":
+			_quality = 2
+		_:
+			var gpu := RenderingServer.get_video_adapter_name().to_lower()
+			var weak := false
+			for w in ["intel(r) hd", "intel hd", "uhd graphics 6", "mali-4", "mali-t", "adreno (tm) 3", "adreno (tm) 4", "adreno (tm) 50", "powervr", "swiftshader", "llvmpipe", "software", "angle (google"]:
+				if gpu.find(w) >= 0:
+					weak = true
+			if OS.has_feature("mobile") or OS.has_feature("web_android") or OS.has_feature("web_ios") or weak:
+				_quality = 0
+			elif OS.has_feature("web"):
+				_quality = 1
+			else:
+				_quality = 2
+	return _quality
+
+
+static func set_quality(q: int) -> void:
+	_quality = clampi(q, 0, 2)

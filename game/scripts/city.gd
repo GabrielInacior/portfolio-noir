@@ -60,9 +60,14 @@ const AVE_START := 8.0
 const CROSS_END := 48.0
 
 
+const Merge := preload("res://scripts/render/merge.gd")
+
+
 func _ready() -> void:
 	_rng.seed = 20260501
-	_light = UI.is_mobile()
+	# modo leve: celular, GPU fraca ou perfil "batata" (ver UI.quality); corta luzes reais, metade dos
+	# anúncios de prédio, menos carros/pedestres, chuva menor e distâncias de desenho menores
+	_light = UI.is_mobile() or UI.quality() == 0
 	_build_env()
 	_build_skyline()
 	_build_ground()
@@ -85,6 +90,45 @@ func _ready() -> void:
 	# teto de segmentos nas primitivas e partículas sem sombra (ver lowpoly.gd)
 	LowPoly.node(self)
 	LowPoly.cull_by_size(self, 18.0 if _light else 24.0, 32.0 if _light else 42.0)
+	# fusão das malhas estáticas por célula+material (de ~3.700 nós para algumas centenas de draw calls)
+	if OS.get_environment("NOMERGE") == "":
+		var ex: Array = []
+		for c in _cars:
+			ex.append(c["node"])
+		for w in _walkers:
+			ex.append(w["node"])
+		for b in _birds:
+			ex.append(b["node"])
+		for sw in _swing:
+			ex.append(sw["node"])
+		for f in _fans:
+			ex.append(f)
+		for sl in _searchlights:
+			ex.append(sl["n"])
+		for f in _flicker:
+			if f.has("node"):
+				ex.append(f["node"])
+		for b in _broken:
+			ex.append(b["node"])
+		for k in kiosks:
+			ex.append(k["ring"])
+		for n in npcs:
+			ex.append(n)
+		if _rain_node:
+			ex.append(_rain_node)
+		if _splash_node:
+			ex.append(_splash_node)
+		var dm: Array = _neon_mats.duplicate()
+		for w in _wins:
+			dm.append(w["m"])
+		for tv in _tvs:
+			dm.append(tv["m"])
+		for tv in _ad_tvs:
+			dm.append(tv["mat"])
+		for bl in _blinkers:
+			dm.append(bl["m"])
+		var r := Merge.merge(self, ex, 18.0 if _light else 24.0, 32.0 if _light else 42.0, dm)
+		print("MERGE cidade: %d malhas -> %d" % [r["in"], r["out"]])
 
 
 # ═════════════════════════════════════════════ ambiente, céu, pós
@@ -134,7 +178,7 @@ func _build_env() -> void:
 	moon.light_energy = 0.35
 	moon.rotation_degrees = Vector3(-48, 128, 0)
 	# no navegador a sombra direcional custa caro demais no WebGL (passada extra); só no app nativo
-	moon.shadow_enabled = not _light and not OS.has_feature("web")
+	moon.shadow_enabled = not _light and not OS.has_feature("web") and UI.quality() == 2
 	moon.directional_shadow_max_distance = 26.0
 	moon.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
 	add_child(moon)
@@ -1914,13 +1958,11 @@ func _awning(parent: Node3D, cx: float, width: float, top: float, accent: Color)
 func _flyers(parent: Node3D, center: Vector3, project: Dictionary) -> void:
 	var id := str(project.get("id", ""))
 	var pics: Array = []
-	var dir := "res://assets/museum/%s/" % id
-	if DirAccess.dir_exists_absolute(dir):
-		for f in DirAccess.get_files_at(dir):
-			if f.ends_with(".import") and (f.contains(".jpg") or f.contains(".png")):
-				var src := f.trim_suffix(".import")
-				if not src.begins_with("numeros"):
-					pics.append(dir + src)
+	# miniaturas (384 px) em vez dos prints cheios: poupa dezenas de MB de VRAM na rua
+	for i in 5:
+		var fp := "res://assets/flyers/%s_%d.jpg" % [id, i]
+		if ResourceLoader.exists(fp):
+			pics.append(fp)
 	pics.sort()
 	if pics.is_empty():
 		return
@@ -2370,36 +2412,97 @@ var _ads_meta := {}
 
 
 func _ad_tex(id: String) -> Texture2D:
+	# anúncios vêm de um ATLAS por língua (poucas páginas): a região vira AtlasTexture e o quad usa a
+	# página inteira com UV da região. Um material por página = os anúncios fundem em poucos draw calls.
 	if id == "":
 		return null
-	var path := "res://assets/ads/%s_%s.png" % [id, "en" if L.lang == "en" else "pt"]
-	if _ad_tex_cache.has(path):
-		return _ad_tex_cache[path]
-	var t: Texture2D = load(path) if ResourceLoader.exists(path) else null
-	_ad_tex_cache[path] = t
+	if _ads_meta.is_empty():
+		var f := FileAccess.open("res://assets/ads/ads.json", FileAccess.READ)
+		if f:
+			_ads_meta = JSON.parse_string(f.get_as_text())
+	var lg := "en" if L.lang == "en" else "pt"
+	var key := lg + ":" + id
+	if _ad_tex_cache.has(key):
+		return _ad_tex_cache[key]
+	var t: Texture2D = null
+	var at: Dictionary = _ads_meta.get("atlas", {}).get(lg, {})
+	var r: Variant = (at.get("map", {}) as Dictionary).get(id)
+	if r is Array:
+		var page := "res://assets/ads/atlas_%s_%d.png" % [lg, int(r[0])]
+		var pt: Texture2D = _ad_tex_cache.get(page)
+		if pt == null and ResourceLoader.exists(page):
+			pt = load(page)
+			_ad_tex_cache[page] = pt
+		if pt:
+			var a := AtlasTexture.new()
+			a.atlas = pt
+			var ps := Vector2(pt.get_width(), pt.get_height())
+			a.region = Rect2(float(r[1]) * ps.x, float(r[2]) * ps.y, float(r[3]) * ps.x, float(r[4]) * ps.y)
+			t = a
+	_ad_tex_cache[key] = t
 	return t
 
 
+## região normalizada (x, y, w, h) de uma AtlasTexture na página
+func _uv_rect(tex: Texture2D) -> Rect2:
+	if tex is AtlasTexture and (tex as AtlasTexture).atlas:
+		var a := tex as AtlasTexture
+		var ps := Vector2(a.atlas.get_width(), a.atlas.get_height())
+		return Rect2(a.region.position / ps, a.region.size / ps)
+	return Rect2(0, 0, 1, 1)
+
+
+var _ad_mats := {}
+
+
 func _ad_mat(tex: Texture2D, emit := 0.45) -> StandardMaterial3D:
+	var page: Texture2D = (tex as AtlasTexture).atlas if tex is AtlasTexture else tex
+	var key := "%d|%.2f" % [page.get_instance_id() if page else 0, emit]
+	if _ad_mats.has(key):
+		return _ad_mats[key]
 	var m := StandardMaterial3D.new()
-	m.albedo_texture = tex
+	m.albedo_texture = page
 	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 	m.roughness = 0.9
 	m.emission_enabled = true
-	m.emission_texture = tex
+	m.emission_texture = page
 	m.emission_energy_multiplier = emit   # retroiluminado; a luz e a névoa da cena continuam valendo
+	_ad_mats[key] = m
 	return m
 
 
 func _ad_quad(parent: Node3D, tex: Texture2D, pos: Vector3, size: Vector2, emit := 0.45) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
-	var q := QuadMesh.new()
-	q.size = size
-	mi.mesh = q
+	var r := _uv_rect(tex)
+	if r == Rect2(0, 0, 1, 1):
+		var q := QuadMesh.new()
+		q.size = size
+		mi.mesh = q
+	else:
+		mi.mesh = _uv_quad(size, r)
 	mi.material_override = _ad_mat(tex, emit)
 	mi.position = pos
 	parent.add_child(mi)
 	return mi
+
+
+## quad virado para +z com UV numa região do atlas
+func _uv_quad(size: Vector2, r: Rect2) -> ArrayMesh:
+	var hw := size.x / 2.0
+	var hh := size.y / 2.0
+	var v := PackedVector3Array([Vector3(-hw, hh, 0), Vector3(hw, hh, 0), Vector3(hw, -hh, 0), Vector3(-hw, -hh, 0)])
+	var uv := PackedVector2Array([r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)])
+	var nrm := PackedVector3Array([Vector3.BACK, Vector3.BACK, Vector3.BACK, Vector3.BACK])
+	var idx := PackedInt32Array([0, 1, 2, 0, 2, 3])
+	var arr := []
+	arr.resize(Mesh.ARRAY_MAX)
+	arr[Mesh.ARRAY_VERTEX] = v
+	arr[Mesh.ARRAY_TEX_UV] = uv
+	arr[Mesh.ARRAY_NORMAL] = nrm
+	arr[Mesh.ARRAY_INDEX] = idx
+	var am := ArrayMesh.new()
+	am.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+	return am
 
 
 func _ad_holder(face: Vector3, normal: Vector3, out := 0.0) -> Node3D:
@@ -2500,8 +2603,12 @@ func _build_ads() -> void:
 				var hold4 := _ad_holder(face, nrm, 0.16)
 				# sequência de 5 cartazes diferentes (3 do Gabriel + 2 panfletos de projetos) num atlas só;
 				# muros menores mostram só os n primeiros
-				var q := _ad_quad(hold4, tex4, Vector3(0, 1.75, 0.0), Vector2(0.9 * n, 1.32), 0.15)
-				(q.material_override as StandardMaterial3D).uv1_scale = Vector3(n / 5.0, 1, 1)
+				var sub: Texture2D = tex4
+				if tex4 is AtlasTexture and n < 5:
+					var a4 := (tex4 as AtlasTexture).duplicate() as AtlasTexture
+					a4.region = Rect2(a4.region.position, Vector2(a4.region.size.x * n / 5.0, a4.region.size.y))
+					sub = a4
+				_ad_quad(hold4, sub, Vector3(0, 1.75, 0.0), Vector2(0.9 * n, 1.32), 0.15)
 	# 5) faixas penduradas cruzando a avenida e a transversal
 	var faixas := [[Vector3(-FAC, 0, -6.0), Vector3(FAC, 0, -6.0)], [Vector3(-FAC, 0, -33.0), Vector3(FAC, 0, -33.0)],
 		[Vector3(-FAC, 0, -63.0), Vector3(FAC, 0, -63.0)],
@@ -2575,7 +2682,10 @@ func _tick_ads(dt: float) -> void:
 		if float(tv["t"]) >= 4.0:
 			tv["t"] = 0.0
 			tv["i"] = (int(tv["i"]) + 1) % (tv["texs"] as Array).size()
-			m.set_shader_parameter("tex", tv["texs"][tv["i"]])
+			var nt: Texture2D = tv["texs"][tv["i"]]
+			m.set_shader_parameter("tex", (nt as AtlasTexture).atlas if nt is AtlasTexture else nt)
+			var ur := _uv_rect(nt)
+			m.set_shader_parameter("uv_rect", Vector4(ur.position.x, ur.position.y, ur.size.x, ur.size.y))
 			tv["g"] = 1.0       # troca de anúncio com glitch
 	for bl in _blinkers:
 		var on := fmod(_t + float(bl["seed"]), 1.6) < 0.25
@@ -2597,7 +2707,9 @@ func _screen_quad(parent: Node3D, tex: Texture2D, pos: Vector3, size: Vector2, c
 	mi.mesh = q
 	var m := ShaderMaterial.new()
 	m.shader = _screen_shader
-	m.set_shader_parameter("tex", tex)
+	m.set_shader_parameter("tex", (tex as AtlasTexture).atlas if tex is AtlasTexture else tex)
+	var ur := _uv_rect(tex)
+	m.set_shader_parameter("uv_rect", Vector4(ur.position.x, ur.position.y, ur.size.x, ur.size.y))
 	m.set_shader_parameter("seed", seed)
 	m.set_shader_parameter("crt", crt)
 	m.set_shader_parameter("px_res", Vector2(size.x * 60.0, size.y * 60.0))

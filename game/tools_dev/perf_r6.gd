@@ -23,7 +23,19 @@ func _ready() -> void:
 		p.rotation.y = pt[1]
 		await get_tree().create_timer(0.8).timeout
 		var base := await _measure()
-		print("PONTO %s | dc=%d objs=%d prims=%d fps=%d" % [pt[2], base[0], base[1], base[2], Engine.get_frames_per_second()])
+		var tot := RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)
+		var totp := RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME)
+		var vram := RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_VIDEO_MEM_USED) / 1048576
+		if pt[2] == "cruzamento":
+			print("  MEM texturas=%dMB buffers=%dMB" % [RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TEXTURE_MEM_USED) / 1048576, RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_BUFFER_MEM_USED) / 1048576])
+		var worst := 0.0
+		var t0 := Time.get_ticks_usec()
+		for _k in 60:
+			var a := Time.get_ticks_usec()
+			await get_tree().process_frame
+			worst = maxf(worst, (Time.get_ticks_usec() - a) / 1000.0)
+		var avg := (Time.get_ticks_usec() - t0) / 60000.0
+		print("PONTO %s | dc_mundo=%d dc_total=%d objs=%d prims=%d prims_total=%d vram=%dMB frame_med=%.1fms pior=%.1fms" % [pt[2], base[0], tot, base[1], base[2], totp, vram, avg, worst])
 		if OS.get_environment("PERF_SPLIT") == "" or pt[2] != OS.get_environment("PERF_SPLIT"):
 			continue
 		_census()
@@ -43,18 +55,23 @@ func _ready() -> void:
 
 ## conta geometria visível perto da câmera por "família" (nome do pai) para achar o que gera draw calls
 func _census() -> void:
-	var cam := get_viewport().get_camera_3d() if main._world_vp == null else main._world_vp.get_camera_3d()
+	var cam: Camera3D = get_viewport().get_camera_3d() if main._world_vp == null else main._world_vp.get_camera_3d()
 	var fam := {}
 	for n in main.city.find_children("*", "GeometryInstance3D", true, false):
 		var g := n as GeometryInstance3D
 		if not g.is_visible_in_tree():
 			continue
-		var d := cam.global_position.distance_to(g.global_position)
+		var d: float = cam.global_position.distance_to(g.global_position)
 		if g.visibility_range_end > 0.0 and d > g.visibility_range_end:
 			continue
 		if not cam.is_position_in_frustum(g.global_position):
 			continue
-		var key := g.get_class() + ":" + str(g.get_parent().name).left(18)
+		var key := "FUNDIDO" if g.has_meta("merged") else g.get_class() + ":" + str(g.get_parent().name).left(18)
+		if g is MeshInstance3D and (g as MeshInstance3D).mesh == null:
+			continue
+		if g.has_meta("merged"):
+			var mo = g.material_override
+			key += ":" + (mo.get_class() if mo else "?") + (":tex" if mo is StandardMaterial3D and (mo as StandardMaterial3D).albedo_texture else "")
 		fam[key] = fam.get(key, 0) + 1
 	var arr := []
 	for k in fam:
