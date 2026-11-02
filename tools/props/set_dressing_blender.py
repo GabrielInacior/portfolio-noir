@@ -1,4 +1,4 @@
-"""Kit de objetos de cena (set dressing) em Blender headless, no estilo dos props Meshy: formas suaves,
+"""Kit de objetos de cena (set dressing) em Blender headless, no estilo dos props do kit: formas suaves,
 chanfro arredondado, cores chapadas, sombreamento suave. Saída game/assets/props/sd_<nome>.glb.
 
   "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe" -b --factory-startup -P tools/props/set_dressing_blender.py

@@ -1,5 +1,5 @@
 extends RefCounted
-## Material único "PS1" para os props (Meshy e kit Blender): textura com filtro NEAREST, luz por
+## Material único "PS1" para os props (kit Blender): textura com filtro NEAREST, luz por
 ## vértice, sem PBR (rugosidade total, sem metal, sem especular, sem normal map). Aplicado uma vez
 ## por malha (o recurso é compartilhado), então custa nada por instância.
 
@@ -27,6 +27,15 @@ static func to_ps1(src: StandardMaterial3D) -> StandardMaterial3D:
 	d.metallic_texture = null
 	d.roughness_texture = null
 	d.ao_enabled = false
+	# kit Blender: cor por vértice (material "vc"); o que brilha vem como "glow_<cor>" e ignora a luz
+	if src.resource_name.begins_with("vc"):
+		d.vertex_color_use_as_albedo = true
+		d.vertex_color_is_srgb = false
+		d.albedo_texture = null
+		d.albedo_color = Color.WHITE
+	elif src.resource_name.begins_with("glow_"):
+		d.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		d.emission_enabled = false
 	return d
 
 

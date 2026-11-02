@@ -348,7 +348,7 @@ func _vcol_mat(emit: float) -> StandardMaterial3D:
 	return m
 
 
-# ═════════════════════════════════════════════ props da Meshy (MultiMesh)
+# ═════════════════════════════════════════════ props do kit Blender (MultiMesh)
 func _prop_mesh(name: String) -> Mesh:
 	if _prop_cache.has(name):
 		return _prop_cache[name]
@@ -871,7 +871,7 @@ func _shop(face: Vector3, normal: Vector3, project: Dictionary, grand := false) 
 		fl.double_sided = true
 		flag.add_child(fl)
 		_swing.append({"node": flag, "seed": _rng.randf() * TAU, "amp": 0.06})
-	# toldo (Meshy) sobre a vitrine
+	# toldo sobre a vitrine
 	if not grand:
 		var aw := _prop_mesh("toldo")
 		if aw:

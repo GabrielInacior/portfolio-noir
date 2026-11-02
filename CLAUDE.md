@@ -15,7 +15,7 @@ aprendido lá em arte, Blender, Godot e web foi trazido para cá:
 - Personagem riggado + atlas de rosto + animações Mixamo reaproveitados do RUMOR
   (`scripts/scene3d/character.gd`, `assets/characters/student.glb`).
 
-**Leia primeiro `docs/CONTEXTO_E_DECISOES.md`**: tudo que o usuário pediu e decidiu (visão, estilo dos personagens, lojas-museu, ferramentas liberadas, Meshy, SD local, Mixamo).
+**Leia primeiro `docs/CONTEXTO_E_DECISOES.md`**: tudo que o usuário pediu e decidiu (visão, estilo dos personagens, lojas-museu, ferramentas liberadas, SD local, Mixamo).
 
 ## Regras de base (herdadas do RUMOR)
 - Nenhum asset pronto de terceiro; gerado por código ou por IA é permitido.

@@ -1,47 +1,55 @@
 extends Node3D
-## Folha dos props (orientação e escala): cada um numa célula, câmera de frente (+z olhando para -z).
+## Prancha dos props do kit Blender (com o material PS1 do jogo). Mudo.
+##   PF_SHOT=<pasta> godot --audio-driver Dummy --path . --resolution 1600x1000 res://tools_dev/props_sheet.tscn
+const PS1 := preload("res://scripts/ps1.gd")
+const NAMES := ["mesa_detetive", "maquina_escrever", "abajur_banqueiro", "arquivo_aco", "quadro_cortica", "cabideiro",
+	"telefone_antigo", "rack_servidor", "mesa_monitores", "cadeira_gamer", "cadeado", "roteador", "fliperama",
+	"mesa_cartas", "miniatura_fortaleza", "trofeu", "bancada_lab", "servidor_ia", "estante_livros", "balcao_bar",
+	"banqueta_bar", "garrafas", "microfone_estudio", "mesa_som", "mesa_escritorio", "cadeira_escritorio", "monitor",
+	"planta_vaso", "sofa_couro", "luminaria_teto", "pilha_papeis"]
+
 func _ready() -> void:
-	var dir := OS.get_environment("RUMOR_SHOT")
-	var names := []
-	for f in DirAccess.get_files_at("res://assets/props"):
-		if f.ends_with(".glb"):
-			names.append(f.get_basename())
-	names.sort()
 	var env := WorldEnvironment.new()
 	var e := Environment.new()
 	e.background_mode = Environment.BG_COLOR
-	e.background_color = Color("#30344a")
+	e.background_color = Color("#1a1d2a")
 	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	e.ambient_light_color = Color.WHITE
-	e.ambient_light_energy = 0.8
+	e.ambient_light_color = Color("#8890b0")
+	e.ambient_light_energy = 0.6
 	env.environment = e
 	add_child(env)
 	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-40, 30, 0)
+	sun.rotation = Vector3(-0.9, 0.6, 0)
+	sun.light_energy = 1.3
 	add_child(sun)
 	var cols := 8
-	for i in names.size():
-		var sc: Node3D = (load("res://assets/props/%s.glb" % names[i]) as PackedScene).instantiate()
-		var cell := Vector3((i % cols) * 3.0, 0, -(i / cols) * 3.0)
-		# normaliza para caber na célula (só para ver)
+	for i in NAMES.size():
+		var sc: PackedScene = load("res://assets/props/%s.glb" % NAMES[i])
+		var n: Node3D = sc.instantiate()
+		PS1.node(n)
 		var aabb := AABB()
-		for mi in sc.find_children("*", "MeshInstance3D", true, false):
-			aabb = (mi as MeshInstance3D).get_aabb()
-		var s := 2.0 / maxf(0.01, maxf(aabb.size.x, maxf(aabb.size.y, aabb.size.z)))
-		sc.scale = Vector3.ONE * s
-		sc.position = cell
-		add_child(sc)
+		var first := true
+		for mi in n.find_children("*", "MeshInstance3D", true, false):
+			var a: AABB = (mi as MeshInstance3D).get_aabb()
+			aabb = a if first else aabb.merge(a)
+			first = false
+		var s := 1.4 / maxf(aabb.size.x, maxf(aabb.size.y, aabb.size.z))
+		n.scale = Vector3.ONE * s
+		n.position = Vector3((i % cols) * 2.0, -(i / cols) * 2.0 - aabb.position.y * s, 0)
+		n.rotation.y = 0.5
+		add_child(n)
 		var l := Label3D.new()
-		l.text = names[i]
+		l.text = NAMES[i]
+		l.font_size = 40
 		l.pixel_size = 0.004
-		l.font_size = 48
-		l.position = cell + Vector3(0, -0.3, 0.8)
+		l.position = n.position + Vector3(0, -0.25, 0.6)
 		add_child(l)
 	var cam := Camera3D.new()
-	cam.position = Vector3(10.5, 6, 9)
-	cam.look_at(Vector3(10.5, 0.6, -7.0))
-	cam.fov = 60
+	cam.position = Vector3(7, -2.6, 13)
+	cam.fov = 48
 	add_child(cam)
-	await get_tree().create_timer(1.0).timeout
-	get_viewport().get_texture().get_image().save_png(dir.path_join("props_sheet.png"))
+	cam.look_at(Vector3(7, -2.4, 0))
+	for _i in 6:
+		await get_tree().process_frame
+	get_viewport().get_texture().get_image().save_png(OS.get_environment("PF_SHOT").path_join("props_sheet.png"))
 	get_tree().quit()

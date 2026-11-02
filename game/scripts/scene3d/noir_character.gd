@@ -1,5 +1,5 @@
 extends Node3D
-## Personagem NOIR low-poly estilo PS1 (tools/blender/char_ps1_build.py). Substitui o elenco Meshy.
+## Personagem NOIR low-poly estilo PS1 (tools/blender/char_ps1_build.py).
 ## Malha construída em volta do esqueleto Mixamo, na pose de repouso dele: TODOS os personagens usam o
 ## mesmo esqueleto, então uma única biblioteca de animações (ps1/anims.glb) serve a todos sem conversão
 ## (fim dos braços torcendo). Braços nascem separados do tronco; pesos limpos por anel.

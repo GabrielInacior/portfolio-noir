@@ -1,4 +1,4 @@
-"""Props de rua procedurais (Blender headless) no estilo limpo dos modelos da Meshy: formas simples,
+"""Props de rua procedurais (Blender headless) no estilo limpo do kit de props: formas simples,
 cantos chanfrados, sombreamento suave, cores chapadas por material (sem textura). Saída GLB em
 game/assets/props/ (só gera os que ainda não existem, a menos que passe nomes).
 

@@ -143,7 +143,7 @@ func box(pos: Vector3, size: Vector3, mat: Material, parent: Node = null, rot :=
 	return mi
 
 
-## Prop 3D (Meshy ou kit Blender) colocado na sala; frente do modelo = +z.
+## Prop 3D (kit Blender) colocado na sala; frente do modelo = +z.
 func prop(name: String, pos: Vector3, yaw := 0.0, scl := 1.0, parent: Node = null) -> Node3D:
 	var path := "res://assets/props/%s.glb" % name
 	if not ResourceLoader.exists(path):

@@ -1,7 +1,7 @@
-"""Texturas da Meshy no grão PS1 do jogo: reduz para 128/256 px, tira o brilho especular "assado"
-(achata os realces), quantiza na PALETA ÚNICA noir/neon do jogo com pontilhado e regrava no mesmo
-arquivo (o .glb continua apontando para ele). Os originais ficam em tools/props/_orig (fora do git).
-Uso: python tools/props/ps1_textures.py"""
+"""Texturas no grão PS1 do jogo: reduz para 96/192 px (ou o lado pedido), achata realces e ruído fino,
+quantiza na PALETA ÚNICA noir/neon do jogo e regrava. Usado nas texturas geradas pelo Stable Diffusion
+(portas, outdoors de fundo, paredes) e importável (`from ps1_textures import to_ps1, PALETTE`).
+Uso: python tools/props/ps1_textures.py <arquivos...> [--lado 192]"""
 import glob
 import os
 import shutil
@@ -10,8 +10,6 @@ from PIL import Image, ImageFilter, ImageOps
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 PROPS = os.path.join(ROOT, "game", "assets", "props")
-ORIG = os.path.join(ROOT, "tools", "props", "_orig")
-os.makedirs(ORIG, exist_ok=True)
 
 PALETTE = ["05060c", "0b1020", "16121c", "1c1a28", "2a2632", "3a3850", "3e2418", "5a3c28", "7a5a3e", "a07850", "c8a070",
            "4a4e58", "6a707c", "9aa0ac", "c8ccd4", "e8ecf8", "5a1a1e", "9a2a3a", "e2384f", "ff4fa3", "ff9ad0", "ff7a3d",
@@ -31,24 +29,24 @@ def palette_image():
     return im
 
 
+def to_ps1(src, side=192, quant=True):
+    im = src.convert("RGB").resize((side, side), Image.LANCZOS)
+    im = im.filter(ImageFilter.MedianFilter(3)).filter(ImageFilter.SMOOTH_MORE)
+    im = Image.eval(im, lambda v: int(min(v, 228) * 1.02))
+    if quant:
+        im = im.quantize(palette=palette_image(), dither=Image.Dither.NONE).convert("RGB")
+    return im
+
+
 def main():
-    pim = palette_image()
-    n = 0
-    for f in sorted(glob.glob(os.path.join(PROPS, "*_Image_0.jpg"))):
-        name = os.path.basename(f)
-        orig = os.path.join(ORIG, name)
-        if not os.path.exists(orig):
-            shutil.copy2(f, orig)
-        src = Image.open(orig).convert("RGB")
-        side = 192 if name.replace("_Image_0.jpg", "") in BIG else 96
-        im = src.resize((side, side), Image.LANCZOS)
-        # achata realces especulares e ruído fino (brilho assado da Meshy)
-        im = im.filter(ImageFilter.MedianFilter(3)).filter(ImageFilter.SMOOTH_MORE)
-        im = Image.eval(im, lambda v: int(min(v, 228) * 1.02))
-        im = im.quantize(palette=pim, dither=Image.Dither.NONE).convert("RGB")
-        im.save(f, quality=96)
-        n += 1
-    print("texturas PS1:", n)
+    import sys
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    side = int(sys.argv[sys.argv.index("--lado") + 1]) if "--lado" in sys.argv else 192
+    for f in args:
+        if f == str(side):
+            continue
+        to_ps1(Image.open(f), side).save(f, quality=96)
+        print("PS1:", f)
 
 
 if __name__ == "__main__":

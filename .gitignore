@@ -22,14 +22,13 @@ node_modules/
 override.cfg
 
 # chaves
-*.meshy_key
-.meshy_key
-*.openai_key
+*_key
+.*_key
 
 # animacoes brutas da Mixamo (nao redistribuir)
 tools/mixamo_raw/*.fbx
 
-# props crus da Meshy, conceitos e texturas candidatas (pesados; o jogo usa game/assets/props e game/assets/tex)
+# props crus, conceitos e texturas candidatas (pesados; o jogo usa game/assets/props e game/assets/tex)
 tools/props/raw/
 tools/props/concepts/
 tools/props/_sheet*.png
