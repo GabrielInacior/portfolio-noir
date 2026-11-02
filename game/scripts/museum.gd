@@ -273,6 +273,7 @@ func add_entry(node: Node3D, it: Dictionary, look_pos: Vector3) -> Dictionary:
 	l.light_color = _accent
 	l.light_energy = 0.0
 	l.omni_range = 2.6
+	l.visible = false
 	add_child(l)
 	var e := {"node": node, "item": it, "light": l, "seen": false, "pos": look_pos}
 	items.append(e)
@@ -473,8 +474,10 @@ func _process(dt: float) -> void:
 	_t += dt
 	for e in items:
 		var l: OmniLight3D = e["light"]
-		var target: float = 2.2 if e.get("_hot", false) else (0.5 if e["seen"] else 0.0)
+		# só o objeto mirado acende uma luz real (no Compatibility cada luz é um passe extra por malha)
+		var target: float = 2.2 if e.get("_hot", false) else 0.0
 		l.light_energy = lerpf(l.light_energy, target, clampf(dt * 6.0, 0, 1))
+		l.visible = l.light_energy > 0.03
 	for n in _spin:
 		if is_instance_valid(n):
 			(n as Node3D).rotate_y(dt * 0.5)

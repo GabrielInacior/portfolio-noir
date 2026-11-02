@@ -50,7 +50,8 @@ JS = r"""// Gerado por tools/deploy/make_boot.py. Abre a cidade noir por cima da
       '#pfl .r{position:absolute;inset:0;pointer-events:none;opacity:.22;' +
       'background:repeating-linear-gradient(100deg,transparent 0 22px,#9fb3ff22 22px 23px);animation:pfr .6s linear infinite}' +
       '@keyframes pfr{from{background-position:0 0}to{background-position:-40px 160px}}' +
-      'html.pf-lock,html.pf-lock body{overflow:hidden!important}';
+      'html.pf-lock,html.pf-lock body{overflow:hidden!important}' +
+      '#pfl,#pfg{cursor:url(/jogo/cursor_arrow.png) 3 2,auto}#pfl.busy{cursor:url(/jogo/cursor_busy.png) 16 16,progress}';
     document.head.appendChild(css);
     document.documentElement.classList.add('pf-lock');
     var wrap = document.createElement('div');

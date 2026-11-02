@@ -287,42 +287,143 @@ func _build_doc() -> void:
 
 
 # ───────────────────────────────── skills: tocar numa tecnologia mostra os projetos
-var _sk_out: VBoxContainer
 
 
 func _build_skills() -> void:
-	_body(L.t("Toque numa tecnologia para ver os projetos em que ela foi usada."), UI.MIST, UI.fs("small"))
-	var skills: Dictionary = Data.profile.get("skills", {})
-	var pal := [Color("#ff4fa3"), Color("#4e9bff"), Color("#5fd38a"), Color("#ffc83d"), Color("#b06bff"), Color("#ff7a3d"), Color("#5bd0ff"), Color("#ff3d5a")]
-	_sk_out = UI.vbox(8)
-	var ci := 0
-	for cat in skills:
-		var col: Color = pal[ci % pal.size()]
-		_col.add_child(UI.title(L.t(str(cat)), UI.fs("h3"), col))
-		var flow := HFlowContainer.new()
-		flow.add_theme_constant_override("h_separation", 8)
-		flow.add_theme_constant_override("v_separation", 8)
-		for t in skills[cat]:
-			var b := UI.ghost(str(t), col, int(UI.tap() * 0.8))
-			b.add_theme_font_override("font", UI.font("bold"))
-			b.add_theme_font_size_override("font_size", UI.fs("small"))
-			# ícone da tecnologia do atlas compartilhado, quando existir
-			var tex := UI.tech_icon(str(t))
-			if tex:
-				b.icon = tex
-				b.expand_icon = true
-				b.add_theme_constant_override("icon_max_width", int(UI.fs("small") * 1.3))
-			b.pressed.connect(_show_projects.bind(str(t), col))
-			flow.add_child(b)
-		_col.add_child(flow)
-		ci += 1
+	# PAINEL NAVEGÁVEL: abas por categoria, busca, grade de cartões com o logo; tocar abre o detalhe
+	# (descrição, site oficial e os projetos que usam a tecnologia, cada um levando à loja).
+	_sk_all = Data.profile.get("skills", {})
+	_sk_info = Data.profile.get("tech_info", {})
+	_sk_pal = [Color("#ff4fa3"), Color("#4e9bff"), Color("#5fd38a"), Color("#ffc83d"), Color("#b06bff"), Color("#ff7a3d"), Color("#5bd0ff"), Color("#ff3d5a")]
+	_sk_cats = ["*"]
+	for c in _sk_all:
+		_sk_cats.append(str(c))
+	var top := UI.vbox(UI.sp(1))
+	_col.add_child(top)
+	var search := LineEdit.new()
+	search.placeholder_text = L.t("Buscar tecnologia...")
+	search.clear_button_enabled = true
+	search.custom_minimum_size.y = UI.tap(self) * 0.8
+	search.add_theme_font_size_override("font_size", UI.fs("body"))
+	search.add_theme_stylebox_override("normal", UI.box(Color(UI.PANEL_2, 0.9), UI.STROKE, 1, 10, 10))
+	search.text_changed.connect(func(t: String) -> void:
+		_sk_query = t.strip_edges().to_lower()
+		_sk_fill())
+	top.add_child(search)
+	var tabs_sc := ScrollContainer.new()
+	tabs_sc.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	tabs_sc.custom_minimum_size.y = UI.tap(self) * 0.85
+	_sk_tabs = UI.hbox(UI.sp(0.8))
+	tabs_sc.add_child(_sk_tabs)
+	top.add_child(tabs_sc)
+	for i in _sk_cats.size():
+		var cname: String = L.t("Todas") if _sk_cats[i] == "*" else L.t(str(_sk_cats[i]))
+		var tb := UI.ghost(cname, _sk_pal[(i + 7) % _sk_pal.size()], int(UI.tap(self) * 0.7))
+		tb.add_theme_font_size_override("font_size", UI.fs("small"))
+		tb.toggle_mode = true
+		tb.button_pressed = i == 0
+		tb.pressed.connect(_sk_pick_tab.bind(i))
+		_sk_tabs.add_child(tb)
+	_sk_grid = GridContainer.new()
+	_sk_grid.columns = 2 if _mobile else 4
+	_sk_grid.add_theme_constant_override("h_separation", UI.sp(1))
+	_sk_grid.add_theme_constant_override("v_separation", UI.sp(1))
+	_sk_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_col.add_child(_sk_grid)
+	_sk_out = UI.vbox(UI.sp(1))
 	_col.add_child(_sk_out)
+	_sk_fill()
+
+
+var _sk_info: Dictionary = {}
+var _sk_pal: Array = []
+var _sk_cats: Array = []
+var _sk_all: Dictionary = {}
+var _sk_cat := 0
+var _sk_query := ""
+var _sk_tabs: HBoxContainer
+var _sk_grid: GridContainer
+var _sk_out: VBoxContainer
+
+
+func _sk_pick_tab(i: int) -> void:
+	_sk_cat = i
+	for k in _sk_tabs.get_child_count():
+		(_sk_tabs.get_child(k) as Button).button_pressed = k == i
+	_sk_fill()
+
+
+func _sk_fill() -> void:
+	for c in _sk_grid.get_children():
+		c.queue_free()
+	var seen := {}
+	for ci in range(1, _sk_cats.size()):
+		if _sk_cat != 0 and ci != _sk_cat:
+			continue
+		var col: Color = _sk_pal[(ci - 1) % _sk_pal.size()]
+		for t in _sk_all[_sk_cats[ci]]:
+			var nm := str(t)
+			if seen.has(nm.to_lower()):
+				continue
+			if _sk_query != "" and nm.to_lower().find(_sk_query) < 0:
+				continue
+			seen[nm.to_lower()] = true
+			_sk_grid.add_child(_sk_card(nm, col))
+	if _sk_grid.get_child_count() == 0:
+		_sk_grid.add_child(UI.text(L.t("Nada encontrado."), "small", UI.MIST))
+
+
+func _sk_card(nm: String, col: Color) -> Control:
+	var b := Button.new()
+	b.focus_mode = Control.FOCUS_ALL
+	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	b.custom_minimum_size.y = UI.tap(self) * 1.5
+	b.add_theme_stylebox_override("normal", UI.box(Color(UI.PANEL_2, 0.92), Color(col, 0.35), 1, 12))
+	var hv := UI.box(Color(col, 0.14), col, 1, 12)
+	hv.shadow_color = Color(col, 0.3)
+	hv.shadow_size = 12
+	b.add_theme_stylebox_override("hover", hv)
+	b.add_theme_stylebox_override("focus", hv)
+	b.add_theme_stylebox_override("pressed", UI.box(Color(col, 0.24), col, 1, 12))
+	var m := UI.margin(UI.sp(1))
+	m.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(UI.full(m))
+	var h := UI.hbox(UI.sp(1))
+	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	m.add_child(h)
+	var tr := TextureRect.new()
+	tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tr.custom_minimum_size = Vector2.ONE * UI.tap(self) * 1.05
+	var tex := UI.tech_icon(nm)
+	if tex:
+		tr.texture = tex
+	h.add_child(tr)
+	var v := UI.vbox(2)
+	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var nl := UI.label(nm, UI.fs("body"), UI.PAPER, "title")
+	nl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	nl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(nl)
+	var info: Variant = _sk_info.get(nm)
+	if info is Array and (info as Array).size() > 0:
+		var dl := UI.label(L.t(str(info[0])), UI.fs("small"), UI.MIST, "body")
+		dl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		dl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		dl.max_lines_visible = 2
+		v.add_child(dl)
+	h.add_child(v)
+	b.pressed.connect(_show_projects.bind(nm, col))
+	return b
 
 
 func _show_projects(tech: String, col: Color) -> void:
 	for c in _sk_out.get_children():
 		c.queue_free()
-	var key := tech.to_lower().split(" ")[0].split("(")[0]
+	var key := tech.to_lower().split(" ")[0].split("(")[0].trim_suffix(".js")
 	var hits := []
 	for p in Data.projects:
 		for s in p.get("stack", []):
@@ -330,21 +431,75 @@ func _show_projects(tech: String, col: Color) -> void:
 			if sl.begins_with(key) or key.begins_with(sl.split(" ")[0]) or (key.length() > 3 and sl.find(key) >= 0):
 				hits.append(p)
 				break
-	_sk_out.add_child(UI.title(tech, UI.fs("h3"), col))
-	if hits.is_empty():
-		_sk_out.add_child(UI.label("Usada no trabalho profissional (veja a CARREIRA).", UI.fs("small"), UI.MIST, "body"))
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", UI.box(Color(col, 0.1), col, 1, 14, 16))
+	var v := UI.vbox(UI.sp(1))
+	card.add_child(v)
+	var h := UI.hbox(UI.sp(1.2))
+	var tex := UI.tech_icon(tech)
+	if tex:
+		var tr := TextureRect.new()
+		tr.texture = tex
+		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		tr.custom_minimum_size = Vector2.ONE * UI.tap(self) * 1.6
+		h.add_child(tr)
+	var hv := UI.vbox(2)
+	hv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hv.add_child(UI.title(tech, UI.fs("h2"), col))
+	var info: Variant = _sk_info.get(tech)
+	if info is Array and (info as Array).size() > 0:
+		var dl := UI.label(L.t(str(info[0])), UI.fs("body"), UI.PAPER, "body")
+		dl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		hv.add_child(dl)
+	h.add_child(hv)
+	v.add_child(h)
+	if info is Array and (info as Array).size() > 1:
+		var site := UI.ghost(L.t("Site oficial") + "  ↗", col, int(UI.tap(self) * 0.75))
+		var url := str(info[1])
+		site.pressed.connect(func() -> void: OS.shell_open(url))
+		v.add_child(site)
+	var note := L.tf("Usada em %d projeto(s)", [hits.size()]) if not hits.is_empty() else L.t("Usada no trabalho profissional (veja a CARREIRA).")
+	v.add_child(UI.text(note, "small", UI.MIST))
 	for p in hits:
-		var b := PanelContainer.new()
-		b.add_theme_stylebox_override("panel", UI.box(Color(col, 0.12), col, 1, 8, 12))
-		var v := UI.vbox(2)
-		v.add_child(UI.label(str(p.get("title", "")), UI.fs("body"), col, "title"))
-		v.add_child(UI.label(str(p.get("tagline", "")), UI.fs("small"), UI.PAPER, "body"))
-		b.add_child(v)
-		_sk_out.add_child(b)
+		var pb := Button.new()
+		pb.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		pb.focus_mode = Control.FOCUS_ALL
+		pb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		pb.custom_minimum_size.y = UI.tap(self)
+		pb.add_theme_stylebox_override("normal", UI.box(Color(UI.PANEL_2, 0.9), Color(col, 0.4), 1, 10))
+		pb.add_theme_stylebox_override("hover", UI.box(Color(col, 0.18), col, 1, 10))
+		pb.add_theme_stylebox_override("focus", UI.box(Color(col, 0.18), col, 1, 10))
+		pb.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		pb.text = "  %s   ·   %s  →" % [str(p.get("title", "")), L.tx(p, "tagline")]
+		pb.clip_text = true
+		pb.add_theme_font_size_override("font_size", UI.fs("small"))
+		pb.add_theme_color_override("font_color", UI.PAPER)
+		pb.pressed.connect(_go_project.bind(str(p.get("id", ""))))
+		v.add_child(pb)
+	_sk_out.add_child(card)
 	await get_tree().process_frame
 	var sc := _col.get_parent().get_parent() as ScrollContainer
 	if sc:
-		sc.ensure_control_visible(_sk_out)
+		sc.ensure_control_visible(card)
+
+
+## leva o jogador até a loja do projeto (fecha o painel e usa a viagem rápida do HUD)
+func _go_project(pid: String) -> void:
+	var hud: Node = null
+	var n: Node = get_parent()
+	while n != null:
+		if n.has_method("enter_museum"):
+			hud = n
+			break
+		n = n.get_parent()
+	if hud == null:
+		return
+	for pl in Nav.places(hud.city):
+		if str((pl["project"] as Dictionary).get("id", "")) == pid:
+			_sheet.close()
+			Nav.travel(hud, pl)
+			return
 
 
 # ───────────────────────────────── linha do tempo da carreira

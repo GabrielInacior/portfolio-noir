@@ -11,6 +11,9 @@ uniform float seed = 0.0;            // fase própria (telas não sincronizam)
 uniform float crt = 0.0;             // 0 = LED plano, 1 = TV de tubo (curvatura + vinheta + estática)
 uniform float swap_glitch = 0.0;     // >0 durante a troca de anúncio (o script decai para 0)
 uniform vec2 px_res = vec2(320.0, 180.0);  // resolução "física" da grade de pixels
+uniform vec4 uv_rect = vec4(0.0, 0.0, 1.0, 1.0);  // região no atlas de anúncios (x, y, w, h)
+
+vec3 samp(vec2 u) { return texture(tex, uv_rect.xy + clamp(u, vec2(0.002), vec2(0.998)) * uv_rect.zw).rgb; }
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 
@@ -35,9 +38,9 @@ void fragment() {
 	}
 	vec3 col;
 	float ab = 0.004 + 0.012 * g;    // aberração cromática (mais forte no glitch)
-	col.r = texture(tex, uv + vec2(ab, 0.0)).r;
-	col.g = texture(tex, uv).g;
-	col.b = texture(tex, uv - vec2(ab, 0.0)).b;
+	col.r = samp(uv + vec2(ab, 0.0)).r;
+	col.g = samp(uv).g;
+	col.b = samp(uv - vec2(ab, 0.0)).b;
 	if (g > 0.0) {   // ruído digital em blocos
 		vec2 blk = floor(uv * vec2(40.0, 24.0));
 		float n = hash(blk + floor(t * 20.0));
