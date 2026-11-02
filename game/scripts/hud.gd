@@ -97,14 +97,14 @@ func _build_topbar() -> void:
 		btns = UI.hbox(10)
 		rows.add_child(btns)
 	var bh := 76 if narrow else 48
-	var snd := UI.ghost("♪" if Audio.is_on() else "✕", UI.PINK, bh)
-	snd.custom_minimum_size.x = 88 if narrow else 56
-	snd.add_theme_font_override("font", UI.font("body"))
+	# texto em vez de símbolo: a fonte do navegador não tem "♪" (saía um quadrado)
+	var snd := UI.ghost(L.t("SOM") if Audio.is_on() else L.t("MUDO"), UI.PINK, bh)
+	snd.custom_minimum_size.x = 96 if narrow else 84
 	snd.tooltip_text = L.t("Som")
 	snd.pressed.connect(func() -> void:
 		var on := not Audio.is_on()
 		Audio.set_enabled(on)
-		snd.text = "♪" if on else "✕")
+		snd.text = L.t("SOM") if on else L.t("MUDO"))
 	btns.add_child(snd)
 	# idioma (PT/EN) e visual retrô (forte/suave/desligado), salvos no navegador
 	var lang := UI.ghost("EN" if L.lang == "pt" else "PT", UI.CYAN, bh)

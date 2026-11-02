@@ -23,6 +23,16 @@ func font(kind := "body") -> Font:
 			"type": load("res://assets/fonts/SpecialElite-Regular.ttf"),
 			"marker": load("res://assets/fonts/PermanentMarker-Regular.ttf"),
 		}
+		# símbolos da interface (✕ ↗ ▶ ★ ...) vêm de uma fonte própria: no navegador não existe fonte do
+		# sistema para completar, e eles viravam quadrados
+		var sym: Font = load("res://assets/fonts/NoirSymbols.ttf")
+		for k in _fonts:
+			var f: Font = _fonts[k]
+			if f and sym and not f.fallbacks.has(sym):
+				var fb: Array[Font] = []
+				fb.assign(f.fallbacks)
+				fb.append(sym)
+				f.fallbacks = fb
 	return _fonts.get(kind, _fonts["body"])
 
 
