@@ -1,161 +1,355 @@
 {
-  "name": "Gabriel Inácio",
-  "fullName": "Gabriel Inácio Rodrigues Silva",
-  "role": "Engenheiro de Software Full-Stack",
-  "tagline": "Mais de 4 anos transformando ideia em produto que chega em produção",
-  "location": "São Paulo, Brasil",
-  "bio": [
-    "Engenheiro de software full-stack com mais de quatro anos construindo sistemas web, mobile e backend. Gosto de ir além do código: participo da arquitetura, das decisões técnicas, da entrega e da produção.",
-    "Já liderei times técnicos, defini arquitetura em vários projetos, entreguei um escopo de duas semanas em três dias e conduzi uma migração completa de framework em menos de uma semana, sem nenhuma regressão em produção.",
-    "Hoje sou desenvolvedor principal numa empresa de SaaS do setor de licitações públicas, onde fui um dos criadores do ACL, uma plataforma robusta de automação de processos e integrações com portais do governo.",
-    "Trabalho muito com IA e modelos de linguagem, tanto como ferramenta de desenvolvimento quanto dentro de produtos: uso o Claude Code e agentes no dia a dia, integro APIs de LLM, desenho prompts e construo saídas estruturadas confiáveis. Também rodo modelos locais e automações. Cada prédio desta cidade é um projeto que eu construí."
+ "name": "Gabriel Inácio",
+ "fullName": "Gabriel Inácio Rodrigues Silva",
+ "role": "Engenheiro de Software Full-Stack",
+ "tagline": "Mais de 4 anos transformando ideia em produto que chega em produção",
+ "location": "São Paulo, Brasil",
+ "bio": [
+  "Engenheiro de software full-stack com mais de quatro anos construindo sistemas web, mobile e backend. Gosto de ir além do código: participo da arquitetura, das decisões técnicas, da entrega e da produção.",
+  "Já liderei times técnicos, defini arquitetura em vários projetos, entreguei um escopo de duas semanas em três dias e conduzi uma migração completa de framework em menos de uma semana, sem nenhuma regressão em produção.",
+  "Hoje sou desenvolvedor principal numa empresa de SaaS do setor de licitações públicas, onde fui um dos criadores do ACL, uma plataforma robusta de automação de processos e integrações com portais do governo.",
+  "Trabalho muito com IA e modelos de linguagem, tanto como ferramenta de desenvolvimento quanto dentro de produtos: uso o Claude Code e agentes no dia a dia, integro APIs de LLM, desenho prompts e construo saídas estruturadas confiáveis. Também rodo modelos locais e automações. Cada prédio desta cidade é um projeto que eu construí."
+ ],
+ "skills": {
+  "Frontend": [
+   "Vue.js",
+   "Nuxt",
+   "React",
+   "React Native",
+   "Angular",
+   "Pinia",
+   "Tailwind CSS",
+   "Next.js",
+   "TypeScript",
+   "JavaScript",
+   "Vite",
+   "GSAP"
   ],
-  "skills": {
-    "Frontend": [
-      "Vue.js",
-      "Nuxt",
-      "React",
-      "React Native",
-      "Angular",
-      "Pinia",
-      "Tailwind CSS"
-    ],
-    "Backend": [
-      "Node.js",
-      "Express",
-      "Fastify",
-      "NestJS",
-      "FastAPI",
-      "Spring Boot",
-      "ASP.NET",
-      "REST",
-      "WebSockets",
-      "JWT",
-      "OAuth2",
-      "2FA"
-    ],
-    "IA e LLM": [
-      "Claude Code",
-      "agentes",
-      "OpenAI (GPT-4, Whisper)",
-      "Gemini",
-      "Ollama e modelos locais",
-      "design de prompt",
-      "gestão de contexto",
-      "saídas estruturadas"
-    ],
-    "Dados e mensageria": [
-      "PostgreSQL",
-      "MongoDB",
-      "Prisma",
-      "Knex",
-      "Redis",
-      "RabbitMQ",
-      "BullMQ",
-      "SQL Server",
-      "Firebase"
-    ],
-    "Nuvem e DevOps": [
-      "AWS (EC2, S3, SQS, SNS)",
-      "Docker",
-      "GitHub Actions",
-      "GitLab CI",
-      "Nginx"
-    ],
-    "Arquitetura": [
-      "Microsserviços",
-      "Multi-tenant",
-      "Row-Level Security",
-      "Event-Driven",
-      "BFF",
-      "DDD",
-      "MVC",
-      "MVVM"
-    ],
-    "Game dev": [
-      "Godot",
-      "GDScript",
-      "Blender",
-      "pipeline 3D para web",
-      "arte por código e por IA"
-    ],
-    "Segurança e testes": [
-      "pentest",
-      "hardening",
-      "Jest",
-      "Playwright",
-      "testes unitários e E2E"
-    ]
+  "Mobile": [
+   "Flutter",
+   "Dart",
+   "React Native"
+  ],
+  "Backend": [
+   "Node.js",
+   "Express",
+   "Fastify",
+   "NestJS",
+   "FastAPI",
+   "Spring Boot",
+   "ASP.NET",
+   "REST",
+   "WebSockets",
+   "JWT",
+   "OAuth2",
+   "2FA",
+   "Spring",
+   "Django",
+   "PHP"
+  ],
+  "IA e LLM": [
+   "Claude Code",
+   "agentes",
+   "OpenAI (GPT-4, Whisper)",
+   "Gemini",
+   "Ollama e modelos locais",
+   "design de prompt",
+   "gestão de contexto",
+   "saídas estruturadas"
+  ],
+  "Dados e mensageria": [
+   "PostgreSQL",
+   "MongoDB",
+   "Prisma",
+   "Knex",
+   "Redis",
+   "RabbitMQ",
+   "BullMQ",
+   "SQL Server",
+   "Firebase"
+  ],
+  "Nuvem e DevOps": [
+   "AWS (EC2, S3, SQS, SNS)",
+   "Docker",
+   "GitHub Actions",
+   "GitLab CI",
+   "Nginx",
+   "Linux",
+   "CI/CD"
+  ],
+  "Arquitetura": [
+   "Microsserviços",
+   "Multi-tenant",
+   "Row-Level Security",
+   "Event-Driven",
+   "BFF",
+   "DDD",
+   "MVC",
+   "MVVM"
+  ],
+  "Game dev": [
+   "Godot",
+   "GDScript",
+   "Blender",
+   "pipeline 3D para web",
+   "arte por código e por IA"
+  ],
+  "Segurança e testes": [
+   "Kali Linux",
+   "pentest",
+   "hardening",
+   "Jest",
+   "Playwright",
+   "testes unitários e E2E"
+  ],
+  "Design": [
+   "UX/UI",
+   "Adobe Photoshop",
+   "Illustrator",
+   "Premiere"
+  ]
+ },
+ "experience": [
+  {
+   "role": "Desenvolvedor Full-Stack",
+   "company": "Sys Evolution (LicitaSys)",
+   "period": "jun 2024 ate hoje",
+   "place": "Remoto",
+   "highlights": [
+    "Liderança técnica de um time de 3 pessoas em mais de 6 projetos de grande porte, com decisões de arquitetura e planejamento de sprint ponta a ponta.",
+    "Desenvolvedor original do ACL, assistente de licitações que automatiza o ciclo completo de compras públicas em portais do governo: captura de editais, envio de propostas, lances e monitoramento de pregões.",
+    "SysGuide: servidor de vídeo e streaming, app desktop em Rust com Tauri, LLM local e Whisper para transcrição.",
+    "Análise de dados sobre a base pública do mercado de licitações, com telas que mostram milhões de linhas de uma vez (rolagem virtualizada) e análises detalhadas.",
+    "SaaS multi-tenant escalável em Vue, React, Node e PostgreSQL, com padrões BFF e DDD e uma biblioteca de componentes usada por mais de 20 desenvolvedores.",
+    "WebSockets para tempo real e integrações profundas entre vários sistemas, com pipeline completo de QA, Staging e Produção.",
+    "Um dos 2 desenvolvedores do app Flutter da empresa, unindo vários aplicativos num só.",
+    "Integração do Claude Code e Codex no fluxo diário para acelerar scaffolding, refatoração e depuração."
+   ]
   },
-  "experience": [
-    {
-      "role": "Desenvolvedor Full-Stack",
-      "company": "Sys Evolution (LicitaSys)",
-      "period": "jun 2024 ate hoje",
-      "place": "Remoto",
-      "highlights": [
-        "Liderança técnica de um time de 3 pessoas em mais de 6 projetos de grande porte, com decisões de arquitetura e planejamento de sprint ponta a ponta.",
-        "Desenvolvedor original do ACL, assistente de licitações que automatiza o ciclo completo de compras públicas em portais do governo: captura de editais, envio de propostas, lances e monitoramento de pregões.",
-        "SysGuide: servidor de vídeo e streaming, app desktop em Rust com Tauri, LLM local e Whisper para transcrição.",
-        "Análise de dados sobre a base pública do mercado de licitações, com telas que mostram milhões de linhas de uma vez (rolagem virtualizada) e análises detalhadas.",
-        "SaaS multi-tenant escalável em Vue, React, Node e PostgreSQL, com padrões BFF e DDD e uma biblioteca de componentes usada por mais de 20 desenvolvedores.",
-        "WebSockets para tempo real e integrações profundas entre vários sistemas, com pipeline completo de QA, Staging e Produção.",
-        "Um dos 2 desenvolvedores do app Flutter da empresa, unindo vários aplicativos num só.",
-        "Integração do Claude Code e Codex no fluxo diário para acelerar scaffolding, refatoração e depuração."
-      ]
-    },
-    {
-      "role": "Desenvolvedor Full-Stack (freelance)",
-      "company": "Freelance",
-      "period": "2023 até hoje",
-      "place": "Remoto",
-      "highlights": [
-        "ATN360: site institucional com CMS próprio, SSR com nota 100 de SEO, 5 idiomas e posts gerados com Gemini.",
-        "BarberCore: CRM multi-tenant para barbearias com WhatsApp, agendamento, fidelidade e assinaturas no Stripe, na AWS, com clientes pagantes.",
-        "AirMessage: SaaS multiplataforma em Flutter para automação de WhatsApp com 2FA por SMS e e-mail."
-      ]
-    },
-    {
-      "role": "Desenvolvedor Full-Stack",
-      "company": "Loop Sistemas",
-      "period": "abr 2024 a jun 2024",
-      "place": "Jales, SP",
-      "highlights": [
-        "Desenvolvimento e manutenção de aplicações desktop WPF com arquitetura MVVM e SQL Server, entregando soluções prontas para produção."
-      ]
-    },
-    {
-      "role": "Bolsista de Iniciação Científica",
-      "company": "CNPq / UNESP",
-      "period": "set 2022 a ago 2023",
-      "place": "Brasil",
-      "highlights": [
-        "Pesquisa sobre um compressor de CO2 supercrítico aplicado à exploração do pré-sal, com scripts próprios em Python para simulação e análise estatística, sem bibliotecas prontas de IA."
-      ]
-    }
-  ],
-  "education": [
-    {
-      "course": "Tecnólogo em Sistemas para Internet",
-      "school": "FATEC-SP",
-      "period": "2023 a 2026",
-      "note": "Desenvolvimento web full-stack, UX/UI, bancos de dados, cibersegurança e métodos ágeis."
-    },
-    {
-      "course": "Engenharia Mecânica",
-      "school": "UNESP",
-      "period": "2020 a 2023 (trancado)",
-      "note": "Base analítica forte em matemática, termodinâmica e análise de dados, antes da transição para software."
-    }
-  ],
-  "languages": [
-    "Português nativo",
-    "Inglês avançado"
-  ],
-  "links": {
-    "github": "https://github.com/GabrielInacior",
-    "linkedin": "https://www.linkedin.com/in/gabriel-inacio-rodrigues-silva-072029220",
-    "email": "gabrielinaciodev47@gmail.com",
-    "site": "https://inaciodev.online"
+  {
+   "role": "Desenvolvedor Full-Stack (freelance)",
+   "company": "Freelance",
+   "period": "2023 até hoje",
+   "place": "Remoto",
+   "highlights": [
+    "Atende 360 (atn360.com.br): site institucional com CMS próprio, SSR com nota 100 de SEO, 5 idiomas e posts gerados com Gemini.",
+    "BarberCore: CRM multi-tenant para barbearias com WhatsApp, agendamento, fidelidade e assinaturas no Stripe, na AWS, com clientes pagantes.",
+    "AirMessage: SaaS multiplataforma em Flutter para automação de WhatsApp com 2FA por SMS e e-mail."
+   ]
+  },
+  {
+   "role": "Desenvolvedor Full-Stack",
+   "company": "Loop Sistemas",
+   "period": "abr 2024 a jun 2024",
+   "place": "Jales, SP",
+   "highlights": [
+    "Desenvolvimento e manutenção de aplicações desktop WPF com arquitetura MVVM e SQL Server, entregando soluções prontas para produção."
+   ]
+  },
+  {
+   "role": "Estagiário de Marketing Digital",
+   "company": "Plug4Sales (Repediu)",
+   "period": "out 2023 a fev 2024",
+   "place": "Jales, SP",
+   "highlights": [
+    "Frontend com React e Vite, otimizando desempenho e usabilidade de projetos digitais.",
+    "Criação de peças visuais no Photoshop e estratégias de marketing digital para engajamento e conversão.",
+    "Atendimento e suporte ao cliente."
+   ]
+  },
+  {
+   "role": "SDR (Sales Development Representative)",
+   "company": "SistemasBr",
+   "period": "set 2023 a out 2023",
+   "place": "Jales, SP",
+   "highlights": [
+    "Prospecção ativa de clientes e gestão do funil de vendas em CRM.",
+    "Desenvolvimento de comunicação e negociação."
+   ]
+  },
+  {
+   "role": "Bolsista de Iniciação Científica",
+   "company": "CNPq / UNESP",
+   "period": "set 2022 a ago 2023",
+   "place": "Brasil",
+   "highlights": [
+    "Pesquisa sobre um compressor de CO2 supercrítico aplicado à exploração do pré-sal, com scripts próprios em Python para simulação e análise estatística, sem bibliotecas prontas de IA."
+   ]
   }
+ ],
+ "education": [
+  {
+   "course": "Tecnólogo em Sistemas para Internet",
+   "school": "FATEC-SP",
+   "period": "2023 a 2026",
+   "note": "Desenvolvimento web full-stack, UX/UI, bancos de dados, cibersegurança e métodos ágeis."
+  },
+  {
+   "course": "Engenharia Mecânica",
+   "school": "UNESP",
+   "period": "2020 a 2023 (trancado)",
+   "note": "Base analítica forte em matemática, termodinâmica e análise de dados, antes da transição para software."
+  }
+ ],
+ "languages": [
+  "Português nativo",
+  "Inglês avançado"
+ ],
+ "links": {
+  "github": "https://github.com/GabrielInacior",
+  "linkedin": "https://www.linkedin.com/in/gabriel-inácio-rodrigues-silva-072029220/",
+  "email": "gabrielinaciodev47@gmail.com",
+  "site": "https://inaciodev.online",
+  "linkedin_short": "linkedin.com/in/gabriel-inácio",
+  "site_old": "https://inaciodev.com.br"
+ },
+ "hero_tag": "// FULLSTACK DEVELOPER",
+ "headline_old": "Dev FullStack • Vue, React, Node.js, Flutter",
+ "stats": [
+  {
+   "value": "4+",
+   "label": "Anos de experiência",
+   "note": "o portfólio antigo dizia 5+ (e em um trecho 3+); o currículo e o LinkedIn sustentam 4+"
+  },
+  {
+   "value": "40+",
+   "label": "Tecnologias"
+  },
+  {
+   "value": "∞",
+   "label": "Curiosidade"
+  }
+ ],
+ "about_city": [
+  "Desenvolvedor FullStack construindo aplicações que importam. Do frontend pixel-perfect ao backend robusto, passando por infraestrutura e segurança.",
+  "Minha abordagem combina código limpo com arquitetura inteligente. Tenho experiência com aplicações web e mobile, APIs escaláveis, deploy em cloud e boas práticas de segurança, incluindo conhecimento em pentest com Kali Linux.",
+  "Cada prédio nessa cidade representa um pedaço do que sei construir. Cada rua, uma conexão entre tecnologias que domino. Bem-vindo ao meu mundo."
+ ],
+ "contact": {
+  "title": "VAMOS CONSTRUIR?",
+  "subtitle": "Tem um projeto em mente? Vamos dar vida a ele juntos.",
+  "copied": "E-mail copiado"
+ },
+ "resume": {
+  "available": false,
+  "note": "O currículo antigo (Resume_Gabriel.pdf) tem telefone e endereço; precisa de uma versão sem esses dados antes de entrar no repositório público."
+ },
+ "tech_info": {
+  "React": [
+   "Biblioteca de UI baseada em componentes",
+   "https://react.dev"
+  ],
+  "Vue.js": [
+   "Framework JavaScript progressivo",
+   "https://vuejs.org"
+  ],
+  "Next.js": [
+   "Framework React com SSR/SSG",
+   "https://nextjs.org"
+  ],
+  "Nuxt": [
+   "Framework Vue com SSR/SSG",
+   "https://nuxt.com"
+  ],
+  "TypeScript": [
+   "JavaScript com tipagem",
+   "https://www.typescriptlang.org"
+  ],
+  "Flutter": [
+   "SDK mobile multiplataforma",
+   "https://flutter.dev"
+  ],
+  "React Native": [
+   "Apps nativos com React",
+   "https://reactnative.dev"
+  ],
+  "Node.js": [
+   "JavaScript no servidor",
+   "https://nodejs.org"
+  ],
+  "Spring": [
+   "Framework Java corporativo",
+   "https://spring.io"
+  ],
+  "Prisma": [
+   "ORM de nova geração para Node.js",
+   "https://www.prisma.io"
+  ],
+  "PostgreSQL": [
+   "Banco relacional avançado",
+   "https://www.postgresql.org"
+  ],
+  "MongoDB": [
+   "Banco NoSQL de documentos",
+   "https://www.mongodb.com"
+  ],
+  "Redis": [
+   "Armazenamento de dados em memória",
+   "https://redis.io"
+  ],
+  "AWS": [
+   "Infraestrutura de nuvem da Amazon",
+   "https://aws.amazon.com"
+  ],
+  "Linux": [
+   "Sistema operacional open source",
+   "https://www.kernel.org"
+  ],
+  "Docker": [
+   "Plataforma de containers",
+   "https://www.docker.com"
+  ],
+  "Nginx": [
+   "Servidor web e proxy de alto desempenho",
+   "https://nginx.org"
+  ],
+  "Kali Linux": [
+   "Distribuição para testes de invasão",
+   "https://www.kali.org"
+  ]
+ },
+ "tech_groups_old": {
+  "Frontend": [
+   "React",
+   "Vue.js",
+   "Next.js",
+   "Nuxt",
+   "TypeScript"
+  ],
+  "Mobile": [
+   "Flutter",
+   "React Native"
+  ],
+  "Backend": [
+   "Node.js",
+   "Spring",
+   "Prisma"
+  ],
+  "Banco de dados": [
+   "PostgreSQL",
+   "MongoDB",
+   "Redis"
+  ],
+  "Cloud e infra": [
+   "AWS",
+   "Linux",
+   "Docker",
+   "Nginx"
+  ],
+  "Segurança": [
+   "Kali Linux"
+  ]
+ },
+ "meta_keywords": [
+  "desenvolvedor fullstack",
+  "fullstack developer",
+  "vue",
+  "react",
+  "node.js",
+  "flutter",
+  "aws",
+  "typescript",
+  "portfólio dev",
+  "gabriel inácio"
+ ]
 }
