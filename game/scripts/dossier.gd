@@ -58,14 +58,10 @@ func _cover(v: VBoxContainer, project: Dictionary) -> void:
 
 func _chips(v: VBoxContainer, items: Array, col: Color) -> void:
 	var flow := HFlowContainer.new()
-	flow.add_theme_constant_override("h_separation", 8)
-	flow.add_theme_constant_override("v_separation", 8)
+	flow.add_theme_constant_override("h_separation", UI.sp(1))
+	flow.add_theme_constant_override("v_separation", UI.sp(1))
 	for it in items:
-		var p := PanelContainer.new()
-		p.add_theme_stylebox_override("panel", UI.box(Color(col, 0.14), col, 1, 8, 6))
-		var l := UI.label(str(it).to_upper(), UI.fs("small"), col, "type")
-		p.add_child(l)
-		flow.add_child(p)
+		flow.add_child(UI.tech_chip(str(it), col))
 	v.add_child(flow)
 
 

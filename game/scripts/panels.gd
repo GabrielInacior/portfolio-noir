@@ -303,9 +303,15 @@ func _build_skills() -> void:
 		flow.add_theme_constant_override("h_separation", 8)
 		flow.add_theme_constant_override("v_separation", 8)
 		for t in skills[cat]:
-			var b := UI.ghost(str(t), col, UI.tap())
+			var b := UI.ghost(str(t), col, int(UI.tap() * 0.8))
 			b.add_theme_font_override("font", UI.font("bold"))
 			b.add_theme_font_size_override("font_size", UI.fs("small"))
+			# ícone da tecnologia do atlas compartilhado, quando existir
+			var tex := UI.tech_icon(str(t))
+			if tex:
+				b.icon = tex
+				b.expand_icon = true
+				b.add_theme_constant_override("icon_max_width", int(UI.fs("small") * 1.3))
 			b.pressed.connect(_show_projects.bind(str(t), col))
 			flow.add_child(b)
 		_col.add_child(flow)

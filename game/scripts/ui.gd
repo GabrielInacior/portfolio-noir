@@ -304,6 +304,86 @@ func chip(t: String, col := AMBER) -> PanelContainer:
 	return p
 
 
+## ícone de tecnologia do atlas compartilhado do cenário (assets/tech_icons + tech_icons.json).
+## Aceita no JSON: {"<nome ou id>": "arquivo.png"} ou {"<nome>": {"id"|"file"|"atlas"+"rect"}}.
+## Sem atlas ou sem o ícone: devolve null e o chip mostra só o nome.
+var _tech := {}
+var _tech_loaded := false
+var _tech_cache := {}
+
+
+func _tech_key(s: String) -> String:
+	var k := s.to_lower().strip_edges()
+	for ch in [" ", ".", "-", "_", "/", "(", ")", "+"]:
+		k = k.replace(ch, "")
+	return k
+
+
+func tech_icon(name: String) -> Texture2D:
+	if not _tech_loaded:
+		_tech_loaded = true
+		for p in ["res://assets/data/tech_icons.json", "res://assets/tech_icons/tech_icons.json"]:
+			if FileAccess.file_exists(p):
+				var v: Variant = JSON.parse_string(FileAccess.get_file_as_string(p))
+				if v is Dictionary:
+					var src: Dictionary = v.get("icons", v)
+					for k in src:
+						_tech[_tech_key(str(k))] = src[k]
+						if src[k] is Dictionary:
+							for al in (src[k] as Dictionary).get("aliases", []):
+								_tech[_tech_key(str(al))] = src[k]
+				break
+	var key := _tech_key(name.split(" (")[0])
+	if _tech_cache.has(key):
+		return _tech_cache[key]
+	var tex: Texture2D = null
+	var e: Variant = _tech.get(key)
+	var path := ""
+	if e is String:
+		path = str(e)
+	elif e is Dictionary:
+		var d: Dictionary = e
+		if d.has("atlas") and d.has("rect"):
+			var at := "res://assets/tech_icons/" + str(d["atlas"]) if not str(d["atlas"]).begins_with("res://") else str(d["atlas"])
+			if ResourceLoader.exists(at):
+				var a := AtlasTexture.new()
+				a.atlas = load(at)
+				var r: Array = d["rect"]
+				a.region = Rect2(r[0], r[1], r[2], r[3])
+				tex = a
+		path = str(d.get("file", str(d.get("id", "")) + ".png" if d.has("id") else ""))
+	elif ResourceLoader.exists("res://assets/tech_icons/%s.png" % key):
+		path = key + ".png"
+	if tex == null and path != "":
+		if not path.begins_with("res://"):
+			path = "res://assets/tech_icons/" + path
+		if ResourceLoader.exists(path):
+			tex = load(path)
+	_tech_cache[key] = tex
+	return tex
+
+
+## chip de tecnologia: ícone do atlas + nome (cai para chip simples se o ícone não existir)
+func tech_chip(t: String, col := AMBER) -> PanelContainer:
+	var p := chip(t, col)
+	var tex := tech_icon(t)
+	if tex:
+		var lbl := p.get_child(0)
+		p.remove_child(lbl)
+		var h := hbox(sp(0.6))
+		var tr := TextureRect.new()
+		tr.texture = tex
+		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		var s := fs("cap") * 1.35
+		tr.custom_minimum_size = Vector2(s, s)
+		tr.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		h.add_child(tr)
+		h.add_child(lbl)
+		p.add_child(h)
+	return p
+
+
 ## tecla desenhada (keycap) para as legendas de comandos
 func keycap(t: String, col := PAPER) -> PanelContainer:
 	var p := PanelContainer.new()

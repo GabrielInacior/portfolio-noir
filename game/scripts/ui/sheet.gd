@@ -363,7 +363,7 @@ func add_chips(list: Array, col := Color(-1, 0, 0)) -> HFlowContainer:
 	fl.add_theme_constant_override("h_separation", UI.sp(1))
 	fl.add_theme_constant_override("v_separation", UI.sp(1))
 	for c in list:
-		fl.add_child(UI.chip(str(c), accent if col.r < 0.0 else col))
+		fl.add_child(UI.tech_chip(str(c), accent if col.r < 0.0 else col))
 	body.add_child(fl)
 	return fl
 
