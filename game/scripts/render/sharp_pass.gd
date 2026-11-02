@@ -11,7 +11,7 @@ extends Node
 const SHARP_LAYER := 1 << 19      # camada 20: elementos nítidos
 const OCC_LAYER := 1 << 18        # camada 19: oclusores (só nesta passada)
 const SHARP_SHADERS := ["code_scroll", "chart_screen", "led_panel", "matrix_rain", "arcade_attract"]
-const SHARP_TEX_HINTS := ["/museum/", "/collages/", "/covers/", "foto_gabriel", "/readmes/", "/captures/", "/billboards/", "/flyers/"]
+const SHARP_TEX_HINTS := ["/museum/", "/collages/", "/covers/", "foto_gabriel", "/readmes/", "/captures/", "/billboards/", "/flyers/", "/ads/", "/tech_icons/"]
 const RETRO_TEX_HINTS := ["janelas_atlas", "fachada_janelas", "/tex/", "/characters/", "sky_"]
 
 var world_vp: SubViewport

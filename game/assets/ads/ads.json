@@ -1,0 +1,99 @@
+{
+ "sizes": {
+  "top": [
+   1600,
+   400
+  ],
+  "tall": [
+   400,
+   1200
+  ],
+  "lightbox": [
+   720,
+   960
+  ],
+  "tv": [
+   1024,
+   576
+  ],
+  "lambe": [
+   480,
+   720
+  ],
+  "faixa": [
+   1800,
+   300
+  ],
+  "taxi": [
+   600,
+   200
+  ],
+  "van": [
+   900,
+   360
+  ]
+ },
+ "ads": {
+  "top": [
+   "top_00",
+   "top_01",
+   "top_02",
+   "top_03",
+   "top_04",
+   "top_05",
+   "top_06",
+   "top_07"
+  ],
+  "tall": [
+   "tall_00",
+   "tall_01",
+   "tall_02",
+   "tall_03",
+   "tall_04",
+   "tall_05"
+  ],
+  "lightbox": [
+   "lightbox_00",
+   "lightbox_01",
+   "lightbox_02",
+   "lightbox_03",
+   "lightbox_04",
+   "lightbox_05"
+  ],
+  "tv": [
+   "tv_00",
+   "tv_01",
+   "tv_02",
+   "tv_03",
+   "tv_04",
+   "tv_05",
+   "tv_06",
+   "tv_07",
+   "tv_08"
+  ],
+  "lambe": [
+   "lambe_00",
+   "lambe_01",
+   "lambe_02",
+   "lambe_03",
+   "lambe_04",
+   "lambe_05",
+   "lambe_06",
+   "lambe_07"
+  ],
+  "faixa": [
+   "faixa_00",
+   "faixa_01",
+   "faixa_02",
+   "faixa_03"
+  ],
+  "taxi": [
+   "taxi_00"
+  ],
+  "van": [
+   "van_00",
+   "van_01",
+   "van_02"
+  ]
+ }
+}

@@ -73,6 +73,8 @@ func _ready() -> void:
 	_street_props()
 	_dress_alley()
 	_build_billboards()
+	if OS.get_environment("NOADS") == "":
+		_build_ads()
 	_build_wayfinding()
 	_build_extras()
 	_commit_batches()
@@ -700,6 +702,7 @@ func _building(face_center: Vector3, normal: Vector3, w: float, h_force := 0.0, 
 	var h := h_force if h_force > 0.0 else _rng.randf_range(9.0, 19.0)
 	if is_end:
 		h = 14.0
+	_bldgs.append({"face": face_center, "normal": normal, "w": w, "h": h, "busy": _near_shop(face_center), "end": is_end})
 	var depth := 8.0
 	var yaw := atan2(normal.x, normal.z)
 	var body_c := face_center - normal * (depth / 2)
@@ -1702,6 +1705,7 @@ func _process(dt: float) -> void:
 	for f in _fans:
 		(f as Node3D).rotate_object_local(Vector3.UP, dt * 9.0)
 	traffic.step(dt, player.global_position if player else null)
+	_tick_ads(dt)
 	for w in _walkers:
 		var a: Vector3 = w["a"]
 		var b: Vector3 = w["b"]
@@ -2281,3 +2285,212 @@ func _mural(face: Vector3, normal: Vector3, w: float) -> void:
 	t.shaded = false
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	h.add_child(t)
+
+
+
+# ═════════════════════════════════════════════ cidade capitalista: a propaganda é o Gabriel
+## Anúncios gerados por tools/deploy/ads.py (proporção exata da superfície, foto + nome + slogan +
+## ícones das tecnologias). Cada prédio ganha um tipo (topo, letreiro vertical, lightbox), os muros
+## sem loja ganham lambe-lambe em sequência, faixas cruzam as ruas e telões trocam de anúncio.
+var _bldgs: Array = []         # {face, normal, w, h, busy, end}
+var _ad_tvs: Array = []           # {mat, texs: [], i, t}
+var _ad_tex_cache := {}
+var _ads_meta := {}
+
+
+func _ad_tex(id: String) -> Texture2D:
+	if id == "":
+		return null
+	var path := "res://assets/ads/%s_%s.png" % [id, "en" if L.lang == "en" else "pt"]
+	if _ad_tex_cache.has(path):
+		return _ad_tex_cache[path]
+	var t: Texture2D = load(path) if ResourceLoader.exists(path) else null
+	_ad_tex_cache[path] = t
+	return t
+
+
+func _ad_mat(tex: Texture2D, emit := 0.45) -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = tex
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	m.roughness = 0.9
+	m.emission_enabled = true
+	m.emission_texture = tex
+	m.emission_energy_multiplier = emit   # retroiluminado; a luz e a névoa da cena continuam valendo
+	return m
+
+
+func _ad_quad(parent: Node3D, tex: Texture2D, pos: Vector3, size: Vector2, emit := 0.45) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	var q := QuadMesh.new()
+	q.size = size
+	mi.mesh = q
+	mi.material_override = _ad_mat(tex, emit)
+	mi.position = pos
+	parent.add_child(mi)
+	return mi
+
+
+func _ad_holder(face: Vector3, normal: Vector3, out := 0.0) -> Node3D:
+	var h := Node3D.new()
+	h.position = face + normal * out
+	h.rotation.y = atan2(normal.x, normal.z)
+	add_child(h)
+	return h
+
+
+func _ad_pick(kind: String, k: int) -> String:
+	var list: Array = _ads_meta.get("ads", {}).get(kind, [])
+	if list.is_empty():
+		return ""
+	return str(list[k % list.size()])
+
+
+func _build_ads() -> void:
+	var f := FileAccess.open("res://assets/ads/ads.json", FileAccess.READ)
+	if f == null:
+		return
+	_ads_meta = JSON.parse_string(f.get_as_text())
+	var dark := _mat(Color("#0b0e1a"))
+	var metal := _mat(Color("#1b1e2a"))
+	var k_top := 0
+	var k_tall := 0
+	var k_box := 0
+	var k_lambe := 0
+	for i in _bldgs.size():
+		var b: Dictionary = _bldgs[i]
+		if b["end"]:
+			continue
+		var face: Vector3 = b["face"]
+		var nrm: Vector3 = b["normal"]
+		var w: float = b["w"]
+		var h: float = b["h"]
+		var right := Vector3(nrm.z, 0, -nrm.x)
+		var mode := i % 3
+		if _light and i % 2 == 1:   # celular fraco: metade dos anúncios de prédio
+			continue
+		# 1) topo do prédio: outdoor 4:1 sobre a cornija, com treliça e holofotes
+		if mode == 0 or (mode == 1 and h < 12.0):
+			var tex := _ad_tex(_ad_pick("top", k_top))
+			k_top += 1
+			if tex:
+				var aw := minf(w * 0.92, 9.0)
+				var ah := aw / 4.0
+				var hold := _ad_holder(face, nrm, -0.6)
+				var y := h + 0.6 + ah / 2
+				_lbox(hold, Vector3(0, y, -0.06), Vector3(aw + 0.24, ah + 0.24, 0.14), dark)
+				_lbox(hold, Vector3(0, h + 0.3, -0.25), Vector3(aw * 0.85, 0.6, 0.12), metal)   # treliça (uma peça)
+				_ad_quad(hold, tex, Vector3(0, y, 0.02), Vector2(aw, ah))
+				_lhalo(hold, Vector3(0, y, 0.15), Vector2(aw * 1.1, ah * 1.4), Color("#ffe0a8"), 0.06)
+		# 2) letreiro vertical 1:3 pendurado na quina, perpendicular à fachada (visto ao longo da rua)
+		elif mode == 1:
+			var tex2 := _ad_tex(_ad_pick("tall", k_tall))
+			k_tall += 1
+			if tex2 and h > 11.0:
+				var vh := minf(h - 6.5, 6.0)
+				var vw := vh / 3.0
+				var corner := face + right * (w / 2 - 0.4)
+				var hold2 := Node3D.new()
+				hold2.position = corner + nrm * (vw / 2 + 0.35)
+				hold2.rotation.y = atan2(right.x, right.z)
+				add_child(hold2)
+				var yc := 5.2 + vh / 2
+				_lbox(hold2, Vector3(0, yc, 0), Vector3(vw + 0.16, vh + 0.16, 0.16), dark)
+				_ad_quad(hold2, tex2, Vector3(0, yc, 0.09), Vector2(vw, vh), 0.55)
+				var back := _ad_quad(hold2, tex2, Vector3(0, yc, -0.09), Vector2(vw, vh), 0.55)
+				back.rotation.y = PI
+				for yy in [yc - vh * 0.4, yc + vh * 0.4]:   # braços até a parede
+					var arm := MeshInstance3D.new()
+					var bm := BoxMesh.new()
+					bm.size = Vector3(0.08, 0.08, vw / 2 + 0.35)
+					arm.mesh = bm
+					arm.material_override = metal
+					arm.position = corner + nrm * ((vw / 2 + 0.35) / 2) + Vector3(0, yy, 0)
+					arm.rotation.y = atan2(nrm.x, nrm.z)
+					add_child(arm)
+		# 3) lightbox 3:4 no 2º andar
+		else:
+			var tex3 := _ad_tex(_ad_pick("lightbox", k_box))
+			k_box += 1
+			if tex3:
+				var lh := minf(3.2, h - 6.0)
+				if lh > 1.6:
+					var lw := lh * 0.75
+					var hold3 := _ad_holder(face, nrm, 0.32)
+					var off := (w / 2 - lw / 2 - 0.3) * (1.0 if i % 2 == 0 else -1.0)
+					_lbox(hold3, Vector3(off, 4.4 + lh / 2, -0.08), Vector3(lw + 0.18, lh + 0.18, 0.2), dark)
+					_ad_quad(hold3, tex3, Vector3(off, 4.4 + lh / 2, 0.04), Vector2(lw, lh), 0.6)
+		# 4) muros sem loja: lambe-lambes em sequência no térreo
+		if not b["busy"] and w > 4.0:
+			var n := mini(int((w - 1.0) / 0.95), 6)
+			var tex4 := _ad_tex(_ad_pick("lambe", k_lambe))
+			k_lambe += 1
+			if tex4:
+				var hold4 := _ad_holder(face, nrm, 0.16)
+				# uma malha só por muro: a textura se repete n vezes (1 draw call por sequência)
+				var q := _ad_quad(hold4, tex4, Vector3(0, 1.75, 0.0), Vector2(0.9 * n, 1.32), 0.15)
+				(q.material_override as StandardMaterial3D).uv1_scale = Vector3(n, 1, 1)
+	# 5) faixas penduradas cruzando a avenida e a transversal
+	var faixas := [[Vector3(-FAC, 0, -6.0), Vector3(FAC, 0, -6.0)], [Vector3(-FAC, 0, -33.0), Vector3(FAC, 0, -33.0)],
+		[Vector3(-FAC, 0, -63.0), Vector3(FAC, 0, -63.0)],
+		[Vector3(20.0, 0, CROSS_Z - CROSS_HW - SIDE - 0.5), Vector3(20.0, 0, CROSS_Z + CROSS_HW + SIDE + 0.5)],
+		[Vector3(-22.0, 0, CROSS_Z - CROSS_HW - SIDE - 0.5), Vector3(-22.0, 0, CROSS_Z + CROSS_HW + SIDE + 0.5)]]
+	for fi in faixas.size():
+		var a: Vector3 = faixas[fi][0]
+		var c2: Vector3 = faixas[fi][1]
+		var tex5 := _ad_tex(_ad_pick("faixa", fi))
+		if tex5 == null:
+			continue
+		var span := a.distance_to(c2)
+		var fw := minf(span - 2.0, 8.4)
+		var fh := fw / 6.0
+		var mid := (a + c2) / 2 + Vector3(0, 7.2, 0)
+		var across_x := absf((c2 - a).x) > 0.5
+		var hold5 := Node3D.new()
+		hold5.position = mid
+		hold5.rotation.y = 0.0 if across_x else PI / 2
+		add_child(hold5)
+		_ad_quad(hold5, tex5, Vector3(0, 0, 0.01), Vector2(fw, fh), 0.35)
+		var bq := _ad_quad(hold5, tex5, Vector3(0, 0, -0.01), Vector2(fw, fh), 0.35)
+		bq.rotation.y = PI
+		for sgn in [-1.0, 1.0]:
+			var cable := MeshInstance3D.new()
+			var cm := BoxMesh.new()
+			cm.size = Vector3((span - fw) / 2, 0.025, 0.025)
+			cable.mesh = cm
+			cable.material_override = metal
+			cable.position = Vector3(sgn * (fw / 2 + (span - fw) / 4), fh / 2 - 0.05, 0)
+			hold5.add_child(cable)
+		_swing.append({"node": hold5, "seed": float(fi) * 1.7, "amp": 0.015})
+	# 6) telões grandes animados nas esquinas do cruzamento (trocam de anúncio a cada 4 s)
+	var zn := CROSS_Z + CROSS_HW + SIDE
+	var zs := CROSS_Z - CROSS_HW - SIDE
+	var tvs := [[Vector3(FAC, 0, zn + 4.5), Vector3(-1, 0, 0)], [Vector3(-FAC, 0, zs - 4.5), Vector3(1, 0, 0)],
+		[Vector3(-12.0, 0, zn), Vector3(0, 0, -1)], [Vector3(12.0, 0, zs), Vector3(0, 0, 1)]]
+	for ti in tvs.size():
+		var texs: Array = []
+		for j in 3:
+			var tt := _ad_tex(_ad_pick("tv", ti * 3 + j))
+			if tt:
+				texs.append(tt)
+		if texs.is_empty():
+			continue
+		var hold6 := _ad_holder(tvs[ti][0], tvs[ti][1], 0.45)
+		var tw := 6.4
+		var th := tw * 9.0 / 16.0
+		var ty := 6.2 + th / 2
+		_lbox(hold6, Vector3(0, ty, -0.12), Vector3(tw + 0.4, th + 0.4, 0.3), dark)
+		var scr := _ad_quad(hold6, texs[0], Vector3(0, ty, 0.05), Vector2(tw, th), 0.9)
+		_lhalo(hold6, Vector3(0, ty, 0.3), Vector2(tw * 1.3, th * 1.5), Color("#9fd8ff"), 0.08)
+		_ad_tvs.append({"mat": scr.material_override, "texs": texs, "i": 0, "t": float(ti) * 1.3})
+
+
+func _tick_ads(dt: float) -> void:
+	for tv in _ad_tvs:
+		tv["t"] = float(tv["t"]) + dt
+		if float(tv["t"]) >= 4.0:
+			tv["t"] = 0.0
+			tv["i"] = (int(tv["i"]) + 1) % (tv["texs"] as Array).size()
+			var m: StandardMaterial3D = tv["mat"]
+			m.albedo_texture = tv["texs"][tv["i"]]
+			m.emission_texture = tv["texs"][tv["i"]]
