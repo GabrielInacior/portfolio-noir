@@ -138,6 +138,121 @@ def bg(w, h, col, k):
     return base
 
 
+PHOTO_IDS = {("top", 0), ("top", 1), ("top", 2), ("tall", 0), ("lightbox", 0), ("lightbox", 1), ("tv", 0), ("tv", 1),
+             ("lambe", 0), ("van", 0)}
+
+
+def monogram(base, cx, cy, r, col):
+    """Selo "GI" em neon (marca do Gabriel) para as peças sem foto."""
+    lay = Image.new("RGBA", base.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    pts = [(cx + r * __import__("math").cos(a), cy + r * __import__("math").sin(a)) for a in
+           [__import__("math").pi / 6 + i * __import__("math").pi / 3 for i in range(6)]]
+    d.polygon(pts, outline=col + (255,), width=max(3, int(r * 0.09)))
+    f = font("BebasNeue-Regular.ttf", r * 1.15)
+    d.text((cx, cy + r * 0.05), "GI", font=f, fill=col + (255,), anchor="mm")
+    base.alpha_composite(lay.filter(ImageFilter.GaussianBlur(max(2, int(r * 0.12)))))
+    base.alpha_composite(lay)
+
+
+def typo_h(kind, lg, k, slogan, stack):
+    """Peça horizontal SEM foto: logotipo GABRIEL INÁCIO em neon como protagonista, selo GI, slogan e ícones."""
+    w, h = SIZES[kind]
+    col = ACCENTS[k % len(ACCENTS)]
+    base = bg(w, h, col, k)
+    d = ImageDraw.Draw(base)
+    m = int(h * 0.1)
+    left = k % 2 == 0
+    r = h * 0.3
+    mx = m + r if left else w - m - r
+    monogram(base, mx, h / 2, r, col)
+    tx0 = (mx + r + m) if left else m
+    tx1 = (w - m) if left else (mx - r - m)
+    cx, maxw = (tx0 + tx1) / 2, tx1 - tx0
+    if kind == "taxi":
+        nf = fit(d, "GABRIEL INÁCIO · DEV", "BebasNeue-Regular.ttf", h * 0.42, maxw)
+        glow(base, (cx, h * 0.38), "GABRIEL INÁCIO · DEV", nf, YEL, g=6)
+        sf = fit(d, "inaciodev.online", "Nunito-Var.ttf", h * 0.16, maxw)
+        d.text((cx, h * 0.76), "inaciodev.online", font=sf, fill=WHITE, anchor="mm")
+    else:
+        rows = [("name", "GABRIEL INÁCIO", 0.34), ("slogan", slogan, 0.16), ("icons", None, 0.18), ("role", ROLE[lg] + "  ·  inaciodev.online", 0.08)]
+        if kind == "faixa":
+            rows = [("name", "GABRIEL INÁCIO", 0.4), ("slogan", slogan + "  ·  inaciodev.online", 0.2), ("icons", None, 0.2)]
+        total = sum(rr[2] for rr in rows) * 1.18
+        y = (h - total * h) / 2
+        for kind_r, txt, frac in rows:
+            hh = frac * h
+            yc = y + hh * 0.59
+            if kind_r == "icons":
+                icon_row(base, stack, cx, yc, hh, maxw)
+            elif kind_r == "name":
+                f = fit(d, txt, "BebasNeue-Regular.ttf", hh * 1.15, maxw)
+                glow(base, (cx, yc), txt, f, col, g=14)
+            elif kind_r == "slogan":
+                f = fit(d, txt, "BebasNeue-Regular.ttf", hh * 1.1, maxw)
+                d.text((cx, yc), txt, font=f, fill=WHITE, anchor="mm")
+            else:
+                f = fit(d, txt, "Nunito-Var.ttf", hh * 1.1, maxw)
+                d.text((cx, yc), txt, font=f, fill=PINK if col != PINK else CYAN, anchor="mm")
+            y += hh * 1.18
+    frame(base, col, max(4, h // 60))
+    return base
+
+
+def typo_v(kind, lg, k, slogan, stack):
+    """Peça vertical SEM foto: selo GI, GABRIEL INÁCIO em neon empilhado, slogan, ícones e endereço;
+    tudo encolhe junto até caber na altura (nada passa da margem)."""
+    w, h = SIZES[kind]
+    col = ACCENTS[k % len(ACCENTS)]
+    base = bg(w, h, col, k + 1)
+    d = ImageDraw.Draw(base)
+    m = int(w * 0.08)
+    maxw = w - 2 * m
+    cx = w / 2
+    scale = 1.0
+    for _ in range(40):
+        r = w * 0.2 * scale
+        nf = [fit(d, wd, "BebasNeue-Regular.ttf", w * 0.3 * scale, maxw) for wd in ("GABRIEL", "INÁCIO")]
+        s_sz = w * 0.11 * scale
+        sf = font("BebasNeue-Regular.ttf", s_sz)
+        lines, cur = [], ""
+        for wd in slogan.split():
+            t = (cur + " " + wd).strip()
+            if d.textlength(t, font=sf) <= maxw:
+                cur = t
+            else:
+                if cur:
+                    lines.append(cur)
+                cur = wd
+        lines.append(cur)
+        ic = w * 0.13 * scale
+        rf = fit(d, "inaciodev.online", "Nunito-Var.ttf", w * 0.055, maxw)
+        need = r * 2 + h * 0.025 + sum(f.size * 0.9 for f in nf) + h * 0.02 + len(lines) * s_sz * 0.95 + ic * 1.5 + rf.size * 1.6
+        if need <= h - 2 * m and len(lines) <= 3:
+            break
+        scale *= 0.94
+    y = m + (h - 2 * m - need) / 2
+    monogram(base, cx, y + r, r, col)
+    y += r * 2 + h * 0.025
+    for wd, f in zip(("GABRIEL", "INÁCIO"), nf):
+        glow(base, (cx, y + f.size * 0.45), wd, f, col, g=12)
+        y += f.size * 0.9
+    y += h * 0.02
+    for ln in lines:
+        f = fit(d, ln, "BebasNeue-Regular.ttf", s_sz, maxw)
+        d.text((cx, y + s_sz * 0.5), ln, font=f, fill=WHITE, anchor="mm")
+        y += s_sz * 0.95
+    icon_row(base, stack[:4], cx, y + ic * 0.7, ic, maxw)
+    y += ic * 1.5
+    d.text((cx, y + rf.size * 0.6), "inaciodev.online", font=rf, fill=PINK if col != PINK else CYAN, anchor="mm")
+    if kind == "lambe":
+        base = ImageEnhance.Color(base).enhance(0.85)
+        ImageDraw.Draw(base).rectangle([0, 0, w - 1, h - 1], outline=(230, 225, 210), width=10)
+    else:
+        frame(base, col, max(4, w // 70))
+    return base
+
+
 def horizontal(kind, lg, k, slogan, stack):
     """Topo de prédio, faixa, van, táxi, telão: foto num lado, nome + slogan + ícones no centro do resto."""
     w, h = SIZES[kind]
@@ -261,7 +376,11 @@ def main():
                 k = n + i
                 slogan = sl[(k * 5 + len(kind)) % len(sl)]
                 stack = STACKS[k % len(STACKS)]
-                im = horizontal(kind, lg, k, slogan, stack) if kind in ("top", "tv", "faixa", "taxi", "van") else vertical(kind, lg, k, slogan, stack)
+                hz = kind in ("top", "tv", "faixa", "taxi", "van")
+                if (kind, i) in PHOTO_IDS:
+                    im = horizontal(kind, lg, k, slogan, stack) if hz else vertical(kind, lg, k, slogan, stack)
+                else:
+                    im = typo_h(kind, lg, k, slogan, stack) if hz else typo_v(kind, lg, k, slogan, stack)
                 aid = "%s_%02d" % (kind, i)
                 im.convert("RGB").save(os.path.join(OUT, "%s_%s.png" % (aid, lg)), optimize=True)
                 meta.setdefault(kind, [])
@@ -290,7 +409,39 @@ def main():
             if lg == "pt":
                 seqs.append("lseq_%02d" % si)
     meta["lseq"] = seqs
-    json.dump({"sizes": {k: list(v) for k, v in SIZES.items()}, "ads": meta}, open(os.path.join(OUT, "ads.json"), "w", encoding="utf8"),
+    atlas = {}
+    PAGE = 2048
+    for lg in ("pt", "en"):
+        items = []
+        for kind, ids in meta.items():
+            for aid in ids:
+                im = Image.open(os.path.join(OUT, "%s_%s.png" % (aid, lg))).convert("RGB")
+                sc = 0.5 if kind != "lseq" else 0.42
+                im = im.resize((max(1, int(im.width * sc)), max(1, int(im.height * sc))), Image.LANCZOS)
+                items.append((aid, im))
+        items.sort(key=lambda t: -t[1].height)
+        pages, x, y, row_h = [Image.new("RGB", (PAGE, PAGE), NIGHT)], 1, 1, 0
+        amap = {}
+        for aid, im in items:
+            if x + im.width + 1 > PAGE:
+                x, y, row_h = 1, y + row_h + 2, 0
+            if y + im.height + 1 > PAGE:
+                pages.append(Image.new("RGB", (PAGE, PAGE), NIGHT))
+                x, y, row_h = 1, 1, 0
+            pages[-1].paste(im, (x, y))
+            amap[aid] = [len(pages) - 1, x / PAGE, y / PAGE, im.width / PAGE, im.height / PAGE]
+            x += im.width + 2
+            row_h = max(row_h, im.height)
+        for pi, pg in enumerate(pages):
+            pg.save(os.path.join(OUT, "atlas_%s_%d.png" % (lg, pi)), optimize=True)
+        atlas[lg] = {"pages": len(pages), "map": amap}
+    # as peças soltas não vão para o jogo (só o atlas); ficam fora do export pelo nome
+    for f in os.listdir(OUT):
+        if f.endswith(".png") and not f.startswith("atlas_"):
+            os.remove(os.path.join(OUT, f))
+            if os.path.exists(os.path.join(OUT, f + ".import")):
+                os.remove(os.path.join(OUT, f + ".import"))
+    json.dump({"sizes": {k: list(v) for k, v in SIZES.items()}, "ads": meta, "atlas": atlas}, open(os.path.join(OUT, "ads.json"), "w", encoding="utf8"),
               ensure_ascii=False, indent=1)
     print("anúncios:", sum(len(v) for v in meta.values()), "x 2 línguas")
 
