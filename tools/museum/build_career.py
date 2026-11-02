@@ -169,7 +169,9 @@ ITEMS = [
     it("frame", "App Flutter e qualidade", "Um dos 2 desenvolvedores do app Flutter da empresa, que juntou vários aplicativos num só. Pipelines de CI/CD no GitLab com testes unitários e E2E, desenvolvimento guiado por especificação e Claude Code e Codex no dia a dia.", "Flutter · GitLab CI · testes", "", 1),
     it("frame", "Loop Sistemas", "Aplicações desktop em WPF com arquitetura MVVM e SQL Server, da correção de bugs a entregas prontas para produção.", "abr a jun 2024 · Jales, SP", "", 2),
     it("screen", "Pesquisa científica (CNPq / UNESP)", "Bolsista de iniciação científica: estudo de um compressor de CO2 supercrítico para o pré-sal, comparando planejamento fatorial fracionário e SS-ANOVA, com scripts próprios em Python.", "set 2022 a ago 2023", "pesquisa.png", 2),
-    it("frame", "Freelas em produção", "ATN360: site institucional com CMS próprio, SSR com nota 100 de SEO, 5 idiomas e posts gerados com Gemini. BarberCore: CRM multi-tenant para barbearias com WhatsApp, agendamento, fidelidade e assinaturas no Stripe, rodando na AWS com clientes pagantes.", "Nuxt · Next · AWS · Stripe", "", 2),
+    it("frame", "Plug4Sales (Repediu)", "Estágio em marketing digital com frontend em React e Vite, otimizando desempenho e usabilidade, além de peças visuais e estratégias de marketing para a marca.", "out 2023 a fev 2024 · React · Vite", "", 2),
+    it("frame", "SistemasBr", "Primeiro contato com software pelo lado comercial: prospecção ativa, gestão do funil de vendas em CRM e negociação com clientes.", "set a out 2023 · SDR · CRM", "", 2),
+    it("frame", "Freelas em produção", "Atende 360 (atn360.com.br): site institucional com CMS próprio, SSR com nota 100 de SEO, 5 idiomas e posts gerados com Gemini. BarberCore: CRM multi-tenant para barbearias com WhatsApp, agendamento, fidelidade e assinaturas no Stripe, rodando na AWS com clientes pagantes.", "Nuxt · Next · AWS · Stripe", "", 2),
 ]
 
 

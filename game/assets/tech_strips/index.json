@@ -1,0 +1,82 @@
+{
+ "rumor": [
+  "godot",
+  "node",
+  "socketio",
+  "blender"
+ ],
+ "fortress": [
+  "godot",
+  "blender",
+  "steam"
+ ],
+ "buscavagas": [
+  "nuxt",
+  "typescript",
+  "fastify",
+  "postgres",
+  "redis",
+  "huggingface",
+  "docker"
+ ],
+ "orbix": [
+  "nest",
+  "fastify",
+  "flutter",
+  "postgres",
+  "docker"
+ ],
+ "formataai": [
+  "flutter",
+  "dart",
+  "node",
+  "prisma",
+  "postgres",
+  "openai"
+ ],
+ "labia": [
+  "godot",
+  "ollama"
+ ],
+ "airmessage": [
+  "node",
+  "fastify",
+  "flutter",
+  "postgres",
+  "aws",
+  "whatsapp"
+ ],
+ "inaciocyber": [
+  "python",
+  "ollama",
+  "docker",
+  "kali"
+ ],
+ "ankiana": [
+  "flutter",
+  "dart",
+  "openai",
+  "materialdesign"
+ ],
+ "atende360": [
+  "nuxt",
+  "vue",
+  "typescript",
+  "gsap",
+  "node",
+  "express",
+  "prisma",
+  "postgres",
+  "aws",
+  "gemini"
+ ],
+ "barbercore": [
+  "next",
+  "fastapi",
+  "node",
+  "postgres",
+  "stripe",
+  "aws",
+  "whatsapp"
+ ]
+}

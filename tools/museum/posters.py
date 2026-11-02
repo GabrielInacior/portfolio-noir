@@ -613,15 +613,24 @@ def make(item, pid, project, kind, dst, theme_over=None, tscale=1.0, idx=0):
     min_px = int(MIN_CAP_MM * px_per_mm / 0.7)
     fs_b = max(min_px, int(H * (0.036 if not land else 0.05) * (0.6 + 0.4 * tscale)))
     fb = _font(st["body_font"], fs_b)
+    # frases COMPLETAS que cabem em até 2 linhas (nunca cortar no meio): a frase inteira, ou a primeira
+    # oração dela se tiver sentido sozinha (4+ palavras); senão a peça fica só com título + gráfico
     blines = []
-    for b in bullets:
-        wl = _wrap(d, b, fb, col_w - 34)
-        if len(wl) > 2:
-            last = wl[1]
-            while last and d.textlength(last + "…", font=fb) > col_w - 34:
-                last = last.rsplit(" ", 1)[0] if " " in last else last[:-1]
-            wl = [wl[0], last.rstrip(",;: ") + "…"]
-        blines.append(wl)
+    want = 2 if not land else 1
+    for cand in _bullets(item.get("text", ""), 6):
+        if len(blines) >= want:
+            break
+        opts = [cand]
+        if "," in cand:
+            first = cand.split(",")[0].strip()
+            if len(first.split()) >= 4:
+                opts.append(first)
+        for o in opts:
+            wl = _wrap(d, o.rstrip(".") , fb, col_w - 34)
+            if len(wl) <= (3 if not land else 2):
+                blines.append(wl)
+                break
+    bullets = [" ".join(bl) for bl in blines]
     if not land:
         foot = int(H * 0.07)
         need_b = sum(len(bl) for bl in blines) * int(fs_b * 1.25) + len(blines) * int(fs_b * 0.4)
@@ -667,6 +676,7 @@ def make(item, pid, project, kind, dst, theme_over=None, tscale=1.0, idx=0):
     gfrac = garea / float(W * H)
     checks = [("cabe", by <= H - M + 2), ("texto_max_30", tfrac <= TEXT_MAX), ("grafico_min", gfrac >= GRAPH_MIN),
               ("max_2_bullets", len(bullets) <= 2), ("corpo_legivel_2m", fs_b >= min_px),
+              ("sem_reticencias", not any(b.endswith("…") or b.endswith("...") for b in bullets)),
               ("contraste_texto", contrast(ink, bg) >= 4.5)]
     if not all(c[1] for c in checks) and tscale > 0.6:
         return make(item, pid, project, kind, dst, theme_over, tscale * 0.88, idx)

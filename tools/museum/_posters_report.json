@@ -4,8 +4,8 @@
   "kind": "frame",
   "style": "cinema",
   "graphic_kind": "phone",
-  "text_frac": 0.146,
-  "graphic_frac": 0.39,
+  "text_frac": 0.136,
+  "graphic_frac": 0.406,
   "bullets": 2,
   "ok": true,
   "checks": {
@@ -14,6 +14,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "rumor"
@@ -23,9 +24,9 @@
   "kind": "screen",
   "style": "cinema",
   "graphic_kind": "iconwall",
-  "text_frac": 0.095,
+  "text_frac": 0.064,
   "graphic_frac": 0.401,
-  "bullets": 1,
+  "bullets": 0,
   "ok": true,
   "checks": {
    "cabe": true,
@@ -33,6 +34,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "rumor"
@@ -42,8 +44,8 @@
   "kind": "frame",
   "style": "arcade",
   "graphic_kind": "bignum",
-  "text_frac": 0.162,
-  "graphic_frac": 0.392,
+  "text_frac": 0.142,
+  "graphic_frac": 0.395,
   "bullets": 2,
   "ok": true,
   "checks": {
@@ -52,6 +54,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "fortress"
@@ -61,9 +64,9 @@
   "kind": "frame",
   "style": "terminal",
   "graphic_kind": "laptop",
-  "text_frac": 0.203,
-  "graphic_frac": 0.392,
-  "bullets": 2,
+  "text_frac": 0.156,
+  "graphic_frac": 0.442,
+  "bullets": 1,
   "ok": true,
   "checks": {
    "cabe": true,
@@ -71,6 +74,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "inaciocyber"
@@ -80,7 +84,7 @@
   "kind": "screen",
   "style": "terminal",
   "graphic_kind": "iconwall",
-  "text_frac": 0.104,
+  "text_frac": 0.085,
   "graphic_frac": 0.425,
   "bullets": 1,
   "ok": true,
@@ -90,6 +94,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "inaciocyber"
@@ -109,6 +114,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "inaciocyber"
@@ -118,9 +124,9 @@
   "kind": "frame",
   "style": "startup",
   "graphic_kind": "laptop",
-  "text_frac": 0.171,
-  "graphic_frac": 0.403,
-  "bullets": 2,
+  "text_frac": 0.113,
+  "graphic_frac": 0.493,
+  "bullets": 1,
   "ok": true,
   "checks": {
    "cabe": true,
@@ -128,6 +134,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "buscavagas"
@@ -137,8 +144,8 @@
   "kind": "frame",
   "style": "startup",
   "graphic_kind": "iconwall",
-  "text_frac": 0.188,
-  "graphic_frac": 0.406,
+  "text_frac": 0.179,
+  "graphic_frac": 0.393,
   "bullets": 1,
   "ok": true,
   "checks": {
@@ -147,6 +154,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "buscavagas"
@@ -156,7 +164,7 @@
   "kind": "monitor",
   "style": "startup",
   "graphic_kind": "laptop",
-  "text_frac": 0.132,
+  "text_frac": 0.134,
   "graphic_frac": 0.428,
   "bullets": 1,
   "ok": true,
@@ -166,6 +174,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "orbix"
@@ -175,7 +184,7 @@
   "kind": "monitor",
   "style": "startup",
   "graphic_kind": "arch",
-  "text_frac": 0.12,
+  "text_frac": 0.105,
   "graphic_frac": 0.428,
   "bullets": 1,
   "ok": true,
@@ -185,6 +194,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "orbix"
@@ -204,6 +214,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "orbix"
@@ -213,7 +224,7 @@
   "kind": "frame",
   "style": "startup",
   "graphic_kind": "laptop",
-  "text_frac": 0.146,
+  "text_frac": 0.135,
   "graphic_frac": 0.493,
   "bullets": 1,
   "ok": true,
@@ -223,6 +234,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "orbix"
@@ -232,8 +244,8 @@
   "kind": "frame",
   "style": "startup",
   "graphic_kind": "laptop",
-  "text_frac": 0.193,
-  "graphic_frac": 0.406,
+  "text_frac": 0.171,
+  "graphic_frac": 0.393,
   "bullets": 1,
   "ok": true,
   "checks": {
@@ -242,6 +254,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "orbix"
@@ -251,8 +264,8 @@
   "kind": "frame",
   "style": "startup",
   "graphic_kind": "arch",
-  "text_frac": 0.137,
-  "graphic_frac": 0.493,
+  "text_frac": 0.108,
+  "graphic_frac": 0.532,
   "bullets": 1,
   "ok": true,
   "checks": {
@@ -261,6 +274,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "orbix"
@@ -270,7 +284,7 @@
   "kind": "frame",
   "style": "startup",
   "graphic_kind": "arch",
-  "text_frac": 0.151,
+  "text_frac": 0.14,
   "graphic_frac": 0.493,
   "bullets": 1,
   "ok": true,
@@ -280,6 +294,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "orbix"
@@ -289,7 +304,7 @@
   "kind": "plaque",
   "style": "startup",
   "graphic_kind": "arch",
-  "text_frac": 0.088,
+  "text_frac": 0.073,
   "graphic_frac": 0.435,
   "bullets": 1,
   "ok": true,
@@ -299,6 +314,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "orbix"
@@ -308,9 +324,9 @@
   "kind": "monitor",
   "style": "studio",
   "graphic_kind": "bignum",
-  "text_frac": 0.135,
+  "text_frac": 0.103,
   "graphic_frac": 0.428,
-  "bullets": 1,
+  "bullets": 0,
   "ok": true,
   "checks": {
    "cabe": true,
@@ -318,6 +334,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "formataai"
@@ -327,9 +344,9 @@
   "kind": "monitor",
   "style": "studio",
   "graphic_kind": "phone",
-  "text_frac": 0.107,
+  "text_frac": 0.08,
   "graphic_frac": 0.428,
-  "bullets": 1,
+  "bullets": 0,
   "ok": true,
   "checks": {
    "cabe": true,
@@ -337,6 +354,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "formataai"
@@ -346,7 +364,7 @@
   "kind": "monitor",
   "style": "studio",
   "graphic_kind": "arch",
-  "text_frac": 0.102,
+  "text_frac": 0.101,
   "graphic_frac": 0.428,
   "bullets": 1,
   "ok": true,
@@ -356,6 +374,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "formataai"
@@ -375,6 +394,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "formataai"
@@ -384,7 +404,7 @@
   "kind": "frame",
   "style": "studio",
   "graphic_kind": "phone",
-  "text_frac": 0.164,
+  "text_frac": 0.152,
   "graphic_frac": 0.403,
   "bullets": 2,
   "ok": true,
@@ -394,6 +414,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "formataai"
@@ -403,7 +424,7 @@
   "kind": "screen",
   "style": "studio",
   "graphic_kind": "phone",
-  "text_frac": 0.109,
+  "text_frac": 0.089,
   "graphic_frac": 0.43,
   "bullets": 1,
   "ok": true,
@@ -413,6 +434,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "formataai"
@@ -432,6 +454,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "formataai"
@@ -441,7 +464,7 @@
   "kind": "frame",
   "style": "studio",
   "graphic_kind": "phone",
-  "text_frac": 0.187,
+  "text_frac": 0.186,
   "graphic_frac": 0.493,
   "bullets": 1,
   "ok": true,
@@ -451,6 +474,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "formataai"
@@ -460,8 +484,8 @@
   "kind": "frame",
   "style": "bar",
   "graphic_kind": "bignum",
-  "text_frac": 0.163,
-  "graphic_frac": 0.403,
+  "text_frac": 0.173,
+  "graphic_frac": 0.383,
   "bullets": 2,
   "ok": true,
   "checks": {
@@ -470,6 +494,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "labia"
@@ -479,7 +504,7 @@
   "kind": "screen",
   "style": "bar",
   "graphic_kind": "iconwall",
-  "text_frac": 0.093,
+  "text_frac": 0.088,
   "graphic_frac": 0.43,
   "bullets": 1,
   "ok": true,
@@ -489,6 +514,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "labia"
@@ -498,8 +524,8 @@
   "kind": "frame",
   "style": "bar",
   "graphic_kind": "arch",
-  "text_frac": 0.167,
-  "graphic_frac": 0.458,
+  "text_frac": 0.185,
+  "graphic_frac": 0.42,
   "bullets": 2,
   "ok": true,
   "checks": {
@@ -508,6 +534,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "labia"
@@ -517,8 +544,8 @@
   "kind": "frame",
   "style": "bar",
   "graphic_kind": "phone",
-  "text_frac": 0.131,
-  "graphic_frac": 0.493,
+  "text_frac": 0.142,
+  "graphic_frac": 0.454,
   "bullets": 1,
   "ok": true,
   "checks": {
@@ -527,6 +554,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "labia"
@@ -536,9 +564,9 @@
   "kind": "plaque",
   "style": "bar",
   "graphic_kind": "arch",
-  "text_frac": 0.09,
+  "text_frac": 0.053,
   "graphic_frac": 0.435,
-  "bullets": 1,
+  "bullets": 0,
   "ok": true,
   "checks": {
    "cabe": true,
@@ -546,6 +574,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "labia"
@@ -555,8 +584,8 @@
   "kind": "frame",
   "style": "studio",
   "graphic_kind": "phone",
-  "text_frac": 0.131,
-  "graphic_frac": 0.493,
+  "text_frac": 0.087,
+  "graphic_frac": 0.532,
   "bullets": 1,
   "ok": true,
   "checks": {
@@ -565,6 +594,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "ankiana"
@@ -574,8 +604,8 @@
   "kind": "frame",
   "style": "studio",
   "graphic_kind": "phone",
-  "text_frac": 0.189,
-  "graphic_frac": 0.406,
+  "text_frac": 0.182,
+  "graphic_frac": 0.469,
   "bullets": 1,
   "ok": true,
   "checks": {
@@ -584,6 +614,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "ankiana"
@@ -593,7 +624,7 @@
   "kind": "plaque",
   "style": "studio",
   "graphic_kind": "arch",
-  "text_frac": 0.107,
+  "text_frac": 0.088,
   "graphic_frac": 0.435,
   "bullets": 1,
   "ok": true,
@@ -603,6 +634,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "ankiana"
@@ -612,8 +644,8 @@
   "kind": "frame",
   "style": "startup",
   "graphic_kind": "phone",
-  "text_frac": 0.133,
-  "graphic_frac": 0.493,
+  "text_frac": 0.135,
+  "graphic_frac": 0.454,
   "bullets": 1,
   "ok": true,
   "checks": {
@@ -622,6 +654,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "airmessage"
@@ -631,9 +664,9 @@
   "kind": "screen",
   "style": "startup",
   "graphic_kind": "iconwall",
-  "text_frac": 0.143,
+  "text_frac": 0.109,
   "graphic_frac": 0.43,
-  "bullets": 1,
+  "bullets": 0,
   "ok": true,
   "checks": {
    "cabe": true,
@@ -641,6 +674,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "airmessage"
@@ -650,7 +684,7 @@
   "kind": "frame",
   "style": "startup",
   "graphic_kind": "phone",
-  "text_frac": 0.217,
+  "text_frac": 0.211,
   "graphic_frac": 0.406,
   "bullets": 1,
   "ok": true,
@@ -660,6 +694,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "airmessage"
@@ -669,7 +704,7 @@
   "kind": "plaque",
   "style": "startup",
   "graphic_kind": "arch",
-  "text_frac": 0.096,
+  "text_frac": 0.077,
   "graphic_frac": 0.435,
   "bullets": 1,
   "ok": true,
@@ -679,6 +714,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "airmessage"
@@ -688,9 +724,9 @@
   "kind": "screen",
   "style": "startup",
   "graphic_kind": "bignum",
-  "text_frac": 0.111,
+  "text_frac": 0.08,
   "graphic_frac": 0.43,
-  "bullets": 1,
+  "bullets": 0,
   "ok": true,
   "checks": {
    "cabe": true,
@@ -698,6 +734,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "atende360"
@@ -708,7 +745,7 @@
   "style": "startup",
   "graphic_kind": "iconwall",
   "text_frac": 0.194,
-  "graphic_frac": 0.406,
+  "graphic_frac": 0.393,
   "bullets": 1,
   "ok": true,
   "checks": {
@@ -717,6 +754,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "atende360"
@@ -726,7 +764,7 @@
   "kind": "frame",
   "style": "startup",
   "graphic_kind": "arch",
-  "text_frac": 0.188,
+  "text_frac": 0.194,
   "graphic_frac": 0.403,
   "bullets": 2,
   "ok": true,
@@ -736,6 +774,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "atende360"
@@ -745,7 +784,7 @@
   "kind": "plaque",
   "style": "startup",
   "graphic_kind": "arch",
-  "text_frac": 0.098,
+  "text_frac": 0.092,
   "graphic_frac": 0.435,
   "bullets": 1,
   "ok": true,
@@ -755,6 +794,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "atende360"
@@ -764,8 +804,8 @@
   "kind": "poster",
   "style": "barber",
   "graphic_kind": "laptop",
-  "text_frac": 0.193,
-  "graphic_frac": 0.397,
+  "text_frac": 0.177,
+  "graphic_frac": 0.394,
   "bullets": 2,
   "ok": true,
   "checks": {
@@ -774,6 +814,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "barbercore"
@@ -783,9 +824,9 @@
   "kind": "screen",
   "style": "barber",
   "graphic_kind": "phone",
-  "text_frac": 0.132,
+  "text_frac": 0.099,
   "graphic_frac": 0.401,
-  "bullets": 1,
+  "bullets": 0,
   "ok": true,
   "checks": {
    "cabe": true,
@@ -793,6 +834,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "barbercore"
@@ -802,8 +844,8 @@
   "kind": "frame",
   "style": "barber",
   "graphic_kind": "arch",
-  "text_frac": 0.191,
-  "graphic_frac": 0.381,
+  "text_frac": 0.154,
+  "graphic_frac": 0.45,
   "bullets": 1,
   "ok": true,
   "checks": {
@@ -812,6 +854,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "barbercore"
@@ -821,7 +864,7 @@
   "kind": "plaque",
   "style": "barber",
   "graphic_kind": "arch",
-  "text_frac": 0.117,
+  "text_frac": 0.115,
   "graphic_frac": 0.404,
   "bullets": 1,
   "ok": true,
@@ -831,6 +874,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "barbercore"
@@ -850,6 +894,7 @@
    "grafico_min": true,
    "max_2_bullets": true,
    "corpo_legivel_2m": true,
+   "sem_reticencias": true,
    "contraste_texto": true
   },
   "pid": "barbercore"

@@ -79,8 +79,22 @@
   },
   {
    "kind": "frame",
+   "title": "Plug4Sales (Repediu)",
+   "text": "Estágio em marketing digital com frontend em React e Vite, otimizando desempenho e usabilidade, além de peças visuais e estratégias de marketing para a marca.",
+   "tag": "out 2023 a fev 2024 · React · Vite",
+   "zone": 2
+  },
+  {
+   "kind": "frame",
+   "title": "SistemasBr",
+   "text": "Primeiro contato com software pelo lado comercial: prospecção ativa, gestão do funil de vendas em CRM e negociação com clientes.",
+   "tag": "set a out 2023 · SDR · CRM",
+   "zone": 2
+  },
+  {
+   "kind": "frame",
    "title": "Freelas em produção",
-   "text": "ATN360: site institucional com CMS próprio, SSR com nota 100 de SEO, 5 idiomas e posts gerados com Gemini. BarberCore: CRM multi-tenant para barbearias com WhatsApp, agendamento, fidelidade e assinaturas no Stripe, rodando na AWS com clientes pagantes.",
+   "text": "Atende 360 (atn360.com.br): site institucional com CMS próprio, SSR com nota 100 de SEO, 5 idiomas e posts gerados com Gemini. BarberCore: CRM multi-tenant para barbearias com WhatsApp, agendamento, fidelidade e assinaturas no Stripe, rodando na AWS com clientes pagantes.",
    "tag": "Nuxt · Next · AWS · Stripe",
    "zone": 2
   }

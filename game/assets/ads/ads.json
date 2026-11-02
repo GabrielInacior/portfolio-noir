@@ -94,6 +94,14 @@
    "van_00",
    "van_01",
    "van_02"
+  ],
+  "lseq": [
+   "lseq_00",
+   "lseq_01",
+   "lseq_02",
+   "lseq_03",
+   "lseq_04",
+   "lseq_05"
   ]
  }
 }

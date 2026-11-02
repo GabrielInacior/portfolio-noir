@@ -23,7 +23,11 @@ JS = r"""// Gerado por tools/deploy/make_boot.py. Abre a cidade noir por cima da
 (function () {
   var CFG = __CFG__;
   var path = location.pathname;
-  var en = /^\/en(\/|$)/.test(path) || document.documentElement.lang === 'en';
+  // carregador abre em INGLÊS por padrão (pedido do usuário); a escolha salva no seletor do jogo
+  // (localStorage pf_lang) passa a valer; o HTML oculto da home continua em português para o Google
+  var saved = '';
+  try { saved = localStorage.getItem('pf_lang') || ''; } catch (e) {}
+  var en = saved ? saved.indexOf('pt') !== 0 : true;
   var loja = (path.match(/^\/projetos\/([^\/]+)/) || [])[1] || new URLSearchParams(location.search).get('loja') || '';
   function start() {
     var probe = document.createElement('canvas');

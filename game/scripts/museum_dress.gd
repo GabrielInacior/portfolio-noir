@@ -140,7 +140,65 @@ static func screen(m, pos: Vector3, yaw: float, size: Vector2, shader: Shader, p
 	return mi
 
 
-## estante com livros cujas lombadas são as tecnologias (cada livro um nome)
+## estante de TECNOLOGIAS: cada livro é uma tecnologia do atlas (lombada na cor dela, logo oficial e
+## nome), prateleiras agrupadas por categoria com placa (FRONT-END, BACK-END, IA...), intercaladas com
+## caixas e canecas com o logo. Nada de título genérico: nomes sem ícone são trocados por volumes
+## ("VOL. 2") das tecnologias da prateleira.
+const TECH_CATS := {
+	"FRONT-END": ["vue", "react", "nuxt", "next", "typescript", "javascript", "tailwind", "vite", "gsap"],
+	"BACK-END": ["node", "nest", "express", "fastify", "fastapi", "spring", "socketio", "python"],
+	"MOBILE": ["flutter", "dart", "materialdesign"],
+	"GAME DEV": ["godot", "blender", "steam"],
+	"IA": ["claude", "openai", "ollama", "gemini", "gemini_ai", "huggingface"],
+	"DEVOPS": ["docker", "aws", "nginx", "linux", "kali", "git", "github"],
+	"BANCO": ["postgres", "mongodb", "redis", "prisma"],
+	"DESIGN": ["figma", "materialdesign"],
+}
+static var _tech_idx := {}
+static var _tech_col := {}
+static var _tex_cache := {}
+
+
+static func _tech_id(name: String) -> String:
+	if _tech_idx.is_empty():
+		var f := FileAccess.open("res://assets/data/tech_icons.json", FileAccess.READ)
+		if f:
+			var arr: Variant = JSON.parse_string(f.get_as_text())
+			var icons: Variant = (arr as Dictionary).get("icons", {}) if arr is Dictionary else {}
+			for nm in icons:
+				var it: Dictionary = icons[nm]
+				var id := str(it.get("id", ""))
+				_tech_col[id] = Color(str(it.get("color", "#888888")))
+				for n in [id, str(nm)] + Array(it.get("aliases", [])):
+					_tech_idx[str(n).to_lower().strip_edges()] = id
+	return str(_tech_idx.get(name.to_lower().strip_edges(), ""))
+
+
+static func _tech_tex(id: String) -> Texture2D:
+	if not _tex_cache.has(id):
+		var p := "res://assets/tech_icons/%s_128.png" % id
+		_tex_cache[id] = load(p) if ResourceLoader.exists(p) else null
+	return _tex_cache[id]
+
+
+static func _icon_quad(parent: Node3D, tex: Texture2D, pos: Vector3, sz: float) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	var q := QuadMesh.new()
+	q.size = Vector2(sz, sz)
+	mi.mesh = q
+	var mat := StandardMaterial3D.new()
+	mat.albedo_texture = tex
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	mat.emission_enabled = true
+	mat.emission_texture = tex
+	mat.emission_energy_multiplier = 0.25
+	mi.material_override = mat
+	mi.position = pos
+	parent.add_child(mi)
+	return mi
+
+
 static func tech_shelf(m, pos: Vector3, yaw: float, techs: Array, width := 1.6, height := 2.0) -> Node3D:
 	var h := Node3D.new()
 	h.position = pos
@@ -150,26 +208,69 @@ static func tech_shelf(m, pos: Vector3, yaw: float, techs: Array, width := 1.6, 
 	m.box(Vector3(0, height / 2, -0.17), Vector3(width, height, 0.04), m.flat(Color("#1c120c")), h)
 	for sx in [-width / 2, width / 2]:
 		m.box(Vector3(sx, height / 2, 0), Vector3(0.05, height, 0.36), wood, h)
+	# ids das tecnologias pedidas (só as que têm logo) + completa com as categorias principais
+	var ids: Array = []
+	for t in techs:
+		var id := _tech_id(str(t))
+		if id != "" and not ids.has(id):
+			ids.append(id)
+	var cats: Array = []
+	for cat in TECH_CATS:
+		var mine := (TECH_CATS[cat] as Array).filter(func(x): return ids.has(x))
+		if not mine.is_empty():
+			cats.append([cat, mine])
+	for cat in ["FRONT-END", "BACK-END", "IA", "DEVOPS", "GAME DEV", "BANCO"]:
+		if cats.size() >= 4:
+			break
+		if not cats.any(func(c): return c[0] == cat):
+			cats.append([cat, (TECH_CATS[cat] as Array).slice(0, 4)])
 	var shelves := 4
-	var cols := [Color("#7a2a2a"), Color("#2a4a7a"), Color("#2a6a4a"), Color("#7a6a2a"), Color("#4a2a6a"), Color("#1e1e2a"), Color("#8a4a1a")]
-	var k := 0
-	for s in shelves:
-		var y := 0.05 + s * (height / shelves)
+	for si in shelves:
+		var y := 0.05 + si * (height / shelves)
 		m.box(Vector3(0, y, 0), Vector3(width, 0.04, 0.36), wood, h)
+		var cat: Array = cats[si % cats.size()]
+		var list: Array = cat[1]
+		# placa da prateleira
+		var plate: MeshInstance3D = m.box(Vector3(0, y - 0.035, 0.185), Vector3(minf(0.62, width * 0.5), 0.07, 0.01), m.flat(Color("#c9a227"), 0.4), h)
+		label3d(m, str(cat[0]), Vector3(0, 0, 0.007), 0, 30, Color("#14100a"), "bold", plate, 0.0016)
 		var x := -width / 2 + 0.06
+		var k := 0
+		var shelf_h := height / shelves - 0.1
 		while x < width / 2 - 0.12:
-			var t: String = str(techs[k % techs.size()]) if not techs.is_empty() else ""
-			var bw := 0.07 + (t.length() % 4) * 0.012
-			var bh := height / shelves - 0.12 - (k % 3) * 0.03
-			var c: Color = cols[k % cols.size()]
-			var tilt := 0.0 if k % 9 != 4 else 0.18
-			var b: MeshInstance3D = m.box(Vector3(x + bw / 2, y + 0.02 + bh / 2, 0.02), Vector3(bw, bh, 0.24), m.flat(c), h, Vector3(0, 0, tilt))
-			if t != "" and k % 2 == 0:
-				var l := label3d(m, t.to_upper(), Vector3(0, 0, 0.125), 0, 26, Color("#f1e6c8"), "bold", b, 0.0018)
-				l.rotation.z = PI / 2
+			var id: String = list[k % list.size()]
+			var vol := k / list.size() + 1
+			var tex := _tech_tex(id)
+			var col: Color = _tech_col.get(id, Color("#3a3a4a"))
+			if k % 7 == 5:
+				# caixa/caneca com o logo no meio dos livros
+				var bw2 := 0.16
+				var cube: MeshInstance3D = m.box(Vector3(x + bw2 / 2, y + 0.02 + 0.08, 0.04), Vector3(bw2, 0.16, 0.16), m.flat(Color("#141824")), h)
+				if tex:
+					_icon_quad(cube, tex, Vector3(0, 0, 0.081), 0.13)
+				x += bw2 + 0.012
+				k += 1
+				continue
+			var bw := 0.075 + (k % 3) * 0.012
+			var bh := shelf_h - (k % 3) * 0.03
+			var tilt := 0.0 if k % 9 != 4 else 0.16
+			var b: MeshInstance3D = m.box(Vector3(x + bw / 2, y + 0.02 + bh / 2, 0.02), Vector3(bw, bh, 0.24), m.flat(col.darkened(0.25)), h, Vector3(0, 0, tilt))
+			if tex:
+				_icon_quad(b, tex, Vector3(0, bh / 2 - bw * 0.62, 0.121), bw * 0.86)
+			var nm := id.to_upper() if not _tech_idx.has(id) else _pretty(id)
+			if vol > 1:
+				nm += " VOL. %d" % vol
+			var l := label3d(m, nm, Vector3(0, -bw * 0.4, 0.122), 0, 24, Color("#f4ecd8") if col.get_luminance() < 0.6 else Color("#14100a"), "bold", b, 0.0016)
+			l.rotation.z = PI / 2
 			x += bw + 0.008
 			k += 1
 	return h
+
+
+static func _pretty(id: String) -> String:
+	var names := {"node": "NODE.JS", "nest": "NESTJS", "next": "NEXT.JS", "postgres": "POSTGRESQL", "socketio": "SOCKET.IO",
+		"materialdesign": "MATERIAL", "gemini_ai": "GEMINI", "huggingface": "HUGGING FACE", "openai": "OPENAI", "javascript": "JAVASCRIPT",
+		"typescript": "TYPESCRIPT", "fastapi": "FASTAPI", "aws": "AWS", "gsap": "GSAP", "kali": "KALI LINUX"}
+	return str(names.get(id, id.to_upper()))
 
 
 ## pôster/placa de stack: placa escura com cabeçalho e lista de tecnologias
@@ -787,25 +888,50 @@ static func _lab(m) -> void:
 	wall.position = Vector3(0, 0, -D / 2 + 0.14)
 	m.add_child(wall)
 	m.box(Vector3(0, 1.75, -0.02), Vector3(W - 0.6, 2.6, 0.03), m.flat(Color("#0c0e16")), wall)
+	# "MEU ARSENAL": grupos do portfólio antigo (+ Design), cada placa com o LOGO oficial, o nome e a
+	# descrição curta (profile.tech_info)
 	var pal := [Color("#ff4fa3"), Color("#4e9bff"), Color("#5fd38a"), Color("#ffc83d"), Color("#b06bff"), Color("#ff7a3d"), Color("#5bd0ff"), Color("#ff3d5a")]
+	var groups: Dictionary = (Data.profile.get("tech_groups_old", {}) as Dictionary).duplicate()
+	if groups.is_empty():
+		groups = skills.duplicate()
+	if not groups.has("Design"):
+		groups["Design"] = ["Figma"]
+	var info: Dictionary = Data.profile.get("tech_info", {})
 	var ci := 0
-	var cats := skills.keys()
+	var cats := groups.keys()
 	var colw := (W - 0.9) / maxf(1, cats.size())
 	for cat in cats:
 		var x := -W / 2 + 0.45 + colw * (ci + 0.5)
 		var col: Color = pal[ci % pal.size()]
-		var hl := label3d(m, L.t(str(cat)).to_upper(), Vector3(x, 2.9, 0.01), 0, 26, col * 1.9, "title", wall, 0.0024)
+		var hl := label3d(m, L.t(str(cat)).to_upper(), Vector3(x, 2.92, 0.01), 0, 26, col * 1.9, "title", wall, 0.0024)
 		hl.width = int(colw / 0.0024)
 		hl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		var y := 2.65
-		for t in (skills[cat] as Array).slice(0, 9):
-			m.box(Vector3(x, y, 0.0), Vector3(colw - 0.05, 0.17, 0.012), m.flat(col.darkened(0.55), 0.5), wall)
-			var tl := label3d(m, str(t), Vector3(x, y, 0.008), 0, 20, Color("#eef2ff"), "bold", wall, 0.0019)
-			tl.width = int((colw - 0.08) / 0.0019)
-			tl.autowrap_mode = TextServer.AUTOWRAP_OFF
-			y -= 0.2
+		var list: Array = (groups[cat] as Array).slice(0, 5)
+		var ch := minf(0.44, 2.3 / maxf(1, list.size()))
+		var y := 2.7 - ch / 2
+		for t in list:
+			var card: MeshInstance3D = m.box(Vector3(x, y, 0.0), Vector3(colw - 0.06, ch - 0.04, 0.014), m.flat(Color("#141826")), wall)
+			m.box(Vector3(x - (colw - 0.06) / 2 + 0.01, y, 0.008), Vector3(0.02, ch - 0.06, 0.004), m.flat(col, 2.0), wall)
+			var id := _tech_id(str(t))
+			var tex := _tech_tex(id) if id != "" else null
+			var isz := minf(ch - 0.1, colw * 0.28)
+			if tex:
+				_icon_quad(card, tex, Vector3(-(colw - 0.06) / 2 + 0.05 + isz / 2, 0, 0.009), isz)
+			var tx := x - (colw - 0.06) / 2 + 0.1 + isz
+			var nl := label3d(m, str(t), Vector3(tx, y + ch * 0.14, 0.009), 0, 22, Color("#eef2ff"), "bold", wall, 0.0019)
+			nl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+			var desc := ""
+			if info.has(str(t)):
+				var iv: Variant = info[str(t)]
+				desc = str(iv[0]) if iv is Array and not (iv as Array).is_empty() else str(iv)
+			if desc != "":
+				var dl := label3d(m, L.t(desc), Vector3(tx, y - ch * 0.16, 0.009), 0, 15, Color("#9fb0d8"), "type", wall, 0.0016)
+				dl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+				dl.width = int((colw - 0.16 - isz) / 0.0016)
+				dl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			y -= ch
 		ci += 1
-	neon(m, "STACK QUE EU DOMINO", Vector3(0, 3.15, -D / 2 + 0.15), 0, Color("#5bd0ff"), 60)
+	neon(m, "MEU ARSENAL", Vector3(0, 3.18, -D / 2 + 0.15), 0, Color("#5bd0ff"), 60)
 	act(m, wall, Vector3(0, 1.6, -D / 2 + 1.2), {"title": "Tecnologias que eu domino", "panel": "skills", "verb": "EXPLORAR",
 		"text": "Toque numa tecnologia para ver os projetos em que ela foi usada."})
 	# parede esquerda: linha do tempo da carreira (examinável)

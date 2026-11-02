@@ -37,8 +37,9 @@ func _detect() -> String:
 		var path: Variant = JavaScriptBridge.eval("location.pathname", true)
 		if path != null and str(path).begins_with("/en"):
 			return "en"
-		var nav: Variant = JavaScriptBridge.eval("(navigator.languages&&navigator.languages[0])||navigator.language||'en'", true)
-		return _norm(str(nav))
+		# padrão do usuário: abre em INGLÊS (tela de carregamento, entrada e cidade) até a pessoa
+		# escolher outro idioma no seletor (a escolha fica salva e passa a valer)
+		return "en"
 	return _norm(OS.get_locale())
 
 

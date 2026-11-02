@@ -268,6 +268,28 @@ def main():
                 if lg == "pt":
                     meta[kind].append(aid)
             n += count
+    # sequências de lambe-lambe variadas: 5 cartazes diferentes por muro (3 do Gabriel + 2 panfletos de
+    # projetos), um atlas por sequência (1 draw call por muro)
+    import glob
+    proj = sorted(glob.glob(os.path.join(ROOT, "game", "assets", "museum", "*", "ad_0[1-3].png")))
+    lw, lh = SIZES["lambe"]
+    seqs = []
+    for lg in ("pt", "en"):
+        for si in range(6):
+            strip = Image.new("RGB", (lw * 5, lh), (20, 18, 24))
+            for j in range(5):
+                if j in (1, 3) and proj:
+                    src = Image.open(proj[(si * 2 + j) % len(proj)]).convert("RGB")
+                    src.thumbnail((lw - 24, lh - 24))
+                    cell = Image.new("RGB", (lw, lh), (232, 226, 210))
+                    cell.paste(src, ((lw - src.width) // 2, (lh - src.height) // 2))
+                else:
+                    cell = Image.open(os.path.join(OUT, "lambe_%02d_%s.png" % ((si * 3 + j) % len(meta["lambe"]), lg))).convert("RGB")
+                strip.paste(cell, (j * lw, 0))
+            strip.save(os.path.join(OUT, "lseq_%02d_%s.png" % (si, lg)), optimize=True)
+            if lg == "pt":
+                seqs.append("lseq_%02d" % si)
+    meta["lseq"] = seqs
     json.dump({"sizes": {k: list(v) for k, v in SIZES.items()}, "ads": meta}, open(os.path.join(OUT, "ads.json"), "w", encoding="utf8"),
               ensure_ascii=False, indent=1)
     print("anúncios:", sum(len(v) for v in meta.values()), "x 2 línguas")

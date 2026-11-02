@@ -4,11 +4,13 @@ extends RefCounted
 ## cor de neon, miniatura e posição; e a viagem (escurece, leva o jogador até a porta e entra).
 
 const STREETS := [
-	# [nome, x, z, rotação do rótulo (rad)]
-	["AV. DOS NEONS", 0.0, -30.0, -PI / 2],
-	["RUA DA CHUVA", 26.0, -42.0, 0.0],
-	["BECO", 18.0, -20.0, 0.0],
-	["PRAÇA", -57.0, -42.0, 0.0],
+	# [nome, x, z, rotação do rótulo (rad)]: as ruas nomeiam as SEÇÕES do portfólio
+	["AV. DOS PROJETOS", 0.0, -30.0, -PI / 2],
+	["RUA DA CARREIRA", 26.0, -42.0, 0.0],
+	["BECO DA SEGURANÇA", 18.0, -20.0, 0.0],
+	["PRAÇA DO CONTATO", -57.0, -42.0, 0.0],
+	["RUA DOS GAMES", -26.0, -42.0, 0.0],
+	["RUA SOBRE MIM", 0.0, -66.0, 0.0],
 ]
 
 

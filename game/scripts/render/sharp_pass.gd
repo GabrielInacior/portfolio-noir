@@ -10,8 +10,8 @@ extends Node
 
 const SHARP_LAYER := 1 << 19      # camada 20: elementos nítidos
 const OCC_LAYER := 1 << 18        # camada 19: oclusores (só nesta passada)
-const SHARP_SHADERS := ["code_scroll", "chart_screen", "led_panel", "matrix_rain", "arcade_attract"]
-const SHARP_TEX_HINTS := ["/museum/", "/collages/", "/covers/", "foto_gabriel", "/readmes/", "/captures/", "/billboards/", "/flyers/", "/ads/", "/tech_icons/"]
+const SHARP_SHADERS := ["code_scroll", "chart_screen", "led_panel", "matrix_rain", "arcade_attract", "screen_fx"]
+const SHARP_TEX_HINTS := ["/museum/", "/collages/", "/covers/", "foto_gabriel", "/readmes/", "/captures/", "/billboards/", "/flyers/", "/ads/", "/tech_icons/", "/tech_strips/"]
 const RETRO_TEX_HINTS := ["janelas_atlas", "fachada_janelas", "/tex/", "/characters/", "sky_"]
 
 var world_vp: SubViewport
@@ -123,7 +123,8 @@ func _on_node_added(n: Node) -> void:
 	# lojas são montadas depois (ao entrar); marca quando terminam de montar
 	if n is Node3D and n.get_script() and str(n.get_script().resource_path).ends_with("museum.gd"):
 		_tag_later.call_deferred(n)
-	elif n is Label3D:
+	elif n is GeometryInstance3D and not n.has_meta("_sharp_done"):
+		# tudo que aparece depois (carros, pedestres, props instanciados) também vira oclusor
 		_tag_one_later.call_deferred(n)
 
 
@@ -145,17 +146,84 @@ func _classify(g: GeometryInstance3D) -> void:
 	if _is_sharp(g):
 		g.layers = g.layers | SHARP_LAYER
 		return
-	# oclusor: malha estática grande do cenário (paredes, fachadas, chão, móveis grandes)
-	if g is MeshInstance3D and (g as MeshInstance3D).mesh and not _in_skeleton(g) and not _is_see_through(g as MeshInstance3D):
-		var size := g.get_aabb().size
-		if maxf(size.x, maxf(size.y, size.z)) >= 1.2:
-			var twin := MeshInstance3D.new()
-			twin.mesh = (g as MeshInstance3D).mesh
-			twin.material_override = _occ_mat
-			twin.layers = OCC_LAYER
-			twin.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-			twin.set_meta("_sharp_done", true)
-			g.add_child(twin)
+	# oclusor: TUDO que o mundo desenha com volume (cenário, carros, pedestres com esqueleto, props,
+	# MultiMesh). Superfícies transparentes (vidro, halos) ficam de fora por superfície, não a malha
+	# inteira: o carro esconde o outdoor atrás dele, mas a vitrine continua deixando ver a colagem.
+	if g is MultiMeshInstance3D and (g as MultiMeshInstance3D).multimesh:
+		var mm := g as MultiMeshInstance3D
+		if mm.get_aabb().size.length() >= 0.6 and not _all_see_through_mm(mm):
+			var tw := MultiMeshInstance3D.new()
+			tw.multimesh = mm.multimesh
+			tw.material_override = _occ_mat
+			tw.layers = OCC_LAYER
+			tw.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			tw.set_meta("_sharp_done", true)
+			mm.add_child(tw)
+		return
+	if not (g is MeshInstance3D) or (g as MeshInstance3D).mesh == null:
+		return
+	var mi := g as MeshInstance3D
+	var size := g.get_aabb().size
+	if maxf(size.x, maxf(size.y, size.z)) < 0.4:
+		return
+	var surf := _surface_kinds(mi)
+	if not surf.has(false):
+		return   # tudo transparente: não esconde nada
+	var twin := MeshInstance3D.new()
+	twin.mesh = mi.mesh
+	twin.layers = OCC_LAYER
+	twin.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	twin.set_meta("_sharp_done", true)
+	if surf.has(true):
+		for i in surf.size():
+			twin.set_surface_override_material(i, _clear_mat() if surf[i] else _occ_mat)
+	else:
+		twin.material_override = _occ_mat
+	if mi.skin or str(mi.skeleton) != "" and _in_skeleton(mi):
+		# malha com esqueleto: o gêmeo é irmão, aponta para o mesmo esqueleto e a mesma pele
+		twin.skin = mi.skin
+		twin.transform = mi.transform
+		var par := mi.get_parent()
+		if par:
+			par.add_child(twin)
+			twin.skeleton = twin.get_path_to(mi.get_node_or_null(mi.skeleton)) if mi.get_node_or_null(mi.skeleton) else NodePath("")
+	else:
+		mi.add_child(twin)
+
+
+var _clear: ShaderMaterial
+
+
+## material que não escreve nada (para as superfícies transparentes do gêmeo)
+func _clear_mat() -> ShaderMaterial:
+	if _clear == null:
+		var sh := Shader.new()
+		sh.code = "shader_type spatial;\nrender_mode unshaded, depth_draw_never, blend_mix, cull_disabled, shadows_disabled;\nvoid fragment(){ ALBEDO = vec3(0.0); ALPHA = 0.0; }\n"
+		_clear = ShaderMaterial.new()
+		_clear.shader = sh
+	return _clear
+
+
+## por superfície: true = transparente (não oculta)
+func _surface_kinds(mi: MeshInstance3D) -> Array:
+	var out := []
+	for i in mi.mesh.get_surface_count():
+		var m: Material = mi.material_override if mi.material_override else mi.get_active_material(i)
+		var see := false
+		if m is BaseMaterial3D:
+			var bm := m as BaseMaterial3D
+			see = bm.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED and bm.transparency != BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR \
+				or bm.blend_mode != BaseMaterial3D.BLEND_MODE_MIX
+		out.append(see)
+	return out
+
+
+func _all_see_through_mm(mm: MultiMeshInstance3D) -> bool:
+	var m := mm.material_override
+	if m is BaseMaterial3D:
+		var bm := m as BaseMaterial3D
+		return bm.transparency == BaseMaterial3D.TRANSPARENCY_ALPHA or bm.blend_mode != BaseMaterial3D.BLEND_MODE_MIX
+	return false
 
 
 ## vidro, halos e qualquer superfície transparente não escondem o que está atrás (vitrines!)
