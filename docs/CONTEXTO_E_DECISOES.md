@@ -57,7 +57,7 @@ em qualquer frente. Quem continuar o trabalho numa sessão nova começa por aqui
   C:/Project/tools-ai/gen.py "prompt" saida.png [--modelo leve|xl] [--lado] [--n] [--seed] [--tile]`
   para tarefas menores (texturas, variações, fundos).
 - **Mixamo** pelo Claude in Chrome (sem digitar senha nem aceitar termos novos).
-- Pesquisa na web para referências visuais (sem baixar assets de terceiros).
+- Pesquisa na web liberada, inclusive para baixar assets prontos com licença compatível (regra de "sem asset de terceiro" revogada pelo usuário em 2026-11-01; registrar créditos em docs/CREDITOS.md).
 - Blender headless com qualquer recurso.
 
 ## Hospedagem

@@ -18,7 +18,7 @@ aprendido lá em arte, Blender, Godot e web foi trazido para cá:
 **Leia primeiro `docs/CONTEXTO_E_DECISOES.md`**: tudo que o usuário pediu e decidiu (visão, estilo dos personagens, lojas-museu, ferramentas liberadas, SD local, Mixamo).
 
 ## Regras de base (herdadas do RUMOR)
-- Nenhum asset pronto de terceiro; gerado por código ou por IA é permitido.
+- Assets prontos de terceiros são PERMITIDOS (decisão do usuário em 2026-11-01): logos oficiais de tecnologias, pacotes de ícones, modelos e texturas prontos podem ser usados, desde que a licença permita uso no site público (preferir CC0/MIT/CC-BY; dar crédito em docs/CREDITOS.md quando a licença pedir). Gerado por código ou IA continua permitido.
 - Teste nunca faz som (`--audio-driver Dummy`). Commits regulares com push estão autorizados pelo usuário (sempre com as linhas de atribuição da sessão; `git pull --rebase` antes; `git add` só com caminhos exatos).
 - Texto ao jogador sem travessão "—" e sem termo de dev.
 - Confirmar UX ambígua antes de implementar. Uma frente por vez; economia de tokens.
