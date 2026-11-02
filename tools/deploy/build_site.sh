@@ -17,6 +17,8 @@ cd game
 "$GODOT" --headless --audio-driver Dummy --path . --import >/dev/null 2>&1 || true
 "$GODOT" --headless --audio-driver Dummy --path . --export-release "Web" ../site/jogo/index.html 2>&1 | grep -E "ERROR|error" | grep -v "^$" | head -20 || true
 cd "$ROOT"
+# boot.js: o jogo abre por cima de todas as páginas (home, /en/, projetos)
+python tools/deploy/make_boot.py
 test -f site/jogo/index.wasm && test -f site/jogo/index.pck
 du -sh site site/jogo
 ls -la site/jogo

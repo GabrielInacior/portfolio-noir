@@ -49,7 +49,7 @@ def head(title, desc, canonical, og_img="/assets/og.png", extra_ld=None, alt_lan
         "name": profile["fullName"], "alternateName": "Gabriel Inacio",
         "jobTitle": profile["role"], "url": SITE, "image": SITE + "/assets/foto.jpg",
         "email": "mailto:" + profile["links"]["email"],
-        "address": {"@type": "PostalAddress", "addressLocality": "Sao Paulo", "addressCountry": "BR"},
+        "address": {"@type": "PostalAddress", "addressLocality": "São Paulo", "addressCountry": "BR"},
         "sameAs": [profile["links"]["github"], profile["links"]["linkedin"]],
         "knowsAbout": sum(list(profile["skills"].values()), []),
     }
@@ -81,10 +81,26 @@ def head(title, desc, canonical, og_img="/assets/og.png", extra_ld=None, alt_lan
   <link rel="icon" href="/assets/favicon.png">
   <link rel="stylesheet" href="/assets/site.css">
   {ld}
-  {langjs}
+  <script defer src="/jogo/boot.js"></script>
 </head>
-<body>""".format(langjs=_langjs(canonical), title=e(title), desc=e(desc), canonical=e(canonical), alt=alt,
+<body class="pf">
+{card}
+<div class="sr-only" id="conteudo">""".format(card=_card(canonical), title=e(title), desc=e(desc), canonical=e(canonical), alt=alt,
                  site=SITE, og=og_img, ld=ld_tags)
+
+
+def _card(canonical):
+    """Cartão noir mínimo: o que aparece só sem JavaScript ou sem WebGL (o jogo cobre a tela nos
+    demais casos). O conteúdo completo da página fica no mesmo documento, visualmente oculto
+    (sr-only), e é o mesmo que o jogo mostra; nada é servido diferente para robôs."""
+    L = profile["links"]
+    en = "/en/" in canonical
+    line = ("Software engineering, games and AI. Open in a browser with WebGL to walk the noir city in 3D."
+            if en else "Engenharia de software, games e IA. Abra num navegador com WebGL para entrar na cidade noir em 3D.")
+    return """<div class="pf-card">
+  <p class="pf-over">{over}</p><p class="pf-name">Gabriel Inácio</p><p class="pf-line">{line}</p>
+  <p class="pf-links"><a href="{li}">LinkedIn</a><a href="{gh}">GitHub</a><a href="mailto:{em}">E-mail</a></p>
+</div>""".format(over="PORTFOLIO" if en else "PORTFÓLIO", line=line, li=L["linkedin"], gh=L["github"], em=L["email"])
 
 
 def nav():
@@ -99,17 +115,10 @@ def footer():
     L = profile["links"]
     return """
   <footer class="foot">
-    <p>Gabriel Inacio Rodrigues Silva, Sao Paulo, Brasil.</p>
+    <p>Gabriel Inácio Rodrigues Silva, São Paulo, Brasil.</p>
     <p><a href="{gh}">GitHub</a> · <a href="{li}">LinkedIn</a> · <a href="mailto:{em}">{em}</a></p>
   </footer>
-  <script>
-    // O jogo (cidade noir 3D) carrega por cima do conteudo apos o primeiro gesto, para nao atrasar
-    // a leitura nem a indexacao. Sem JS, o site inteiro continua funcionando como portfolio.
-    (function(){{
-      var b=document.getElementById('jogar'); if(!b) return;
-      b.addEventListener('click',function(){{ location.href='/jogo/'; }});
-    }})();
-  </script>
+</div>
 </body></html>""".format(gh=L["github"], li=L["linkedin"], em=L["email"])
 
 
@@ -136,11 +145,11 @@ def index_pt():
             "".join("<li>%s</li>" % e(h) for h in x["highlights"]))
     collection = {
         "@context": "https://schema.org", "@type": "CollectionPage",
-        "name": "Projetos de Gabriel Inacio",
+        "name": "Projetos de Gabriel Inácio",
         "hasPart": [{"@type": SCHEMA_KIND.get(p["kind"], "SoftwareApplication"),
                      "name": p["title"], "url": "%s/projetos/%s/" % (SITE, p["id"]),
                      "description": p["desc"]} for p in projects]}
-    s = head("Gabriel Inacio · Desenvolvedor Full-Stack, Game Dev e IA",
+    s = head("Gabriel Inácio · Portfólio · Desenvolvedor Full-Stack, Game Dev e IA",
              profile["tagline"] + ". " + profile["bio"][0], SITE + "/",
              extra_ld=collection, alt_lang=("en", SITE + "/en/"))
     s += nav()
@@ -148,7 +157,7 @@ def index_pt():
   <main>
     <section class="hero">
       <p class="eyebrow">{role}</p>
-      <h1>Gabriel Inacio</h1>
+      <h1>Gabriel Inácio</h1>
       <p class="lead">{tagline}</p>
       <div class="cta"><button id="jogar">Entrar na cidade</button>
         <a class="ghost" href="#projetos">Ver projetos</a></div>
@@ -157,8 +166,8 @@ def index_pt():
     <section id="projetos"><h2>Projetos</h2><div class="grid">{cards}</div></section>
     <section id="sobre"><h2>Sobre</h2>{bio}
       <div class="skills">{skills}</div>
-      <h3>Experiencia</h3><ul class="exp">{exp}</ul>
-      <h3>Formacao</h3><ul>{edu}</ul></section>
+      <h3>Experiência</h3><ul class="exp">{exp}</ul>
+      <h3>Formação</h3><ul>{edu}</ul></section>
     <section id="contato"><h2>Contato</h2>
       <p>Aberto a conversas sobre projetos, vagas e parcerias.</p>
       <p class="links"><a href="mailto:{em}">{em}</a> · <a href="{gh}">GitHub</a> · <a href="{li}">LinkedIn</a></p>
@@ -190,14 +199,14 @@ def index_en():
     cards = "".join(
         '<a class="card" href="/projetos/{id}/" style="--neon:{n}"><img loading="lazy" src="/assets/collages/{id}.webp" alt="{t}" width="1280" height="800"><div class="card-body"><h3>{t}</h3><p>{tag}</p></div></a>'.format(
             id=p["id"], n=p.get("neon", "#ffc83d"), t=e(p["title"]), tag=e(_en(p["tagline"]))) for p in projects)
-    s = head("Gabriel Inacio · Full-Stack Software Engineer, Game Dev and AI",
+    s = head("Gabriel Inácio · Portfolio · Full-Stack Software Engineer, Game Dev and AI",
              "Full-stack software engineer with 4+ years building web, mobile and backend systems, LLM integration and game development.",
              SITE + "/en/", alt_lang=("pt-BR", SITE + "/"))
     s += nav()
     s += """
   <main>
     <section class="hero"><p class="eyebrow">Full-Stack Software Engineer</p>
-      <h1>Gabriel Inacio</h1>
+      <h1>Gabriel Inácio</h1>
       <p class="lead">4+ years turning ideas into products that reach production. Web, mobile, game dev and AI.</p>
       <div class="cta"><button id="jogar">Enter the city</button><a class="ghost" href="#projects">See projects</a></div></section>
     <section id="projects"><h2>Projects</h2><div class="grid">%s</div></section>
@@ -233,7 +242,7 @@ def project_page(p):
     bc = {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
         {"@type": "ListItem", "position": 1, "name": "Projetos", "item": SITE + "/#projetos"},
         {"@type": "ListItem", "position": 2, "name": p["title"], "item": "%s/projetos/%s/" % (SITE, p["id"])}]}
-    s = head("%s · %s | Gabriel Inacio" % (p["title"], p["tagline"]),
+    s = head("%s · %s | Gabriel Inácio" % (p["title"], p["tagline"]),
              p["desc"], "%s/projetos/%s/" % (SITE, p["id"]),
              extra_ld={"@graph": [app, bc]})
     s += nav()
@@ -289,6 +298,18 @@ h2{font-size:clamp(28px,5vw,44px);margin:56px 0 18px;border-left:5px solid var(-
 .piece{border-left:3px solid var(--neon);padding:4px 0 4px 16px;margin:16px 0}.piece h2{border:0;padding:0;font-size:22px;margin:0 0 4px}
 .foot{max-width:1120px;margin:60px auto 30px;padding:24px 20px;border-top:1px solid #1a2b50;color:#6f82b4}
 @media(max-width:640px){.hero{padding:48px 0 24px}}
+
+/* conteúdo semântico visualmente oculto (lido por leitores de tela e robôs; o jogo cobre a tela) */
+.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+body.pf{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 75%,#1a0f2e 0%,#05060c 70%);overflow:hidden}
+.pf-card{text-align:center;padding:24px;max-width:560px}
+.pf-over{margin:0;font:600 13px/1 'Courier New',monospace;letter-spacing:.42em;color:#ff4fa3}
+.pf-name{margin:.25em 0;font:400 clamp(44px,10vw,84px)/1 'Bebas Neue',Impact,sans-serif;letter-spacing:.06em;color:#f3ead8;text-shadow:0 0 18px #ff4fa388,0 0 40px #5aaadc55}
+.pf-line{margin:.4em 0 1.4em;font:15px/1.5 'Courier New',monospace;color:#ffc83d}
+.pf-links{display:flex;gap:18px;justify-content:center}
+.pf-links a{color:#e8ecf7;text-decoration:none;border:1px solid #ff4fa3;border-radius:8px;padding:10px 16px;font:600 14px 'Courier New',monospace}
+.pf-links a:hover{background:#ff4fa322}
+body.pf-on .pf-card{visibility:hidden}
 """
 
 
@@ -368,7 +389,7 @@ def main():
     open(os.path.join(WEB, "robots.txt"), "w", encoding="utf8").write(
         "User-agent: *\nAllow: /\nSitemap: %s/sitemap.xml\n" % SITE)
     open(os.path.join(WEB, "404.html"), "w", encoding="utf8").write(
-        head("Pagina nao encontrada | Gabriel Inacio", "Esta rua nao existe no mapa.", SITE + "/404") +
+        head("Página não encontrada | Gabriel Inácio", "Esta rua não existe no mapa.", SITE + "/404") +
         nav() + '<main class="hero"><h1>404</h1><p class="lead">Esta rua nao existe no mapa. <a href="/">Voltar ao inicio</a>.</p></main>' + footer())
     print("seo: index pt/en,", len(projects), "paginas de projeto, sitemap, robots, 404, og.png, css")
 
