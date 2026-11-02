@@ -17,7 +17,7 @@ dest_files=["res://.godot/imported/mobile.jpg-ad8f910d948bf27c936d60a3032b52c8.c
 
 compress/mode=1
 compress/high_quality=false
-compress/lossy_quality=0.8
+compress/lossy_quality=0.82
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
