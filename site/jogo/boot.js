@@ -1,8 +1,12 @@
 // Gerado por tools/deploy/make_boot.py. Abre a cidade noir por cima da página.
 (function () {
-  var CFG = {"canvasResizePolicy": 2, "emscriptenPoolSize": 8, "ensureCrossOriginIsolationHeaders": true, "executable": "/jogo/index", "experimentalVK": false, "fileSizes": {"index.pck": 16131572, "index.wasm": 39513091}, "focusCanvas": true, "gdextensionLibs": [], "godotPoolSize": 4, "mainPack": "/jogo/index.pck"};
+  var CFG = {"canvasResizePolicy": 2, "emscriptenPoolSize": 8, "ensureCrossOriginIsolationHeaders": true, "executable": "/jogo/index", "experimentalVK": false, "fileSizes": {"index.pck": 54176440, "index.wasm": 39513091}, "focusCanvas": true, "gdextensionLibs": [], "godotPoolSize": 4, "mainPack": "/jogo/index.pck"};
   var path = location.pathname;
-  var en = /^\/en(\/|$)/.test(path) || document.documentElement.lang === 'en';
+  // carregador abre em INGLÊS por padrão (pedido do usuário); a escolha salva no seletor do jogo
+  // (localStorage pf_lang) passa a valer; o HTML oculto da home continua em português para o Google
+  var saved = '';
+  try { saved = localStorage.getItem('pf_lang') || ''; } catch (e) {}
+  var en = saved ? saved.indexOf('pt') !== 0 : true;
   var loja = (path.match(/^\/projetos\/([^\/]+)/) || [])[1] || new URLSearchParams(location.search).get('loja') || '';
   function start() {
     var probe = document.createElement('canvas');
