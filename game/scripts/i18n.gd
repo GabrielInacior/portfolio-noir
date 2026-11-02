@@ -96,6 +96,16 @@ func tarr(a: Array) -> Array:
 	return out
 
 
+## idioma imposto pela página (/en/ abre em inglês): sem salvar e sem recarregar
+func force(l: String) -> void:
+	l = _norm(l)
+	if l == lang:
+		return
+	lang = l
+	_load()
+	changed.emit()
+
+
 func set_lang(l: String) -> void:
 	l = _norm(l)
 	if OS.has_feature("web"):

@@ -24,7 +24,29 @@ func _ready() -> void:
 	layer.add_child(hud)
 	await get_tree().process_frame
 	hud.setup(city.player, city)
+	_read_args()
 	_build_gate(layer)
+	# avisa a página (boot.js) que a cidade está montada e desenhada: o carregador HTML some
+	for _i in 3:
+		await get_tree().process_frame
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.pfReady&&window.pfReady()", true)
+
+
+## argumentos vindos da página (boot.js): lang=en (página /en/) e loja=<projeto> (páginas de projeto
+## abrem o jogo já dentro da loja daquele projeto, depois do ENTRAR)
+var _open_shop := ""
+
+
+func _read_args() -> void:
+	for a in OS.get_cmdline_user_args():
+		var kv := str(a).trim_prefix("--").split("=", true, 1)
+		if kv.size() != 2:
+			continue
+		if kv[0] == "lang" and kv[1] in ["pt", "en"]:
+			L.force(kv[1])
+		elif kv[0] == "loja":
+			_open_shop = kv[1]
 
 
 # ───────────────────────────────── visual retrô (PS1): 3D em baixa resolução, ampliado sem borrar
@@ -33,7 +55,7 @@ func _ready() -> void:
 ## imagens, telões, outdoors, letreiros e placas (conteúdo informativo) continuem nítidos (regra do usuário). A interface fica por
 ## cima em resolução cheia (texto nunca pixela). Escolha salva no navegador (pf_retro).
 const RETRO := preload("res://shaders/retro_ps1.gdshader")
-const RETRO_H := {"forte": 540, "suave": 720}
+const RETRO_H := {"forte": 360, "suave": 432}
 var _world_vp: SubViewport
 var _world_rect: TextureRect
 var retro := "forte"
@@ -92,6 +114,12 @@ func set_retro(level: String) -> void:
 
 
 func _load_retro() -> String:
+	# visual fixo: RETRÔ ½ ("suave"), sem seletor na interface (pedido do usuário). PF_RETRO só para capturas.
+	var fixed := OS.get_environment("PF_RETRO")
+	return fixed if fixed in ["forte", "suave", "off"] else "suave"
+
+
+func _load_retro_old() -> String:
 	var env := OS.get_environment("PF_RETRO")
 	if env != "":
 		return env
@@ -120,6 +148,10 @@ func _build_gate(layer: CanvasLayer) -> void:
 	var v := UI.vbox(18)
 	v.alignment = BoxContainer.ALIGNMENT_CENTER
 	center.add_child(v)
+	var over := UI.label(L.t("PORTFÓLIO"), 22, UI.PINK, "type")
+	over.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	over.add_theme_constant_override("outline_size", 0)
+	v.add_child(over)
 	var logo := UI.title("GABRIEL INÁCIO", 86, UI.PAPER)
 	logo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(logo)
@@ -161,6 +193,12 @@ func _enter() -> void:
 	var tw := create_tween()
 	tw.tween_property(_gate, "modulate:a", 0.0, 0.9)
 	tw.tween_callback(_gate.queue_free)
+	if _open_shop != "":
+		for pr in Data.projects:
+			if str(pr.get("id", "")) == _open_shop:
+				hud.enter_museum(pr)
+				break
+		_open_shop = ""
 
 
 
