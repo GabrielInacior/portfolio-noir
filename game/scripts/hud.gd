@@ -1,14 +1,18 @@
 extends Control
-## Interface por cima da cidade: alavanca virtual (celular), olhar por arrasto, aviso de
-## interação, nome, minimapa, contador de projetos visitados, som liga/desliga, modo lista.
+## INTERFACE POR CIMA DA CIDADE (design system em ui.gd): barra de vidro no topo (nome, progresso e
+## ícones: lugares, mapa, som, idioma), radar redondo, retícula, aviso de ação com tecla/ícone,
+## placas clicáveis na rua, menu de lugares e mapa grande (viajar sem andar), tour guiado dentro das
+## lojas (anterior/próxima peça), alavanca virtual no celular e conversa com os NPCs (realce amarelo).
+## Responsivo pelo formato (UI.ff): celular em pé, celular deitado e PC. Fica fora do filtro retrô.
 
 const Dossier := preload("res://scripts/dossier.gd")
 const ListMode := preload("res://scripts/list_mode.gd")
 const Dialogue := preload("res://scripts/dialogue.gd")
-const Minimap := preload("res://scripts/minimap.gd")
 const Museum := preload("res://scripts/museum.gd")
 const Exhibit := preload("res://scripts/exhibit.gd")
 const Panels := preload("res://scripts/panels.gd")
+const PlacesMenu := preload("res://scripts/nav/places_menu.gd")
+const HOVER := preload("res://shaders/hover_outline.gdshader")
 
 var _museum = null
 var _entry_xform: Transform3D
@@ -16,20 +20,33 @@ var _exam: Dictionary = {}
 
 var player
 var city
+var world_vp: SubViewport
 var prompt: PanelContainer
 var prompt_label: Label
+var _prompt_hint: Label
+var _prompt_key: Control
 var counter_label: Label
-var minimap: Control
-var stick_base: Panel
-var stick_knob: Panel
+var minimap: MapView
+var signs: StreetSigns
+var reticle: Control
+var stick_base: Control
+var stick_knob: Control
 var _stick_touch := -1
 var _look_touch := -1
 var _stick_center := Vector2.ZERO
+var _touch_start := {}
 var _current: Dictionary = {}
 var _sheet_open := false
-var reticle: Control
-var _prompt_hint: Label
 var _ret_hot := false
+var _ret_col := UI.AMBER
+var _topbar: Control
+var _ff := ""
+var _snd_btn: Button
+var _tour: Control
+var _tour_label: Label
+var _tour_i := -1
+var _npc_hot = null
+var _npc_mat: ShaderMaterial
 
 
 func setup(p, c) -> void:
@@ -38,228 +55,495 @@ func setup(p, c) -> void:
 	player.target_changed.connect(_on_target)
 	player.interacted.connect(_on_interact)
 	city.visited_changed.connect(_on_visited)
-	if minimap:
-		minimap.city = c
-		minimap.player = p
+	var m := get_parent().get_parent() if get_parent() else null
+	if m and "_world_vp" in m:
+		world_vp = m._world_vp
+	_build()
+	_on_visited(city.visited_count(), city.total_projects())
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_npc_mat = ShaderMaterial.new()
+	_npc_mat.shader = HOVER
+	_npc_mat.set_shader_parameter("color", UI.AMBER)
+	_npc_mat.set_shader_parameter("width", 0.02)
+	get_viewport().size_changed.connect(func() -> void:
+		if UI.ff(self) != _ff and player:
+			_build.call_deferred())
+	set_process_input(true)
+
+
+## (re)monta tudo pelo formato de tela atual
+func _build() -> void:
+	_ff = UI.ff(self)
+	for n in [_topbar, minimap, signs, prompt, reticle, stick_base, stick_knob, _tour]:
+		if n and is_instance_valid(n):
+			n.queue_free()
+	_build_signs()
 	_build_topbar()
 	_build_minimap()
 	_build_prompt()
 	_build_reticle()
-	if UI.is_mobile():
+	_build_tour()
+	if UI.is_touch() or _ff == "phone":
 		_build_stick()
-	set_process_input(true)
+	_sync_mode()
 
 
-var _topbar: Control
-var _topbar_narrow := -1
-
-
-## Barra de cima compacta (pedido do usuário: botões e textos menores): nome, contador e três
-## botões de ícone (som, idioma, projetos). O visual retrô é fixo (RETRÔ ½), sem seletor.
-## Celular em pé: uma linha só, com toque de 64 px; PC: 44 px.
+# ───────────────────────────────── barra de cima
 func _build_topbar() -> void:
-	var narrow := get_viewport_rect().size.x < 900.0
-	_topbar_narrow = 1 if narrow else 0
-	if _topbar and is_instance_valid(_topbar):
-		_topbar.queue_free()
 	var bar := PanelContainer.new()
 	_topbar = bar
-	bar.add_theme_stylebox_override("panel", UI.box(Color(UI.INK, 0.55), Color.TRANSPARENT, 0, 0))
-	bar.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var pad := MarginContainer.new()
-	pad.add_theme_constant_override("margin_left", 14)
-	pad.add_theme_constant_override("margin_right", 12)
-	pad.add_theme_constant_override("margin_top", 8 + _safe_top())
-	pad.add_theme_constant_override("margin_bottom", 6)
-	bar.add_child(pad)
-	var h := UI.hbox(10)
-	pad.add_child(h)
+	bar.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	var g := UI.sp(1.6, self)
+	bar.offset_left = g
+	bar.offset_right = -g
+	bar.offset_top = g + UI.safe_top(self)
+	var st := UI.glass(Color.TRANSPARENT, UI.radius(self), 0, 0.7)
+	st.content_margin_left = UI.sp(2, self)
+	st.content_margin_right = UI.sp(1, self)
+	st.content_margin_top = UI.sp(1, self)
+	st.content_margin_bottom = UI.sp(1, self)
+	bar.add_theme_stylebox_override("panel", st)
+	var h := UI.hbox(UI.sp(1, self))
+	bar.add_child(h)
 	var names := UI.vbox(0)
 	names.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	names.alignment = BoxContainer.ALIGNMENT_CENTER
+	names.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	h.add_child(names)
-	var nm := UI.title("GABRIEL INÁCIO", 26 if narrow else 24, UI.PAPER)
+	var nm := UI.text("GABRIEL INÁCIO", "h3", UI.PAPER)
 	nm.autowrap_mode = TextServer.AUTOWRAP_OFF
+	nm.clip_text = true
+	nm.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	names.add_child(nm)
-	counter_label = UI.label(counter_label.text if counter_label and is_instance_valid(counter_label) else "", 15 if narrow else 14, UI.AMBER, "type")
+	counter_label = UI.text("", "cap", UI.AMBER)
 	counter_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	counter_label.clip_text = true
+	counter_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	names.add_child(counter_label)
-	var bh := 64 if narrow else 44
-	var snd := _icon_btn("🔊" if Audio.is_on() else "🔇", UI.PINK, bh, L.t("Som"))
-	snd.pressed.connect(func() -> void:
+	var side := int(UI.tap(self) * (0.86 if _ff == "phone" else 0.92))
+	var places := UI.icon_btn("places", UI.AMBER, side, "Lugares")
+	places.pressed.connect(_open_places)
+	h.add_child(places)
+	var mp := UI.icon_btn("map", UI.CYAN, side, "Mapa (M)")
+	mp.pressed.connect(_open_map)
+	h.add_child(mp)
+	_snd_btn = UI.icon_btn("sound" if Audio.is_on() else "mute", UI.PINK, side, "Som")
+	_snd_btn.pressed.connect(func() -> void:
 		var on := not Audio.is_on()
 		Audio.set_enabled(on)
-		snd.text = "🔊" if on else "🔇")
-	h.add_child(snd)
-	var lang := _icon_btn("EN" if L.lang == "pt" else "PT", UI.CYAN, bh, "English" if L.lang == "pt" else "Português")
-	lang.add_theme_font_size_override("font_size", 22 if narrow else 18)
+		(_snd_btn.get_meta("icon") as Icon).set_icon("sound" if on else "mute"))
+	h.add_child(_snd_btn)
+	var lang := UI.icon_btn("globe", UI.PAPER, side, "English" if L.lang == "pt" else "Português")
+	var tag := UI.label("EN" if L.lang == "pt" else "PT", int(side * 0.22), UI.PAPER, "bold")
+	tag.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+	tag.offset_left = -side * 0.42
+	tag.offset_top = -side * 0.36
+	tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lang.add_child(tag)
 	lang.pressed.connect(func() -> void: L.set_lang("en" if L.lang == "pt" else "pt"))
 	h.add_child(lang)
-	var lst := _icon_btn("☰", UI.AMBER, bh, L.t("PROJETOS"))
-	lst.pressed.connect(_open_list)
-	h.add_child(lst)
 	add_child(bar)
-	move_child(bar, 0)
-	if minimap:
-		_place_minimap()
 
 
-func _icon_btn(txt: String, col: Color, side: int, tip: String) -> Button:
-	var b := UI.ghost(txt, col, side)
-	b.custom_minimum_size = Vector2(side, side)
-	b.tooltip_text = tip
-	b.add_theme_font_size_override("font_size", int(side * 0.5))
-	return b
+func _topbar_bottom() -> float:
+	return UI.sp(1.6, self) + UI.safe_top(self) + UI.tap(self) * (0.86 if _ff == "phone" else 0.92) + UI.sp(2, self)
 
 
-func _safe_top() -> int:
-	# entalhe/barra de status: área segura do sistema (no navegador vem da janela inteira)
-	var safe := DisplayServer.get_display_safe_area()
-	var win := DisplayServer.window_get_position()
-	var top := safe.position.y - win.y
-	return clampi(top, 0, 60)
-
-
-func _place_minimap() -> void:
-	var top := 92 if _topbar_narrow == 1 else 64
-	minimap.offset_top = top
-	minimap.offset_bottom = top + 150
-
-
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_RESIZED and _topbar_narrow != -1:
-		var narrow := 1 if get_viewport_rect().size.x < 900.0 else 0
-		if narrow != _topbar_narrow:
-			_build_topbar.call_deferred()
-
-
+# ───────────────────────────────── radar (minimapa)
 func _build_minimap() -> void:
-	minimap = Minimap.new()
-	minimap.custom_minimum_size = Vector2(190, 150)
-	minimap.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
-	minimap.offset_left = -206
-	minimap.offset_right = -16
-	minimap.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	minimap.clip_contents = true
+	minimap = MapView.new()
+	minimap.radar = true
+	minimap.city = city
+	minimap.player = player
+	var d: float = {"phone": 230.0, "land": 150.0, "desk": 190.0}[_ff]
+	minimap.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	minimap.size = Vector2(d, d)
+	minimap.position = Vector2(get_viewport_rect().size.x - d - UI.sp(1.6, self), _topbar_bottom())
+	minimap.mouse_filter = Control.MOUSE_FILTER_STOP
+	minimap.tooltip_text = L.t("Mapa (M)")
+	minimap.gui_input.connect(func(e: InputEvent) -> void:
+		if (e is InputEventMouseButton and (e as InputEventMouseButton).pressed) or (e is InputEventScreenTouch and (e as InputEventScreenTouch).pressed):
+			accept_event()
+			_open_map())
 	add_child(minimap)
-	_place_minimap()
 
 
+# ───────────────────────────────── placas clicáveis na rua
+func _build_signs() -> void:
+	signs = StreetSigns.new()
+	signs.city = city
+	signs.player = player
+	signs.world_vp = world_vp
+	add_child(signs)
+
+
+# ───────────────────────────────── aviso de ação (tecla/ícone + verbo + nome)
 func _build_prompt() -> void:
 	prompt = PanelContainer.new()
-	prompt.add_theme_stylebox_override("panel", UI.box(Color(UI.NIGHT, 0.95), UI.AMBER, 2, 14, 16))
-	var v := UI.vbox(4)
-	prompt_label = UI.label("", 28, UI.AMBER, "type")
-	prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	prompt_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	v.add_child(prompt_label)
-	var hint := UI.label("toque para abrir" if UI.is_mobile() else "[E] abrir  ·  toque no letreiro para ir até lá", 20 if UI.is_mobile() else 18, UI.MIST, "body")
-	_prompt_hint = hint
-	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	v.add_child(hint)
-	prompt.add_child(v)
-	prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	prompt.offset_top = -176
-	prompt.offset_bottom = -96
-	prompt.offset_left = -240
-	prompt.offset_right = 240
-	prompt.visible = false
 	prompt.mouse_filter = Control.MOUSE_FILTER_STOP
+	prompt.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	var h := UI.hbox(UI.sp(1.6, self))
+	prompt.add_child(h)
+	if UI.is_touch() or _ff == "phone":
+		_prompt_key = Icon.make("tap", UI.INK, UI.fs("h3", self))
+		var holder := PanelContainer.new()
+		holder.add_theme_stylebox_override("panel", UI.box(UI.AMBER, UI.AMBER, 0, 999, UI.sp(1, self)))
+		holder.add_child(_prompt_key)
+		_prompt_key = holder
+	else:
+		_prompt_key = UI.keycap("E", UI.AMBER)
+	_prompt_key.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	h.add_child(_prompt_key)
+	var v := UI.vbox(0)
+	v.alignment = BoxContainer.ALIGNMENT_CENTER
+	h.add_child(v)
+	_prompt_hint = UI.text("", "cap", UI.AMBER, "bold")
+	_prompt_hint.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_prompt_hint.uppercase = true
+	v.add_child(_prompt_hint)
+	prompt_label = UI.text("", "h3", UI.PAPER)
+	prompt_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	prompt_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	prompt_label.clip_text = true
+	prompt_label.custom_minimum_size.x = 0
+	v.add_child(prompt_label)
+	prompt.visible = false
 	prompt.gui_input.connect(func(e: InputEvent) -> void:
-		if e is InputEventMouseButton and (e as InputEventMouseButton).pressed and not _current.is_empty():
-			_on_interact(_current))
+		if (e is InputEventMouseButton and (e as InputEventMouseButton).pressed) or (e is InputEventScreenTouch and (e as InputEventScreenTouch).pressed):
+			accept_event()
+			_do_interact())
 	add_child(prompt)
 
 
-## retícula central: ponto discreto; vira anel com a cor do objeto quando há algo interativo
+func _show_prompt(verb: String, name: String, col := UI.AMBER) -> void:
+	_prompt_hint.text = L.t(verb)
+	_prompt_hint.add_theme_color_override("font_color", col)
+	prompt_label.text = name
+	var st := UI.glass(col, 999, 0, 0.9)
+	st.content_margin_left = UI.sp(1.2, self)
+	st.content_margin_right = UI.sp(3, self)
+	st.content_margin_top = UI.sp(1, self)
+	st.content_margin_bottom = UI.sp(1, self)
+	prompt.add_theme_stylebox_override("panel", st)
+	if not prompt.visible:
+		prompt.visible = true
+		prompt.modulate.a = 0.0
+		prompt.create_tween().tween_property(prompt, "modulate:a", 1.0, 0.14)
+	_place_prompt()
+
+
+func _place_prompt() -> void:
+	var vs := get_viewport_rect().size
+	prompt_label.custom_minimum_size.x = 0
+	prompt.reset_size()
+	var maxw := vs.x - UI.sp(4, self) * 2
+	var w := minf(prompt.get_combined_minimum_size().x, maxw)
+	if prompt.get_combined_minimum_size().x > maxw:
+		prompt_label.custom_minimum_size.x = maxw - UI.sp(14, self)
+	var bottom := UI.sp(4, self)
+	if _ff == "phone":
+		bottom = UI.sp(6, self) + 340.0      # acima da alavanca
+	elif _tour and _tour.visible:
+		bottom = UI.sp(3, self) + UI.tap(self) + UI.sp(2, self)
+	prompt.size = Vector2(w, 0)
+	prompt.position = Vector2((vs.x - w) / 2.0, vs.y - bottom - prompt.get_combined_minimum_size().y)
+
+
+func _hide_prompt() -> void:
+	prompt.visible = false
+
+
+# ───────────────────────────────── retícula
 func _build_reticle() -> void:
 	reticle = Control.new()
 	reticle.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	reticle.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	reticle.draw.connect(func() -> void:
+		var s := UI.sp(1, self) / 6.0
 		if _ret_hot:
-			var k := 0.85 + 0.15 * sin(Time.get_ticks_msec() * 0.01)
-			reticle.draw_arc(Vector2.ZERO, 16.0 * k, 0, TAU, 32, UI.AMBER, 3.0, true)
-			reticle.draw_circle(Vector2.ZERO, 3.0, UI.AMBER)
+			var k := 0.88 + 0.12 * sin(Time.get_ticks_msec() * 0.009)
+			for i in 4:
+				var a := i * PI / 2 + PI / 4
+				reticle.draw_arc(Vector2.ZERO, 15.0 * s * k, a - 0.45, a + 0.45, 8, _ret_col, 2.5 * s, true)
+			reticle.draw_circle(Vector2.ZERO, 2.6 * s, _ret_col)
 		else:
-			reticle.draw_circle(Vector2.ZERO, 3.0, Color(1, 1, 1, 0.55)))
+			reticle.draw_circle(Vector2.ZERO, 2.4 * s, Color(1, 1, 1, 0.6))
+			reticle.draw_arc(Vector2.ZERO, 5.0 * s, 0, TAU, 16, Color(0, 0, 0, 0.35), 1.2 * s))
+	reticle.visible = not (UI.is_touch() or _ff == "phone")
 	add_child(reticle)
 
 
+# ───────────────────────────────── tour guiado dentro da loja
+func _build_tour() -> void:
+	_tour = PanelContainer.new()
+	var st := UI.glass(Color.TRANSPARENT, 999, 0, 0.82)
+	st.content_margin_left = UI.sp(1, self)
+	st.content_margin_right = UI.sp(1, self)
+	st.content_margin_top = UI.sp(0.8, self)
+	st.content_margin_bottom = UI.sp(0.8, self)
+	_tour.add_theme_stylebox_override("panel", st)
+	var h := UI.hbox(UI.sp(1, self))
+	_tour.add_child(h)
+	var side := int(UI.tap(self) * 0.9)
+	var prev := UI.icon_btn("chev_l", UI.PAPER, side, "Peça anterior")
+	prev.pressed.connect(func() -> void: _tour_step(-1))
+	h.add_child(prev)
+	_tour_label = UI.text("", "small", UI.PAPER, "bold")
+	_tour_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_tour_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_tour_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_tour_label.custom_minimum_size.x = UI.sp(18, self)
+	h.add_child(_tour_label)
+	var nxt := UI.icon_btn("chev_r", UI.AMBER, side, "Próxima peça")
+	nxt.pressed.connect(func() -> void: _tour_step(1))
+	h.add_child(nxt)
+	var out := UI.icon_btn("door", UI.PINK, side, "Sair para a rua")
+	out.pressed.connect(func() -> void:
+		if not _sheet_open:
+			exit_museum())
+	h.add_child(out)
+	_tour.visible = false
+	add_child(_tour)
+
+
+func _place_tour() -> void:
+	if _tour == null:
+		return
+	var vs := get_viewport_rect().size
+	_tour.reset_size()
+	var sz := _tour.get_combined_minimum_size()
+	var bottom := UI.sp(3, self) + (UI.safe_top(self) * 0.0)
+	_tour.position = Vector2((vs.x - sz.x) / 2.0 if _ff != "phone" else vs.x - sz.x - UI.sp(1.6, self), vs.y - sz.y - bottom - (0.0 if _ff != "phone" else 0.0))
+	if _ff == "phone":
+		_tour.position = Vector2((vs.x - sz.x) / 2.0, _topbar_bottom())
+
+
+## leva a câmera até a peça seguinte/anterior e abre o painel dela
+func _tour_step(dir: int) -> void:
+	if _museum == null or _sheet_open or _museum.items.is_empty():
+		return
+	var n: int = _museum.items.size()
+	_tour_i = (_tour_i + dir + n) % n if _tour_i >= 0 else (0 if dir > 0 else n - 1)
+	var e: Dictionary = _museum.items[_tour_i]
+	var node: Node3D = e.get("node")
+	if node and is_instance_valid(node):
+		var target := node.global_position
+		var bmin: Vector2 = player.bound_min
+		var bmax: Vector2 = player.bound_max
+		var center := Vector3((bmin.x + bmax.x) / 2.0, 0, (bmin.y + bmax.y) / 2.0)
+		var dirv := (center - Vector3(target.x, 0, target.z)).normalized()
+		var stand := Vector3(target.x, 0, target.z) + dirv * 1.7
+		stand.x = clampf(stand.x, bmin.x + 0.3, bmax.x - 0.3)
+		stand.z = clampf(stand.z, bmin.y + 0.3, bmax.y - 0.3)
+		var fade := ColorRect.new()
+		fade.color = Color(0, 0, 0, 0)
+		fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(UI.full(fade))
+		var tw := create_tween()
+		tw.tween_property(fade, "color:a", 0.85, 0.14)
+		tw.tween_callback(func() -> void:
+			player.global_position = Vector3(stand.x, player.global_position.y, stand.z)
+			var to: Vector3 = target - player.global_position
+			player._yaw = atan2(-to.x, -to.z)
+			player.rotation.y = player._yaw
+			player._pitch = clampf(atan2(to.y, Vector2(to.x, to.z).length()), -0.6, 0.5)
+			if player.head:
+				player.head.rotation.x = player._pitch)
+		tw.tween_property(fade, "color:a", 0.0, 0.2)
+		tw.tween_callback(fade.queue_free)
+		await tw.finished
+	_update_tour_label()
+	_activate(e)
+
+
+func _update_tour_label() -> void:
+	if _museum == null:
+		return
+	var n: int = _museum.items.size()
+	_tour_label.text = L.tf("PEÇA %d DE %d", [maxi(_tour_i + 1, 1), n]) if _tour_i >= 0 else L.tf("TOUR · %d PEÇAS", [n])
+
+
+# ───────────────────────────────── alavanca (celular)
 func _build_stick() -> void:
-	stick_base = Panel.new()
-	stick_base.add_theme_stylebox_override("panel", UI.box(Color(UI.PAPER, 0.07), Color(UI.PAPER, 0.28), 2, 80))
-	stick_base.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
-	stick_base.offset_left = 40
-	stick_base.offset_top = -200
-	stick_base.offset_right = 200
-	stick_base.offset_bottom = -40
+	var r := 150.0
+	stick_base = Control.new()
 	stick_base.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	stick_base.size = Vector2(r * 2, r * 2)
+	stick_base.draw.connect(func() -> void:
+		var c := stick_base.size / 2.0
+		stick_base.draw_circle(c, r, Color(UI.PANEL, 0.35))
+		stick_base.draw_arc(c, r - 1.0, 0, TAU, 64, Color(UI.PAPER, 0.22), 2.0, true)
+		for i in 4:
+			var a := i * PI / 2
+			var p := c + Vector2(cos(a), sin(a)) * (r - 26.0)
+			stick_base.draw_colored_polygon(PackedVector2Array([p + Vector2(cos(a), sin(a)) * 9.0, p + Vector2(cos(a + 2.3), sin(a + 2.3)) * 9.0, p + Vector2(cos(a - 2.3), sin(a - 2.3)) * 9.0]), Color(UI.PAPER, 0.35)))
 	add_child(stick_base)
-	stick_knob = Panel.new()
-	stick_knob.add_theme_stylebox_override("panel", UI.box(Color(UI.AMBER, 0.85), UI.AMBER, 0, 50))
-	stick_knob.size = Vector2(72, 72)
-	stick_knob.position = Vector2(84, stick_base.offset_top + 44)
+	stick_knob = Control.new()
 	stick_knob.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	stick_knob.size = Vector2(124, 124)
+	stick_knob.draw.connect(func() -> void:
+		var c := stick_knob.size / 2.0
+		stick_knob.draw_circle(c, 60.0, Color(UI.AMBER, 0.22))
+		stick_knob.draw_circle(c, 46.0, Color(UI.AMBER, 0.9))
+		stick_knob.draw_arc(c, 46.0, 0, TAU, 32, UI.INK, 2.0, true))
 	add_child(stick_knob)
 	_reset_knob()
 
 
+func _stick_home() -> Vector2:
+	var vs := get_viewport_rect().size
+	return Vector2(UI.sp(4, self) + 150.0, vs.y - UI.sp(4, self) - 150.0)
+
+
 func _reset_knob() -> void:
+	if stick_base:
+		stick_base.position = _stick_home() - stick_base.size / 2.0
 	if stick_knob:
-		stick_knob.position = Vector2(84, size.y - 200 + 44)
+		stick_knob.position = _stick_home() - stick_knob.size / 2.0
+
+
+# ───────────────────────────────── modo (rua x loja)
+func _sync_mode() -> void:
+	var in_shop := _museum != null
+	if minimap:
+		minimap.visible = not in_shop
+	if signs:
+		signs.visible = not in_shop and not _sheet_open
+	if _tour:
+		_tour.visible = in_shop
+		_update_tour_label()
+		_place_tour()
+	if in_shop:
+		counter_label.text = L.tf("%s · %d/%d examinados", [L.t(str(_museum.project.get("title", ""))).to_upper(), _museum_seen(), _museum.items.size()])
+	elif city:
+		counter_label.text = L.tf("%d/%d projetos explorados", [city.visited_count(), city.total_projects()])
+
+
+func _museum_seen() -> int:
+	var c := 0
+	if _museum:
+		for e in _museum.items:
+			if e.get("seen", false):
+				c += 1
+	return c
 
 
 func _on_target(project: Dictionary) -> void:
 	_current = project
-	if project.is_empty():
-		prompt.visible = false
-	elif not _sheet_open:
-		prompt_label.text = str(project.get("title", "")).to_upper()
-		prompt.visible = true
 
 
 func _on_visited(count: int, total: int) -> void:
-	counter_label.text = L.tf("· %d/%d explorados", [count, total])
+	if counter_label and _museum == null:
+		counter_label.text = L.tf("%d/%d projetos explorados", [count, total])
 
 
+# ───────────────────────────────── entrada (toques, cliques)
 func _input(e: InputEvent) -> void:
-	if not UI.is_mobile() or _sheet_open:
+	if _sheet_open:
+		return
+	# clique nas placas da rua (mouse livre: no ponto; mouse preso: na retícula)
+	if e is InputEventMouseButton and (e as InputEventMouseButton).pressed and (e as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT and signs and signs.visible:
+		var pos: Vector2 = get_viewport_rect().size / 2.0 if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED else (e as InputEventMouseButton).position
+		var pl := signs.hit(pos)
+		if not pl.is_empty():
+			get_viewport().set_input_as_handled()
+			Nav.travel(self, pl)
+			return
+	if not (UI.is_touch() or _ff == "phone"):
 		return
 	if e is InputEventScreenTouch:
 		var t := e as InputEventScreenTouch
 		if t.pressed:
-			if t.position.x < size.x * 0.45 and _stick_touch == -1 and t.position.y > size.y * 0.4:
+			_touch_start[t.index] = t.position
+			if t.position.x < size.x * 0.45 and _stick_touch == -1 and t.position.y > size.y * 0.45:
 				_stick_touch = t.index
 				_stick_center = t.position
-			elif _look_touch == -1 and t.position.y > 90:
+				if stick_base:
+					stick_base.position = t.position - stick_base.size / 2.0
+			elif _look_touch == -1 and t.position.y > _topbar_bottom():
 				_look_touch = t.index
 		else:
+			var st: Vector2 = _touch_start.get(t.index, t.position)
+			var was_tap := st.distance_to(t.position) < 18.0
 			if t.index == _stick_touch:
 				_stick_touch = -1
 				player.move_vec = Vector2.ZERO
 				_reset_knob()
 			elif t.index == _look_touch:
 				_look_touch = -1
+				if was_tap:
+					_tap_world(t.position)
+			_touch_start.erase(t.index)
 	elif e is InputEventScreenDrag:
 		var d := e as InputEventScreenDrag
 		if d.index == _stick_touch:
-			var off := (d.position - _stick_center).limit_length(70)
-			player.move_vec = Vector2(off.x, off.y) / 70.0
+			var off := (d.position - _stick_center).limit_length(110)
+			player.move_vec = Vector2(off.x, off.y) / 110.0
 			if stick_knob:
-				stick_knob.position = _stick_center + off - Vector2(36, 36)
+				stick_knob.position = _stick_center + off - stick_knob.size / 2.0
 		elif d.index == _look_touch:
 			player.look_delta += d.relative
 
 
+## toque curto no mundo: placa, NPC ou objeto mirado
+func _tap_world(pos: Vector2) -> void:
+	if signs and signs.visible:
+		var pl := signs.hit(pos)
+		if not pl.is_empty():
+			Nav.travel(self, pl)
+			return
+	if prompt.visible and prompt.get_global_rect().has_point(pos):
+		return
+	if _npc_hot != null or not _current.is_empty() or not _exam.is_empty():
+		_do_interact()
+
+
+func _unhandled_input(e: InputEvent) -> void:
+	if _sheet_open:
+		return
+	if e is InputEventKey and (e as InputEventKey).pressed and not (e as InputEventKey).echo:
+		var k := (e as InputEventKey).keycode
+		if k == KEY_M:
+			get_viewport().set_input_as_handled()
+			_open_map()
+			return
+		if k == KEY_TAB or k == KEY_L:
+			get_viewport().set_input_as_handled()
+			_open_places()
+			return
+		if _museum != null and (k == KEY_PERIOD or k == KEY_BRACKETRIGHT):
+			_tour_step(1)
+			return
+		if _museum != null and (k == KEY_COMMA or k == KEY_BRACKETLEFT):
+			_tour_step(-1)
+			return
+	# conversar com o NPC mirado tem prioridade sobre a loja (o jogador não recebe o E)
+	if e.is_action_pressed("interact") and _npc_hot != null and _museum == null:
+		get_viewport().set_input_as_handled()
+		_open_dialogue(_npc_hot)
+
+
+func _do_interact() -> void:
+	if _npc_hot != null and _museum == null:
+		_open_dialogue(_npc_hot)
+		return
+	if _museum != null:
+		_on_interact({})
+		return
+	if not _current.is_empty():
+		_on_interact(_current)
+
+
 func _on_interact(project: Dictionary) -> void:
 	if _sheet_open:
+		return
+	if _npc_hot != null and _museum == null and project.is_empty():
+		_open_dialogue(_npc_hot)
 		return
 	# dentro de uma loja-museu: examinar o item mirado ou sair pela porta
 	if _museum != null:
@@ -270,11 +554,81 @@ func _on_interact(project: Dictionary) -> void:
 		return
 	if project.is_empty():
 		return
-	# contato é um cartão simples; sobre e projetos entram numa loja-museu
 	if project.get("special", "") == "contact":
 		open_dossier(project)
 		return
 	enter_museum(project)
+
+
+# ───────────────────────────────── navegação rápida
+func _open_places() -> void:
+	if _sheet_open:
+		return
+	_modal_open()
+	var pm := PlacesMenu.new()
+	add_child(UI.full(pm))
+	pm.open(city)
+	pm.go.connect(func(pl: Dictionary) -> void:
+		_sheet_open = false
+		Nav.travel(self, pl))
+	pm.closed.connect(_modal_closed)
+
+
+func _open_map() -> void:
+	if _sheet_open:
+		return
+	_modal_open()
+	var sh := Sheet.new()
+	add_child(UI.full(sh))
+	sh.setup(L.t("Mapa do bairro"), L.t("Toque num lugar para ir até lá"), UI.CYAN, 1180.0)
+	var mv := MapView.new()
+	mv.radar = false
+	mv.city = city
+	mv.player = player
+	var vs := get_viewport_rect().size
+	mv.custom_minimum_size = Vector2(0, maxf(sh.panel.custom_minimum_size.y - UI.tap(self) * 3.2, 280.0))
+	mv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sh.body.add_child(mv)
+	mv.pick.connect(func(pl: Dictionary) -> void:
+		sh.close()
+		_sheet_open = false
+		Nav.travel(self, pl))
+	# legenda
+	var leg := HFlowContainer.new()
+	leg.add_theme_constant_override("h_separation", UI.sp(2, self))
+	leg.add_theme_constant_override("v_separation", UI.sp(0.8, self))
+	for spec in [["play", "Jogos", UI.AMBER], ["places", "Software", UI.CYAN], ["eye", "Segurança", UI.GREEN], ["star", "LAB · sobre mim", UI.PAPER], ["compass", "Carreira", UI.VIOLET], ["pin", "Contato", UI.GREEN]]:
+		var it := UI.hbox(UI.sp(0.6, self))
+		it.add_child(Icon.make(spec[0], spec[2], UI.fs("small", self)))
+		var lt := UI.text(spec[1], "cap", UI.MIST)
+		lt.autowrap_mode = TextServer.AUTOWRAP_OFF
+		it.add_child(lt)
+		leg.add_child(it)
+	var me := UI.hbox(UI.sp(0.6, self))
+	me.add_child(Icon.make("compass", UI.CYAN, UI.fs("small", self)))
+	var ml := UI.text("Você", "cap", UI.CYAN)
+	ml.autowrap_mode = TextServer.AUTOWRAP_OFF
+	me.add_child(ml)
+	leg.add_child(me)
+	sh.footer.add_child(leg)
+	sh.closed.connect(_modal_closed)
+
+
+func _modal_open() -> void:
+	_sheet_open = true
+	_hide_prompt()
+	if signs:
+		signs.visible = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	if player:
+		player.move_vec = Vector2.ZERO
+
+
+func _modal_closed() -> void:
+	_sheet_open = false
+	_sync_mode()
+	if not (UI.is_touch() or _ff == "phone"):
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
 # ───────────────────────────────── entrar e sair da loja-museu
@@ -282,11 +636,12 @@ func enter_museum(project: Dictionary) -> void:
 	var id := "_lab" if project.get("special", "") == "about" else ("_carreira" if project.get("special", "") == "career" else str(project.get("id", "")))
 	var path := "res://assets/museum/_items/%s.json" % id
 	if not FileAccess.file_exists(path):
-		open_dossier(project)   # sem museu montado: cai no dossiê
+		open_dossier(project)
 		return
 	var d: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
 	if city:
 		city.mark_visited(project)
+	_set_npc_hot(null)
 	_entry_xform = player.global_transform
 	city.visible = false
 	city.set_process(false)
@@ -304,13 +659,11 @@ func enter_museum(project: Dictionary) -> void:
 	var br: Rect2 = _museum.bounds()
 	player.bound_min = br.position
 	player.bound_max = br.end
-	_museum.examined.connect(func(c: int, t: int) -> void:
-		counter_label.text = L.tf("· %d/%d examinados", [c, t]))
-	counter_label.text = L.tf("· 0/%d examinados", [_museum.items.size()])
-	if minimap:
-		minimap.visible = false
-	prompt_label.text = ""
-	prompt.visible = false
+	_museum.examined.connect(func(_c: int, _t: int) -> void: _sync_mode())
+	_tour_i = -1
+	_hide_prompt()
+	_sync_mode()
+	UI.toast(self, L.t("Use as setas da barra para o tour guiado"), _museum._accent)
 
 
 func exit_museum() -> void:
@@ -323,20 +676,13 @@ func exit_museum() -> void:
 	_museum.queue_free()
 	_museum = null
 	_exam = {}
+	_tour_i = -1
 	city.visible = true
 	city.set_process(true)
 	city.set_physics_process(true)
-	if minimap:
-		minimap.visible = true
-	_on_visited(city.visited_count(), city.total_projects())
-	prompt.visible = false
-	_museum_hot_clear()
-	_prompt_hint.text = L.t("toque para abrir") if UI.is_mobile() else L.t("[E] abrir  ·  toque no letreiro para ir até lá")
-
-
-## Aciona o objeto: ação física (telefone, gaveta, máquina, interruptor) e/ou o painel do tipo dele.
-func _museum_hot_clear() -> void:
+	_hide_prompt()
 	_ret_hot = false
+	_sync_mode()
 
 
 func _activate(entry: Dictionary) -> void:
@@ -361,79 +707,125 @@ func _activate(entry: Dictionary) -> void:
 				var tw := create_tween()
 				tw.tween_property(dr, "position:z", 0.6, 0.35).set_trans(Tween.TRANS_BACK)
 	var panel := str(it.get("panel", ""))
-	if panel == "" or panel == "exhibit":
-		_open_exhibit(entry)
-		return
-	_sheet_open = true
-	prompt.visible = false
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	_museum.mark_seen(entry)
+	_modal_open()
+	if panel == "" or panel == "exhibit":
+		var ex := Exhibit.new()
+		ex.setup(it, _museum._accent, _museum.project)
+		ex.closed.connect(_modal_closed)
+		add_child(UI.full(ex))
+		return
 	var p := Panels.new()
 	p.setup(panel, it, _museum._accent, _museum.project)
 	p.closed.connect(func() -> void:
-		_sheet_open = false
 		var dr2 = it.get("drawer")
 		if dr2 and is_instance_valid(dr2):
 			create_tween().tween_property(dr2, "position:z", 0.24, 0.3)
-		if not UI.is_mobile():
-			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED)
+		_modal_closed())
 	add_child(UI.full(p))
 
 
 func _open_exhibit(entry: Dictionary) -> void:
-	_sheet_open = true
-	prompt.visible = false
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	_museum.mark_seen(entry)
+	_modal_open()
 	var ex := Exhibit.new()
 	ex.setup(entry["item"], _museum._accent, _museum.project)
-	ex.closed.connect(func() -> void:
-		_sheet_open = false
-		if not UI.is_mobile():
-			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED)
+	ex.closed.connect(_modal_closed)
 	add_child(UI.full(ex))
 
 
+# ───────────────────────────────── quadro a quadro: alvo atual e realces
 func _process(_dt: float) -> void:
 	if reticle:
 		reticle.queue_redraw()
-	if _museum == null or _sheet_open:
-		_ret_hot = not _current.is_empty() and _museum == null
+	if stick_base:
+		stick_base.queue_redraw()
+	if _sheet_open or player == null:
 		return
-	# realce do item mirado (contorno + retícula) e aviso de ação/sair
-	for e in _museum.items:
-		e["_hot"] = false
-	_exam = _museum.nearest(player.global_position, player.forward())
-	_museum.set_hot(_exam)
-	_ret_hot = not _exam.is_empty()
-	if not _exam.is_empty():
-		_exam["_hot"] = true
-		var it: Dictionary = _exam["item"]
-		var verb := L.t(str(it.get("verb", "EXAMINAR")))
-		prompt_label.text = L.tx(it, "title").to_upper()
-		_prompt_hint.text = (L.t("toque para") + " " + verb.to_lower()) if UI.is_mobile() else ("[E] " + verb.to_lower())
-		prompt.visible = true
-	elif _museum.at_exit(player.global_position):
-		prompt_label.text = L.t("SAIR PARA A RUA")
-		_prompt_hint.text = L.t("toque para sair") if UI.is_mobile() else L.t("[E] sair")
-		prompt.visible = true
+	if _museum != null:
+		for e in _museum.items:
+			e["_hot"] = false
+		_exam = _museum.nearest(player.global_position, player.forward())
+		_museum.set_hot(_exam)
+		_ret_hot = not _exam.is_empty()
+		if not _exam.is_empty():
+			_exam["_hot"] = true
+			var it: Dictionary = _exam["item"]
+			_ret_col = _museum._accent
+			var verb := L.t(str(it.get("verb", "EXAMINAR")))
+			_show_prompt(verb, L.tx(it, "title").to_upper(), _museum._accent)
+		elif _museum.at_exit(player.global_position):
+			_ret_col = UI.PINK
+			_show_prompt("sair", L.t("PARA A RUA"), UI.PINK)
+		else:
+			_hide_prompt()
+		return
+	# rua: NPC mirado (realce amarelo) tem prioridade; senão a loja à frente
+	var npc = _aimed_npc()
+	_set_npc_hot(npc)
+	if npc != null:
+		_ret_hot = true
+		_ret_col = UI.AMBER
+		var nm: String = "O GUIA" if npc.project.get("special", "") == "about" else str(npc.project.get("title", "GUIA")).to_upper()
+		_show_prompt("conversar", L.t(nm) + "  ·  " + L.t(str(npc.role)), UI.AMBER)
+	elif not _current.is_empty():
+		_ret_hot = true
+		var neon := Color(str(_current.get("neon", "#ffc83d")))
+		_ret_col = neon
+		var verb := "abrir" if _current.get("special", "") == "contact" else "entrar"
+		_show_prompt(verb, L.t(str(_current.get("title", ""))).to_upper(), neon)
 	else:
-		prompt.visible = false
+		_ret_hot = false
+		_hide_prompt()
 
 
-func _nearest_npc() -> Node:
-	if city == null:
+## NPC conversável à frente (até 3,4 m, dentro de um cone de ~45°); figurantes não contam
+func _aimed_npc():
+	if city == null or not ("npcs" in city):
 		return null
+	var best = null
+	var bs := 0.0
+	var fw: Vector3 = player.forward()
+	fw.y = 0
+	fw = fw.normalized()
 	for n in city.npcs:
-		if n.global_position.distance_to(player.global_position) < 3.0:
-			return n
-	return null
+		if not is_instance_valid(n):
+			continue
+		var to: Vector3 = n.global_position - player.global_position
+		to.y = 0
+		var d := to.length()
+		if d > 3.4 or d < 0.2:
+			continue
+		var dot := fw.dot(to / d)
+		if dot < 0.7:
+			continue
+		var score := dot - d * 0.1
+		if score > bs:
+			bs = score
+			best = n
+	return best
 
 
+## contorno amarelo pulsando no NPC mirado (sobreposição na malha, compatível com o esqueleto)
+func _set_npc_hot(npc) -> void:
+	if npc == _npc_hot:
+		return
+	if _npc_hot != null and is_instance_valid(_npc_hot):
+		for mi in _npc_hot.find_children("*", "MeshInstance3D", true, false):
+			(mi as MeshInstance3D).material_overlay = null
+	_npc_hot = npc
+	if npc != null:
+		for mi in npc.find_children("*", "MeshInstance3D", true, false):
+			if mi is Label3D:
+				continue
+			(mi as MeshInstance3D).material_overlay = _npc_mat
+
+
+# ───────────────────────────────── conversas, dossiês, lista
 func _open_dialogue(npc) -> void:
-	_sheet_open = true
-	prompt.visible = false
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	if _sheet_open:
+		return
+	_modal_open()
 	var d := Dialogue.new()
 	var acc := Color(str(npc.project.get("neon", "#ffc83d")))
 	var nm := "O GUIA" if npc.project.get("special", "") == "about" else str(npc.project.get("title", "GUIA")).to_upper()
@@ -441,43 +833,27 @@ func _open_dialogue(npc) -> void:
 	d.ducking.connect(func(a: bool) -> void: Audio.duck(a))
 	d.open_project.connect(func() -> void:
 		open_dossier(npc.project))
-	d.closed.connect(func() -> void:
-		_sheet_open = false
-		if not UI.is_mobile():
-			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED)
+	d.closed.connect(_modal_closed)
 	add_child(UI.full(d))
 
 
 func open_dossier(project: Dictionary) -> void:
 	if project.is_empty():
 		return
-	_sheet_open = true
-	prompt.visible = false
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	_modal_open()
 	if city:
 		city.mark_visited(project)
 	var sp := str(project.get("special", ""))
 	var d := Dossier.new()
+	add_child(UI.full(d))
+	d.closed.connect(_modal_closed)
 	if sp == "about":
 		d.setup_about(Data.profile)
 	elif sp == "contact":
 		d.setup_contact(Data.profile)
 	else:
 		d.setup_project(project)
-	d.closed.connect(func() -> void:
-		_sheet_open = false
-		if not UI.is_mobile() and player:
-			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED)
-	add_child(UI.full(d))
 
 
 func _open_list() -> void:
-	if _sheet_open:
-		return
-	_sheet_open = true
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	var lm := ListMode.new()
-	lm.open_project.connect(open_dossier)
-	lm.closed.connect(func() -> void:
-		_sheet_open = false)
-	add_child(UI.full(lm))
+	_open_places()

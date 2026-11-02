@@ -34,119 +34,59 @@ func setup(k: String, it: Dictionary, accent: Color, proj: Dictionary) -> void:
 	project = proj
 
 
+var _sheet: Sheet
+
+
 func _ready() -> void:
-	mouse_filter = Control.MOUSE_FILTER_STOP
+	# moldura do design system (Sheet): cabeçalho fixo, rolagem por toque, rodapé com os links
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_vs = get_viewport_rect().size
 	_tall = _vs.y > _vs.x
 	_mobile = _tall or _vs.y <= 560.0
-	var dim := ColorRect.new()
-	dim.color = Color(0, 0, 0, 0.76)
-	add_child(UI.full(dim))
-	var w: float = _vs.x - 20.0 if _tall else minf(_vs.x - 40.0, 1000.0 if kind in ["skills", "arcade", "terminal"] else 880.0)
-	var h: float = _vs.y - (20.0 if _mobile else 70.0)
-	var bg := Color("#f1e9d4") if kind == "doc" and str(item.get("doc_style", "")) != "phone" else UI.PANEL
-	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", UI.box(bg, _accent, 3, 16, 0))
-	panel.custom_minimum_size = Vector2(w, h)
-	panel.size = Vector2(w, h)
-	panel.position = (_vs - Vector2(w, h)) / 2.0
-	add_child(panel)
-	_outer = UI.vbox(0)
-	panel.add_child(_outer)
-	_header()
+	_sheet = Sheet.new()
+	_sheet.scrollable = kind != "arcade"
+	add_child(UI.full(_sheet))
+	var wide := kind in ["skills", "arcade", "terminal", "timeline"]
+	_sheet.setup(L.t(str(project.get("title", ""))), L.tx(item, "title") if item.has("title") else "", _accent, 1060.0 if wide else 0.0)
+	_sheet.closed.connect(func() -> void:
+		Audio.duck(false)
+		closed.emit()
+		queue_free())
+	_col = _sheet.body
+	_outer = _sheet.body
 	match kind:
 		"arcade":
 			_build_arcade()
-		_:
-			_scroll_body()
-			match kind:
-				"inspect": _build_inspect()
-				"terminal": _build_terminal()
-				"gallery": _build_gallery()
-				"doc": _build_doc()
-				"skills": _build_skills()
-				"timeline": _build_timeline()
-				"contact": _build_contact()
-	modulate.a = 0.0
-	create_tween().tween_property(self, "modulate:a", 1.0, 0.18)
+		"inspect": _build_inspect()
+		"terminal": _build_terminal()
+		"gallery": _build_gallery()
+		"doc": _build_doc()
+		"skills": _build_skills()
+		"timeline": _build_timeline()
+		"contact": _build_contact()
 	Audio.duck(true)
 
 
-func _header() -> void:
-	var pad := MarginContainer.new()
-	for sd in ["left", "right", "top"]:
-		pad.add_theme_constant_override("margin_" + sd, 16)
-	pad.add_theme_constant_override("margin_bottom", 6)
-	var row := UI.hbox(10)
-	var dark := kind == "doc" and str(item.get("doc_style", "")) != "phone"
-	var t := UI.label(L.tx(item, "title").to_upper() if item.has("title") else "", 26 if _mobile else 22, Color("#2a1a10") if dark else _accent, "type")
-	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	t.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	row.add_child(t)
-	var x := UI.ghost("✕", Color("#2a1a10") if dark else _accent, 88 if _mobile else 64)
-	x.custom_minimum_size.x = 88 if _mobile else 64
-	x.add_theme_font_override("font", UI.font("body"))
-	x.add_theme_font_size_override("font_size", 32)
-	x.pressed.connect(close)
-	row.add_child(x)
-	pad.add_child(row)
-	_outer.add_child(pad)
-
-
-func _scroll_body() -> void:
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_outer.add_child(scroll)
-	TouchScroll.attach(scroll)
-	var pad := MarginContainer.new()
-	for sd in ["left", "right", "bottom"]:
-		pad.add_theme_constant_override("margin_" + sd, 20)
-	pad.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(pad)
-	_col = UI.vbox(14)
-	_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	pad.add_child(_col)
-
-
 func _body(text: String, col := UI.PAPER, size := 0) -> Label:
-	var l := UI.label(text, size if size > 0 else (28 if _mobile else 24), col, "body")
+	var l := UI.label(text, size if size > 0 else UI.fs("body"), col, "body")
+	l.add_theme_constant_override("line_spacing", 4)
 	_col.add_child(l)
 	return l
 
 
 func _chips(list: Array, col: Color) -> void:
-	var flow := HFlowContainer.new()
-	flow.add_theme_constant_override("h_separation", 8)
-	flow.add_theme_constant_override("v_separation", 8)
-	for s in list:
-		var c := PanelContainer.new()
-		c.add_theme_stylebox_override("panel", UI.box(Color(col, 0.16), col, 1, 8, 10))
-		var cl := UI.label(str(s), 22 if _mobile else 18, col, "type")
-		cl.autowrap_mode = TextServer.AUTOWRAP_OFF
-		c.add_child(cl)
-		flow.add_child(c)
-	_col.add_child(flow)
+	_sheet.add_chips(list, col)
 
 
 func _link_buttons() -> void:
 	var links: Dictionary = project.get("links", {}) if project.get("links") is Dictionary else {}
-	var row: BoxContainer = UI.vbox(10) if _tall else UI.hbox(10)
 	if links.has("site"):
-		var b := UI.button("ABRIR O SITE  ↗", _accent, 88 if _mobile else 64)
-		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		b.pressed.connect(func() -> void: open_url(str(links["site"])))
-		row.add_child(b)
+		_sheet.add_link(L.t("ABRIR O SITE"), str(links["site"]), true)
 	if links.has("github"):
-		var g := UI.ghost("VER NO GITHUB  ↗", UI.PAPER, 88 if _mobile else 64)
-		g.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		g.pressed.connect(func() -> void: open_url(str(links["github"])))
-		row.add_child(g)
-	if row.get_child_count() > 0:
-		_col.add_child(row)
-	elif bool(project.get("private", false)):
-		_col.add_child(UI.label("Repositório privado", 22 if _mobile else 18, UI.MIST, "type"))
+		_sheet.add_link(L.t("VER NO GITHUB"), str(links["github"]), not links.has("site"))
+	if links.is_empty() and bool(project.get("private", false)):
+		var l := UI.text("Repositório privado", "small", UI.MIST)
+		_sheet.footer.add_child(l)
 
 
 # ───────────────────────────────── inspeção 3D: o objeto gira com o mouse/dedo
@@ -205,7 +145,7 @@ func _build_inspect() -> void:
 			_spin_node.rotation.x = clampf(_spin_node.rotation.x + (ev as InputEventMouseMotion).relative.y * 0.006, -0.6, 0.6)
 		elif ev is InputEventScreenDrag:
 			_spin_node.rotate_y((ev as InputEventScreenDrag).relative.x * 0.01))
-	_col.add_child(UI.label("Arraste para girar", 20 if _mobile else 16, UI.MIST, "type"))
+	_col.add_child(UI.label("Arraste para girar", UI.fs("small"), UI.MIST, "type"))
 	_body(L.tx(item, "text"))
 	if str(item.get("tag", "")) != "":
 		_chips([L.t(str(item["tag"]))], _accent)
@@ -231,10 +171,10 @@ func _aabb(n: Node) -> AABB:
 func _build_terminal() -> void:
 	var id := str(item.get("repo", project.get("id", "")))
 	var r := GithubLive.repo(id)
-	var head := UI.label("$ cat %s/README.md" % str(r.get("full", "GabrielInacior/" + id)), 22 if _mobile else 18, Color("#5fd38a"), "type")
+	var head := UI.label("$ cat %s/README.md" % str(r.get("full", "GabrielInacior/" + id)), UI.fs("small"), Color("#5fd38a"), "type")
 	_col.add_child(head)
 	var priv: bool = r.get("private", false)
-	var meta := UI.label("★ %d   ·   %s   ·   %s %s" % [int(r.get("stars", 0)), L.t("privado") if priv else L.t("público"), L.t("atualizado"), str(r.get("pushed", r.get("updated", "")))], 22 if _mobile else 18, UI.MIST, "type")
+	var meta := UI.label("★ %d   ·   %s   ·   %s %s" % [int(r.get("stars", 0)), L.t("privado") if priv else L.t("público"), L.t("atualizado"), str(r.get("pushed", r.get("updated", "")))], UI.fs("small"), UI.MIST, "type")
 	_col.add_child(meta)
 	var langs: Dictionary = r.get("languages", {})
 	if not langs.is_empty():
@@ -246,8 +186,8 @@ func _build_terminal() -> void:
 	rt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rt.add_theme_font_override("normal_font", UI.font("body"))
 	rt.add_theme_font_override("bold_font", UI.font("bold"))
-	rt.add_theme_font_size_override("normal_font_size", 24 if _mobile else 19)
-	rt.add_theme_font_size_override("bold_font_size", 25 if _mobile else 20)
+	rt.add_theme_font_size_override("normal_font_size", UI.fs("small"))
+	rt.add_theme_font_size_override("bold_font_size", UI.fs("body"))
 	rt.add_theme_color_override("default_color", Color("#e6eaf6"))
 	rt.text = GH.md_to_bbcode(GithubLive.readme(id), _accent)
 	_col.add_child(rt)
@@ -255,9 +195,9 @@ func _build_terminal() -> void:
 		if is_instance_valid(rt):
 			rt.text = GH.md_to_bbcode(txt, _accent))
 	if priv:
-		_col.add_child(UI.label("Repositório privado: o código não é público, só a descrição.", 22 if _mobile else 18, UI.MIST, "type"))
+		_col.add_child(UI.label("Repositório privado: o código não é público, só a descrição.", UI.fs("small"), UI.MIST, "type"))
 	else:
-		var b := UI.ghost("VER NO GITHUB  ↗", Color("#5fd38a"), 88 if _mobile else 64)
+		var b := UI.ghost("VER NO GITHUB  ↗", Color("#5fd38a"), UI.tap())
 		b.pressed.connect(func() -> void: open_url(str(r.get("url", "https://github.com/GabrielInacior/" + id))))
 		_col.add_child(b)
 
@@ -282,16 +222,16 @@ func _build_gallery() -> void:
 	fr.add_child(_gtex)
 	_col.add_child(fr)
 	var nav := UI.hbox(10)
-	var prev := UI.ghost("◀", _accent, 88 if _mobile else 60)
+	var prev := UI.ghost("◀", _accent, UI.tap())
 	prev.custom_minimum_size.x = 100
 	prev.pressed.connect(func() -> void: _gshow(_gi - 1))
 	nav.add_child(prev)
-	_gcap = UI.label("", 22 if _mobile else 18, UI.MIST, "type")
+	_gcap = UI.label("", UI.fs("small"), UI.MIST, "type")
 	_gcap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_gcap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_gcap.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	nav.add_child(_gcap)
-	var nxt := UI.ghost("▶", _accent, 88 if _mobile else 60)
+	var nxt := UI.ghost("▶", _accent, UI.tap())
 	nxt.custom_minimum_size.x = 100
 	nxt.pressed.connect(func() -> void: _gshow(_gi + 1))
 	nav.add_child(nxt)
@@ -323,14 +263,21 @@ func _build_doc() -> void:
 		var row := UI.hbox(12)
 		var ic := UI.label("☎", 64, _accent, "body")
 		row.add_child(ic)
-		var who := UI.label("Chamada recebida", 26 if _mobile else 22, UI.MIST, "type")
+		var who := UI.label("Chamada recebida", UI.fs("body"), UI.MIST, "type")
 		who.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(who)
 		_col.add_child(row)
-		_type_label = _body("", UI.PAPER, 30 if _mobile else 26)
+		_type_label = _body("", UI.PAPER, UI.fs("h3"))
 	else:
-		_type_label = UI.label("", 30 if _mobile else 26, Color("#2a1a10"), "type")
-		_col.add_child(_type_label)
+		# folha de papel datilografada (cor de papel só dentro do cartão; o painel segue escuro)
+		var paper := PanelContainer.new()
+		var ps := UI.box(Color("#efe6cf"), Color("#c9b98f"), 1, 6, UI.sp(3))
+		ps.shadow_color = Color(0, 0, 0, 0.5)
+		ps.shadow_size = 12
+		paper.add_theme_stylebox_override("panel", ps)
+		_type_label = UI.label("", UI.fs("h3"), Color("#2a1a10"), "type")
+		paper.add_child(_type_label)
+		_col.add_child(paper)
 	_type_full = full
 	_type_pos = 0.0
 	if style == "file":
@@ -342,21 +289,21 @@ var _sk_out: VBoxContainer
 
 
 func _build_skills() -> void:
-	_body(L.t("Toque numa tecnologia para ver os projetos em que ela foi usada."), UI.MIST, 24 if _mobile else 20)
+	_body(L.t("Toque numa tecnologia para ver os projetos em que ela foi usada."), UI.MIST, UI.fs("small"))
 	var skills: Dictionary = Data.profile.get("skills", {})
 	var pal := [Color("#ff4fa3"), Color("#4e9bff"), Color("#5fd38a"), Color("#ffc83d"), Color("#b06bff"), Color("#ff7a3d"), Color("#5bd0ff"), Color("#ff3d5a")]
 	_sk_out = UI.vbox(8)
 	var ci := 0
 	for cat in skills:
 		var col: Color = pal[ci % pal.size()]
-		_col.add_child(UI.title(L.t(str(cat)), 32 if _mobile else 28, col))
+		_col.add_child(UI.title(L.t(str(cat)), UI.fs("h3"), col))
 		var flow := HFlowContainer.new()
 		flow.add_theme_constant_override("h_separation", 8)
 		flow.add_theme_constant_override("v_separation", 8)
 		for t in skills[cat]:
-			var b := UI.ghost(str(t), col, 72 if _mobile else 48)
+			var b := UI.ghost(str(t), col, UI.tap())
 			b.add_theme_font_override("font", UI.font("bold"))
-			b.add_theme_font_size_override("font_size", 22 if _mobile else 18)
+			b.add_theme_font_size_override("font_size", UI.fs("small"))
 			b.pressed.connect(_show_projects.bind(str(t), col))
 			flow.add_child(b)
 		_col.add_child(flow)
@@ -375,15 +322,15 @@ func _show_projects(tech: String, col: Color) -> void:
 			if sl.begins_with(key) or key.begins_with(sl.split(" ")[0]) or (key.length() > 3 and sl.find(key) >= 0):
 				hits.append(p)
 				break
-	_sk_out.add_child(UI.title(tech, 34 if _mobile else 30, col))
+	_sk_out.add_child(UI.title(tech, UI.fs("h3"), col))
 	if hits.is_empty():
-		_sk_out.add_child(UI.label("Usada no trabalho profissional (veja a CARREIRA).", 24 if _mobile else 20, UI.MIST, "body"))
+		_sk_out.add_child(UI.label("Usada no trabalho profissional (veja a CARREIRA).", UI.fs("small"), UI.MIST, "body"))
 	for p in hits:
 		var b := PanelContainer.new()
 		b.add_theme_stylebox_override("panel", UI.box(Color(col, 0.12), col, 1, 8, 12))
 		var v := UI.vbox(2)
-		v.add_child(UI.label(str(p.get("title", "")), 26 if _mobile else 22, col, "title"))
-		v.add_child(UI.label(str(p.get("tagline", "")), 22 if _mobile else 18, UI.PAPER, "body"))
+		v.add_child(UI.label(str(p.get("title", "")), UI.fs("body"), col, "title"))
+		v.add_child(UI.label(str(p.get("tagline", "")), UI.fs("small"), UI.PAPER, "body"))
 		b.add_child(v)
 		_sk_out.add_child(b)
 	await get_tree().process_frame
@@ -402,23 +349,23 @@ func _build_timeline() -> void:
 		row.add_child(dot)
 		var v := UI.vbox(4)
 		v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		v.add_child(UI.title(str(e.get("company", "")), 32 if _mobile else 28, _accent))
-		v.add_child(UI.label("%s  ·  %s  ·  %s" % [L.t(str(e.get("role", ""))), L.t(str(e.get("period", ""))), L.t(str(e.get("place", "")))], 22 if _mobile else 18, UI.MIST, "type"))
+		v.add_child(UI.title(str(e.get("company", "")), UI.fs("h3"), _accent))
+		v.add_child(UI.label("%s  ·  %s  ·  %s" % [L.t(str(e.get("role", ""))), L.t(str(e.get("period", ""))), L.t(str(e.get("place", "")))], UI.fs("small"), UI.MIST, "type"))
 		for hl in e.get("highlights", []):
-			v.add_child(UI.label("▸ " + L.t(str(hl)), 24 if _mobile else 20, UI.PAPER, "body"))
+			v.add_child(UI.label("▸ " + L.t(str(hl)), UI.fs("small"), UI.PAPER, "body"))
 		row.add_child(v)
 		_col.add_child(row)
 	var edu: Array = Data.profile.get("education", [])
 	if not edu.is_empty():
-		_col.add_child(UI.title("Formação", 30 if _mobile else 26, UI.PAPER))
+		_col.add_child(UI.title("Formação", UI.fs("h3"), UI.PAPER))
 		for ed in edu:
-			_col.add_child(UI.label("▸ " + L.t(str(ed.get("course", ed.get("title", "")))) + "  ·  " + str(ed.get("school", ed.get("place", ""))) + "  ·  " + L.t(str(ed.get("period", ""))), 24 if _mobile else 20, UI.PAPER, "body"))
+			_col.add_child(UI.label("▸ " + L.t(str(ed.get("course", ed.get("title", "")))) + "  ·  " + str(ed.get("school", ed.get("place", ""))) + "  ·  " + L.t(str(ed.get("period", ""))), UI.fs("small"), UI.PAPER, "body"))
 
 
 # ───────────────────────────────── contato
 func _build_contact() -> void:
 	var p: Dictionary = Data.profile
-	_col.add_child(UI.title("Gabriel Inácio", 44 if _mobile else 40, _accent))
+	_col.add_child(UI.title("Gabriel Inácio", UI.fs("h2"), _accent))
 	_body(L.t(str(p.get("role", ""))), UI.MIST)
 	var links: Dictionary = p.get("links", {})
 	for spec in [["LINKEDIN  ↗", "linkedin", Color("#4e9bff")], ["GITHUB  ↗", "github", UI.PAPER], ["E-MAIL  ↗", "email", Color("#5fd38a")]]:
@@ -426,7 +373,7 @@ func _build_contact() -> void:
 			var url := str(links[spec[1]])
 			if spec[1] == "email":
 				url = "mailto:" + url
-			var b := UI.button(spec[0], spec[2], 88 if _mobile else 64)
+			var b := UI.button(spec[0], spec[2], UI.tap())
 			b.pressed.connect(func() -> void: open_url(url))
 			_col.add_child(b)
 
@@ -448,7 +395,7 @@ func _build_arcade() -> void:
 	_game.set("accent", _accent)
 	_game.set("touch", UI.is_mobile())
 	v.add_child(_game)
-	var help := UI.label(_game.call("help"), 20 if _mobile else 16, UI.MIST, "type")
+	var help := UI.label(_game.call("help"), UI.fs("small"), UI.MIST, "type")
 	help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(help)
 	_game.grab_focus()
@@ -463,12 +410,6 @@ func _process(dt: float) -> void:
 		_spin_node.rotate_y(dt * 0.5)
 
 
-func _unhandled_input(e: InputEvent) -> void:
-	if e.is_action_pressed("ui_cancel"):
-		close()
-		get_viewport().set_input_as_handled()
-
-
 static func open_url(url: String) -> void:
 	if url == "":
 		return
@@ -479,9 +420,5 @@ static func open_url(url: String) -> void:
 
 
 func close() -> void:
-	Audio.duck(false)
-	var tw := create_tween()
-	tw.tween_property(self, "modulate:a", 0.0, 0.14)
-	tw.tween_callback(func() -> void:
-		closed.emit()
-		queue_free())
+	if _sheet:
+		_sheet.close()

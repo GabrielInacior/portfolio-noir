@@ -150,51 +150,60 @@ func _build_portrait(vs: Vector2) -> Control:
 	return holder
 
 
-# ───────── painel de fala e escolhas
+# ───────── painel de fala e escolhas (design system)
 func _build_panel(vs: Vector2) -> Control:
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", UI.box(Color(UI.NIGHT, 0.98), accent, 3, 0, 18 if _small else 24))
+	var st := UI.glass(accent, 0, 0, 0.97)
+	st.set_corner_radius_all(0)
+	if _portrait_mode:
+		st.corner_radius_top_left = UI.radius(self)
+		st.corner_radius_top_right = UI.radius(self)
+	st.content_margin_left = UI.sp(3, self)
+	st.content_margin_right = UI.sp(3, self)
+	st.content_margin_top = UI.sp(2.4, self) + (UI.safe_top(self) if not _portrait_mode else 0)
+	st.content_margin_bottom = UI.sp(2.4, self)
+	panel.add_theme_stylebox_override("panel", st)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var v := UI.vbox(12)
+	var v := UI.vbox(UI.sp(1.6, self))
 	panel.add_child(v)
-	# cabeçalho: crachá do personagem + fechar (alvo 88)
-	var head := UI.hbox(10)
-	var tag := PanelContainer.new()
-	tag.add_theme_stylebox_override("panel", UI.box(accent, Color.TRANSPARENT, 0, 8, 10))
-	tag.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var tv := UI.vbox(0)
-	var nml := UI.label(npc_name.to_upper(), 34, UI.INK, "title")
+	# cabeçalho: sobretítulo (função), nome e fechar
+	var head := UI.hbox(UI.sp(1.6, self))
+	var tv := UI.vbox(UI.sp(0.3, self))
+	tv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tv.alignment = BoxContainer.ALIGNMENT_CENTER
+	if role != "":
+		tv.add_child(UI.kicker(L.t(role), accent))
+	var nml := UI.text(L.t(npc_name).to_upper(), "h2", UI.PAPER)
 	nml.autowrap_mode = TextServer.AUTOWRAP_OFF
 	nml.clip_text = true
+	nml.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	tv.add_child(nml)
-	if role != "":
-		var rl := UI.label(role, 20, Color(UI.INK, 0.8), "type")
-		tv.add_child(rl)
-	tag.add_child(tv)
-	head.add_child(tag)
-	var x := UI.ghost("✕", accent, 72 if _small else 88)
-	x.custom_minimum_size.x = 72 if _small else 88
-	x.add_theme_font_override("font", UI.font("body"))
-	x.add_theme_font_size_override("font_size", 34)
+	head.add_child(tv)
+	var x := UI.icon_btn("close", UI.PAPER, UI.tap(self), "Fechar")
+	x.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	x.pressed.connect(_close)
 	head.add_child(x)
 	v.add_child(head)
-	# fala datilografada
+	# fala datilografada em balão
 	var speech_box := PanelContainer.new()
-	speech_box.add_theme_stylebox_override("panel", UI.box(Color(UI.INK, 0.6), Color(accent, 0.4), 1, 12, 16))
-	speech_box.custom_minimum_size.y = 120 if _small else 170
-	_speech = UI.label("", 26 if _small else 30, UI.PAPER, "type")
+	var sb := UI.box(Color(UI.INK, 0.7), Color(accent, 0.45), 1, UI.radius(self) - 4, UI.sp(2, self))
+	sb.border_width_left = 3
+	speech_box.add_theme_stylebox_override("panel", sb)
+	speech_box.custom_minimum_size.y = UI.tap(self) * 1.2
+	_speech = UI.label("", UI.fs("body", self) + 2, UI.PAPER, "type")
+	_speech.add_theme_constant_override("line_spacing", 4)
 	_speech.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	_speech.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	speech_box.add_child(_speech)
 	v.add_child(speech_box)
+	v.add_child(UI.kicker(L.t("Pergunte"), UI.DIM))
 	# escolhas numa área que rola com o dedo (nunca cortadas)
 	var sc := ScrollContainer.new()
 	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	v.add_child(sc)
-	_choices = UI.vbox(10)
+	_choices = UI.vbox(UI.sp(1, self))
 	_choices.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sc.add_child(_choices)
 	TouchScroll.attach(sc)
@@ -224,15 +233,22 @@ func _process(dt: float) -> void:
 
 
 func _choice_button(text: String, col: Color, filled := false) -> Button:
-	var b := UI.button(text, col, 72 if _small else 88) if filled else UI.ghost(text, col, 72 if _small else 88)
+	var b := UI.button(text, col) if filled else UI.ghost(text, col)
 	b.alignment = HORIZONTAL_ALIGNMENT_LEFT if not filled else HORIZONTAL_ALIGNMENT_CENTER
 	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	if not filled:
-		b.add_theme_font_override("font", UI.font("body"))
-		b.add_theme_font_size_override("font_size", 24 if _small else 27)
-	else:
-		b.add_theme_font_size_override("font_size", 32)
+		b.add_theme_font_override("font", UI.font("bold"))
+		b.add_theme_font_size_override("font_size", UI.fs("small", self))
+		b.add_theme_color_override("font_color", UI.PAPER)
+		var r := UI.radius(self) - 6
+		var n := UI.box(Color(UI.PANEL_2, 0.9), UI.STROKE, 1, r, UI.sp(1.6, self))
+		n.border_width_left = 3
+		n.border_color = Color(col, 0.6)
+		b.add_theme_stylebox_override("normal", n)
+		var hv := UI.box(Color(col, 0.16), col, 1, r, UI.sp(1.6, self))
+		hv.border_width_left = 3
+		b.add_theme_stylebox_override("hover", hv)
 	return b
 
 

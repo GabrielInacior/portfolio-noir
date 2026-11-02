@@ -170,52 +170,10 @@ func _unhandled_input(e: InputEvent) -> void:
 
 
 func _build_gate(layer: CanvasLayer) -> void:
-	_gate = Control.new()
-	_gate.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_gate.mouse_filter = Control.MOUSE_FILTER_STOP
-	var bg := ColorRect.new()
-	bg.color = Color("#05060c")
-	_gate.add_child(UI.full(bg))
-	var center := CenterContainer.new()
-	_gate.add_child(UI.full(center))
-	var v := UI.vbox(18)
-	v.alignment = BoxContainer.ALIGNMENT_CENTER
-	center.add_child(v)
-	var over := UI.label(L.t("PORTFÓLIO"), 22, UI.PINK, "type")
-	over.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	over.add_theme_constant_override("outline_size", 0)
-	v.add_child(over)
-	var logo := UI.title("GABRIEL INÁCIO", 86, UI.PAPER)
-	logo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	v.add_child(logo)
-	var sub := UI.label("engenharia de software · games · IA", 26, UI.AMBER, "type")
-	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	v.add_child(sub)
-	var spacer := Control.new()
-	spacer.custom_minimum_size.y = 30
-	v.add_child(spacer)
-	var enter := UI.button("ENTRAR NA CIDADE", UI.AMBER, 86)
-	enter.custom_minimum_size.x = 420
-	enter.pressed.connect(_enter)
-	v.add_child(enter)
-	var langs := UI.hbox(10)
-	langs.alignment = BoxContainer.ALIGNMENT_CENTER
-	for spec in [["PORTUGUÊS", "pt"], ["ENGLISH", "en"]]:
-		var lb := UI.ghost(spec[0], UI.AMBER if L.lang == spec[1] else UI.MIST, 56)
-		lb.custom_minimum_size.x = 180
-		lb.pressed.connect(func() -> void: L.set_lang(spec[1]))
-		langs.add_child(lb)
-	v.add_child(langs)
-	var hint := UI.label("ative o som para a experiência completa", 18, UI.MIST, "body")
-	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	v.add_child(hint)
+	# tela de entrada do design system (scripts/ui/gate.gd): título, ENTRAR, idioma e comandos
+	_gate = Gate.new()
+	_gate.entered.connect(_enter)
 	layer.add_child(_gate)
-	# respiração do título: o tween pertence ao próprio título e morre com a tela de entrada (preso ao
-	# nó principal ele virava loop infinito instantâneo quando a tela era liberada e travava a aba no
-	# navegador; no desktop o Godot só avisa "Infinite loop detected")
-	var tw := logo.create_tween().set_loops()
-	tw.tween_property(logo, "modulate:a", 0.6, 1.4)
-	tw.tween_property(logo, "modulate:a", 1.0, 1.4)
 
 
 func _enter() -> void:
