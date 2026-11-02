@@ -46,6 +46,8 @@ var _tour: Control
 var _tour_label: Label
 var _tour_i := -1
 var _npc_hot = null
+var goal: Dictionary = {}       # lugar marcado (seta de HUD na borda até ele)
+var _goal_arrow: Control
 var _npc_mat: ShaderMaterial
 
 
@@ -78,15 +80,15 @@ func _ready() -> void:
 ## (re)monta tudo pelo formato de tela atual
 func _build() -> void:
 	_ff = UI.ff(self)
-	for n in [_topbar, minimap, signs, prompt, reticle, stick_base, stick_knob, _tour]:
+	for n in [_topbar, minimap, signs, prompt, reticle, stick_base, stick_knob, _tour, _goal_arrow]:
 		if n and is_instance_valid(n):
 			n.queue_free()
-	_build_signs()
 	_build_topbar()
 	_build_minimap()
 	_build_prompt()
 	_build_reticle()
 	_build_tour()
+	_build_goal_arrow()
 	if UI.is_touch() or _ff == "phone":
 		_build_stick()
 	_sync_mode()
@@ -202,15 +204,13 @@ func _build_prompt() -> void:
 	var v := UI.vbox(0)
 	v.alignment = BoxContainer.ALIGNMENT_CENTER
 	h.add_child(v)
-	_prompt_hint = UI.text("", "cap", UI.AMBER, "bold")
+	_prompt_hint = UI.text("", "small" if _ff == "phone" else "cap", UI.AMBER, "bold")
 	_prompt_hint.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_prompt_hint.uppercase = true
 	v.add_child(_prompt_hint)
 	prompt_label = UI.text("", "h3", UI.PAPER)
 	prompt_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	prompt_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	prompt_label.clip_text = true
-	prompt_label.custom_minimum_size.x = 0
+
 	v.add_child(prompt_label)
 	prompt.visible = false
 	prompt.gui_input.connect(func(e: InputEvent) -> void:
@@ -221,6 +221,9 @@ func _build_prompt() -> void:
 
 
 func _show_prompt(verb: String, name: String, col := UI.AMBER) -> void:
+	var maxc := 22 if _ff == "phone" else 34
+	if name.length() > maxc:
+		name = name.substr(0, maxc - 1) + "…"
 	_prompt_hint.text = L.t(verb)
 	_prompt_hint.add_theme_color_override("font_color", col)
 	prompt_label.text = name
@@ -239,19 +242,20 @@ func _show_prompt(verb: String, name: String, col := UI.AMBER) -> void:
 
 func _place_prompt() -> void:
 	var vs := get_viewport_rect().size
-	prompt_label.custom_minimum_size.x = 0
 	prompt.reset_size()
-	var maxw := vs.x - UI.sp(4, self) * 2
-	var w := minf(prompt.get_combined_minimum_size().x, maxw)
-	if prompt.get_combined_minimum_size().x > maxw:
-		prompt_label.custom_minimum_size.x = maxw - UI.sp(14, self)
+	var ms := prompt.get_combined_minimum_size()
+	var w := ms.x
 	var bottom := UI.sp(4, self)
-	if _ff == "phone":
-		bottom = UI.sp(6, self) + 340.0      # acima da alavanca
-	elif _tour and _tour.visible:
+	if _tour and _tour.visible and _ff != "phone":
 		bottom = UI.sp(3, self) + UI.tap(self) + UI.sp(2, self)
-	prompt.size = Vector2(w, 0)
-	prompt.position = Vector2((vs.x - w) / 2.0, vs.y - bottom - prompt.get_combined_minimum_size().y)
+	prompt.size = Vector2(w, ms.y)
+	if _ff == "phone":
+		# celular: botão grande no canto de baixo à direita (a alavanca fica à esquerda)
+		w = maxf(w, vs.x * 0.5)
+		prompt.size = Vector2(w, ms.y)
+		prompt.position = Vector2(vs.x - w - UI.sp(3, self), vs.y - UI.sp(6, self) - ms.y)
+	else:
+		prompt.position = Vector2((vs.x - w) / 2.0, vs.y - bottom - ms.y)
 
 
 func _hide_prompt() -> void:
@@ -276,6 +280,59 @@ func _build_reticle() -> void:
 			reticle.draw_arc(Vector2.ZERO, 5.0 * s, 0, TAU, 16, Color(0, 0, 0, 0.35), 1.2 * s))
 	reticle.visible = not (UI.is_touch() or _ff == "phone")
 	add_child(reticle)
+
+
+# ───────────────────────────────── seta de destino (HUD)
+func _build_goal_arrow() -> void:
+	_goal_arrow = Control.new()
+	_goal_arrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_goal_arrow.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_goal_arrow.draw.connect(_draw_goal)
+	add_child(_goal_arrow)
+
+
+func _draw_goal() -> void:
+	if goal.is_empty() or _museum != null or _sheet_open or player == null or player.cam == null:
+		return
+	var pos: Vector3 = goal["pos"]
+	var d: float = player.global_position.distance_to(pos)
+	if d < 4.0:
+		goal = {}
+		return
+	var vs := get_viewport_rect().size
+	var cam: Camera3D = player.cam
+	var vp := Vector2(world_vp.size) if world_vp else vs
+	var sp := cam.unproject_position(pos + Vector3(0, 2.0, 0)) * (vs / vp)
+	var behind := cam.is_position_behind(pos)
+	var c := vs / 2.0
+	var dir := (sp - c)
+	if behind:
+		dir = -dir
+	var m := UI.sp(5, self)
+	var inside := not behind and Rect2(Vector2(m, m + _topbar_bottom()), vs - Vector2(m * 2, m * 2 + _topbar_bottom())).has_point(sp)
+	var neon: Color = goal.get("neon", UI.AMBER)
+	var f := UI.font("bold")
+	var fsz := UI.fs("cap", self) + 2
+	var label := "%s · %dm" % [str(goal["title"]).to_upper(), int(d)]
+	if inside:
+		var k := 0.85 + 0.15 * sin(Time.get_ticks_msec() * 0.006)
+		_goal_arrow.draw_arc(sp, 14.0 * k, 0, TAU, 24, neon, 2.5, true)
+		_goal_arrow.draw_circle(sp, 4.0, neon)
+		var tw := f.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, fsz).x
+		_goal_arrow.draw_string(f, sp + Vector2(-tw / 2.0, -22), label, HORIZONTAL_ALIGNMENT_LEFT, -1, fsz, neon)
+		return
+	var ang := dir.angle()
+	var half := vs / 2.0 - Vector2(m, m)
+	var t := minf(absf(half.x / maxf(0.001, absf(cos(ang)))), absf(half.y / maxf(0.001, absf(sin(ang)))))
+	var p := c + Vector2(cos(ang), sin(ang)) * t
+	p.y = maxf(p.y, _topbar_bottom() + m)
+	var a := 18.0 * UI.sp(1, self) / 6.0
+	var tri := PackedVector2Array([p + Vector2(cos(ang), sin(ang)) * a, p + Vector2(cos(ang + 2.4), sin(ang + 2.4)) * a * 0.8, p + Vector2(cos(ang - 2.4), sin(ang - 2.4)) * a * 0.8])
+	_goal_arrow.draw_colored_polygon(tri, neon)
+	var tw2 := f.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, fsz).x
+	var lp := p - Vector2(cos(ang), sin(ang)) * (a + 10.0) - Vector2(tw2 / 2.0, -fsz * 0.35)
+	lp.x = clampf(lp.x, m, vs.x - m - tw2)
+	_goal_arrow.draw_string(f, lp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, fsz, neon)
 
 
 # ───────────────────────────────── tour guiado dentro da loja
@@ -446,14 +503,11 @@ func _on_visited(count: int, total: int) -> void:
 func _input(e: InputEvent) -> void:
 	if _sheet_open:
 		return
-	# clique nas placas da rua (mouse livre: no ponto; mouse preso: na retícula)
-	if e is InputEventMouseButton and (e as InputEventMouseButton).pressed and (e as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT and signs and signs.visible:
-		var pos: Vector2 = get_viewport_rect().size / 2.0 if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED else (e as InputEventMouseButton).position
-		var pl := signs.hit(pos)
-		if not pl.is_empty():
-			get_viewport().set_input_as_handled()
-			Nav.travel(self, pl)
-			return
+	# clique com o mouse preso enquanto mira um letreiro/porta, NPC ou peça = interagir (E também)
+	if e is InputEventMouseButton and (e as InputEventMouseButton).pressed and (e as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and _ret_hot:
+		get_viewport().set_input_as_handled()
+		_do_interact()
+		return
 	if not (UI.is_touch() or _ff == "phone"):
 		return
 	if e is InputEventScreenTouch:
@@ -492,11 +546,6 @@ func _input(e: InputEvent) -> void:
 
 ## toque curto no mundo: placa, NPC ou objeto mirado
 func _tap_world(pos: Vector2) -> void:
-	if signs and signs.visible:
-		var pl := signs.hit(pos)
-		if not pl.is_empty():
-			Nav.travel(self, pl)
-			return
 	if prompt.visible and prompt.get_global_rect().has_point(pos):
 		return
 	if _npc_hot != null or not _current.is_empty() or not _exam.is_empty():
@@ -683,6 +732,20 @@ func exit_museum() -> void:
 	_hide_prompt()
 	_ret_hot = false
 	_sync_mode()
+	_suggest_next()
+
+
+## ao sair de uma loja, a seta de HUD sugere o próximo projeto ainda não visitado (o mais perto)
+func _suggest_next() -> void:
+	goal = {}
+	var best := 1e9
+	for pl in Nav.places(city):
+		if pl["visited"] or str((pl["project"] as Dictionary).get("special", "")) != "":
+			continue
+		var d: float = player.global_position.distance_to(pl["pos"])
+		if d < best:
+			best = d
+			goal = pl
 
 
 func _activate(entry: Dictionary) -> void:
@@ -738,6 +801,8 @@ func _open_exhibit(entry: Dictionary) -> void:
 func _process(_dt: float) -> void:
 	if reticle:
 		reticle.queue_redraw()
+	if _goal_arrow:
+		_goal_arrow.queue_redraw()
 	if stick_base:
 		stick_base.queue_redraw()
 	if _sheet_open or player == null:

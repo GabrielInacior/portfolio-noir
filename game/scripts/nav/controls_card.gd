@@ -25,7 +25,7 @@ func _ready() -> void:
 		rows = [
 			[["stick"], "Alavanca à esquerda para andar"],
 			[["drag"], "Arraste à direita para olhar"],
-			[["tap"], "Toque nos objetos e placas"],
+			[["tap"], "Toque nos objetos, letreiros e pessoas"],
 			[["places"], "Menu de lugares: vá direto, sem andar"],
 		]
 	else:

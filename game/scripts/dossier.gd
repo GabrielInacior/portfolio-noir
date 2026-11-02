@@ -67,14 +67,17 @@ func _chips(v: VBoxContainer, items: Array, col: Color) -> void:
 
 func setup_project(project: Dictionary) -> void:
 	var accent := Color(str(project.get("neon", "#ffc83d")))
-	var v := _frame(accent)
+	var v := _frame(accent, L.t("Projeto"), L.t(str(project.get("title", ""))).to_upper())
 	_cover(v, project)
-	v.add_child(UI.title(str(project.get("title", "")).to_upper(), UI.fs("h1"), accent))
-	v.add_child(UI.label(str(project.get("tagline", "")), UI.fs("body"), UI.PAPER, "type"))
-	var meta := UI.hbox(10)
+	v.add_child(UI.label(L.tx(project, "tagline"), UI.fs("body"), UI.PAPER, "type"))
+	var meta := HFlowContainer.new()
+	meta.add_theme_constant_override("h_separation", UI.sp(1))
+	meta.add_theme_constant_override("v_separation", UI.sp(1))
 	var yr := int(project.get("year", 0))
 	if yr > 0:
 		meta.add_child(_tag(str(yr), UI.MIST))
+	if str(project.get("status", "")) != "":
+		meta.add_child(Nav.status_chip(str(project["status"])))
 	if bool(project.get("private", false)):
 		meta.add_child(_tag("PRIVADO", UI.RED))
 	else:
@@ -104,31 +107,65 @@ func setup_project(project: Dictionary) -> void:
 
 
 func setup_about(profile: Dictionary) -> void:
-	var v := _frame(UI.PAPER)
-	v.add_child(UI.title("QUEM HABITA ESSA CIDADE", UI.fs("h1"), UI.PAPER))
-	v.add_child(UI.label(str(profile.get("role", "")) + "  ·  " + str(profile.get("tagline", "")), UI.fs("small"), UI.AMBER, "type"))
-	v.add_child(_rule(UI.PAPER))
-	for para in profile.get("bio", []):
-		v.add_child(UI.label(str(para), UI.fs("body"), UI.PAPER.darkened(0.06), "body"))
-	v.add_child(UI.label("ARSENAL", UI.fs("body"), UI.CYAN, "title"))
+	var v := _frame(UI.PAPER, L.t("Sobre"), L.t("QUEM HABITA ESSA CIDADE"))
+	var stats: Array = profile.get("stats", [])
+	if not stats.is_empty():
+		var row := UI.hbox(UI.sp(1.2))
+		for st in stats:
+			var c := UI.card(UI.AMBER, UI.sp(1.6))
+			c.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			var cv := UI.vbox(0)
+			var num := UI.text(str(st.get("value", "")), "h1", UI.AMBER)
+			num.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			cv.add_child(num)
+			var lb := UI.text(L.t(str(st.get("label", ""))), "cap", UI.MIST)
+			lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			cv.add_child(lb)
+			c.add_child(cv)
+			row.add_child(c)
+		v.add_child(row)
+	var paras: Array = profile.get("about_city", profile.get("bio", []))
+	for para in paras:
+		var l := UI.text(L.t(str(para)), "body", Color(UI.PAPER, 0.92))
+		l.add_theme_constant_override("line_spacing", 4)
+		v.add_child(l)
+	v.add_child(UI.kicker(L.t("Arsenal"), UI.CYAN))
 	_chips(v, profile.get("stack", []), UI.CYAN)
 
 
 func setup_contact(profile: Dictionary) -> void:
-	var v := _frame(UI.GREEN)
-	v.add_child(UI.title("VAMOS CONSTRUIR?", UI.fs("h1"), UI.GREEN))
-	v.add_child(UI.label("Tem um projeto em mente? Me chama.", UI.fs("body"), UI.PAPER, "type"))
-	v.add_child(_rule(UI.GREEN))
+	var c: Dictionary = profile.get("contact", {})
+	var v := _frame(UI.GREEN, L.t("Contato"), L.t(str(c.get("title", "VAMOS CONSTRUIR?"))))
+	v.add_child(UI.text(L.t(str(c.get("subtitle", "Tem um projeto em mente? Me chama."))), "body", UI.PAPER))
 	var links: Dictionary = profile.get("links", {})
-	for spec in [["E-MAIL", str(links.get("email", "")), "mailto:" + str(links.get("email", "")), UI.AMBER],
-			["LINKEDIN", "linkedin.com/in/gabriel-inácio", str(links.get("linkedin", "")), UI.CYAN],
-			["GITHUB", "github.com/GabrielInacior", str(links.get("github", "")), UI.PAPER]]:
-		var b := UI.button(str(spec[0]) + "  ↗", spec[3])
-		b.pressed.connect(_open.bind(str(spec[2])))
-		v.add_child(b)
-		var l := UI.label(str(spec[1]), UI.fs("small"), UI.MIST, "type")
-		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		v.add_child(l)
+	var email := str(links.get("email", ""))
+	if email != "":
+		# e-mail: tocar copia (toast) e o ícone ao lado abre o app de e-mail
+		var eb := UI.button(email, UI.AMBER)
+		eb.add_theme_font_override("font", UI.font("bold"))
+		eb.add_theme_font_size_override("font_size", UI.fs("body"))
+		eb.tooltip_text = L.t("Copiar e-mail")
+		eb.pressed.connect(func() -> void:
+			DisplayServer.clipboard_set(email)
+			if OS.has_feature("web"):
+				JavaScriptBridge.eval("navigator.clipboard&&navigator.clipboard.writeText(%s)" % JSON.stringify(email), true)
+			UI.toast(self, L.t(str(c.get("copied", "E-mail copiado"))), UI.GREEN))
+		v.add_child(eb)
+		v.add_child(UI.text(L.t("Toque para copiar"), "cap", UI.DIM))
+	var row := UI.hbox(UI.sp(1.2))
+	for spec in [["LINKEDIN", str(links.get("linkedin", "")), UI.CYAN], ["GITHUB", str(links.get("github", "")), UI.PAPER]]:
+		if str(spec[1]) == "":
+			continue
+		var b := UI.ghost(str(spec[0]) + "  ↗", spec[2])
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.pressed.connect(_open.bind(str(spec[1])))
+		row.add_child(b)
+	v.add_child(row)
+	var rs: Dictionary = profile.get("resume", {})
+	if bool(rs.get("available", false)) and str(rs.get("url", "")) != "":
+		var cv := UI.ghost(L.t("CURRÍCULO") + "  ↓", UI.AMBER)
+		cv.pressed.connect(_open.bind(str(rs["url"])))
+		v.add_child(cv)
 
 
 func _tag(text: String, col: Color) -> Control:

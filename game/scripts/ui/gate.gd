@@ -53,14 +53,17 @@ func _build() -> void:
 	_logo = UI.label("GABRIEL INÁCIO", UI.fs("display"), UI.PAPER, "title")
 	_logo.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_logo.add_theme_constant_override("line_spacing", -12)
-	_logo.add_theme_color_override("font_shadow_color", Color(UI.PINK, 0.45))
+	_logo.add_theme_color_override("font_shadow_color", Color(UI.PINK, 0.22))
 	_logo.add_theme_constant_override("shadow_offset_x", 0)
 	_logo.add_theme_constant_override("shadow_offset_y", 0)
-	_logo.add_theme_constant_override("shadow_outline_size", 18)
+	_logo.add_theme_constant_override("shadow_outline_size", 7)
 	left.add_child(_logo)
+	var tag := UI.label(str(Data.profile.get("hero_tag", "// FULLSTACK DEVELOPER")), UI.fs("small"), UI.CYAN, "type")
+	left.add_child(tag)
+	left.move_child(tag, left.get_child_count() - 2)
 	var sub := UI.label("engenharia de software · games · IA", UI.fs("h3") * 0.9, UI.AMBER, "type")
 	left.add_child(sub)
-	for l in [over, _logo, sub]:
+	for l in [over, tag, _logo, sub]:
 		(l as Label).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER if center_align else HORIZONTAL_ALIGNMENT_LEFT
 	var gap := Control.new()
 	gap.custom_minimum_size.y = UI.sp(2)
@@ -68,7 +71,6 @@ func _build() -> void:
 	var enter := UI.button("ENTRAR NA CIDADE", UI.AMBER, int(UI.tap() * 1.1))
 	enter.custom_minimum_size.x = minf(vs.x - UI.sp(8), 460.0 if f != "phone" else 9999.0)
 	enter.size_flags_horizontal = Control.SIZE_FILL if f == "phone" else Control.SIZE_SHRINK_BEGIN
-	var play := Icon.make("play", UI.INK, enter.custom_minimum_size.y * 0.34)
 	enter.pressed.connect(func() -> void: entered.emit())
 	left.add_child(enter)
 	enter.grab_focus.call_deferred()
@@ -83,7 +85,7 @@ func _build() -> void:
 			lb.pressed.connect(func() -> void: L.set_lang(spec[1]))
 		seg.add_child(lb)
 	left.add_child(seg)
-	var hint := UI.text("Ative o som para a experiência completa", "cap", UI.DIM)
+	var hint := UI.text("Ative o volume para experiência completa", "cap", UI.DIM)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER if center_align else HORIZONTAL_ALIGNMENT_LEFT
 	left.add_child(hint)
 	# cartão de comandos

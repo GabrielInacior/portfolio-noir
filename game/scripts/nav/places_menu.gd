@@ -15,7 +15,7 @@ func open(c) -> void:
 	for p in list:
 		if p["visited"]:
 			visited += 1
-	var intro := UI.text(L.t("Toque num lugar para ir direto até ele. Você também pode andar pela cidade e clicar nas placas."), "small", UI.MIST)
+	var intro := UI.text(L.t("Toque num lugar para ir direto até ele. Você também pode andar pela cidade e entrar pelos letreiros."), "small", UI.MIST)
 	body.add_child(intro)
 	var grid := GridContainer.new()
 	grid.columns = 1 if UI.ff(self) == "phone" else 2
@@ -82,12 +82,22 @@ func _card(p: Dictionary) -> Control:
 	tcol.alignment = BoxContainer.ALIGNMENT_CENTER
 	tcol.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	h.add_child(tcol)
+	# título e selo de status na mesma linha (o cartão tem altura fixa: nada pode empurrar o texto)
+	var trow := UI.hbox(UI.sp(0.8))
+	trow.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var t := UI.text(str(p["title"]).to_upper(), "h3", UI.PAPER)
 	t.autowrap_mode = TextServer.AUTOWRAP_OFF
 	t.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	t.clip_text = true
+	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	tcol.add_child(t)
+	trow.add_child(t)
+	var st := str((p["project"] as Dictionary).get("status", ""))
+	if st != "":
+		var ch := Nav.status_chip(st)
+		ch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		trow.add_child(ch)
+	tcol.add_child(trow)
 	var s := UI.text(str(p["sub"]), "cap", UI.MIST)
 	s.max_lines_visible = 2
 	s.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS

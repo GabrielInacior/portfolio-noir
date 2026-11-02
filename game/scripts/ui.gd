@@ -338,7 +338,7 @@ func toast(host: Control, msg: String, col := AMBER, secs := 2.4) -> void:
 	host.add_child(p)
 	await host.get_tree().process_frame
 	var vs := host.get_viewport_rect().size
-	p.position = Vector2((vs.x - p.size.x) / 2.0, vs.y - p.size.y - sp(12))
+	p.position = Vector2((vs.x - p.size.x) / 2.0, vs.y * 0.2)
 	p.modulate.a = 0.0
 	var tw := p.create_tween()
 	tw.tween_property(p, "modulate:a", 1.0, 0.18)

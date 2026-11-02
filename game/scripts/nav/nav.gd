@@ -99,3 +99,13 @@ static func travel(hud, place: Dictionary) -> void:
 	var tw2 := fade.create_tween()
 	tw2.tween_property(fade, "color:a", 0.0, 0.3)
 	tw2.tween_callback(fade.queue_free)
+
+
+## selo de status do projeto (PRODUÇÃO / EM DEV / CONCLUÍDO)
+static func status_chip(st: String) -> Control:
+	var s := st.to_lower()
+	if "produ" in s:
+		return UI.chip(L.t("PRODUÇÃO"), UI.GREEN)
+	if "desenv" in s or "dev" in s:
+		return UI.chip(L.t("EM DEV"), UI.AMBER)
+	return UI.chip(L.t(st.to_upper()), UI.CYAN)

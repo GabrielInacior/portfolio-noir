@@ -44,6 +44,8 @@ signal visited_changed(count: int, total: int)
 signal near_changed(project: Dictionary)
 
 # ── traçado (x, z); z negativo é "para frente" a partir do início
+## carros noir feitos no Blender (tools/blender/car_build.py): sedã, táxi, cupê e van em variações de cor
+const CARS := ["car_sedan_maroon", "car_sedan_teal", "car_sedan_cream", "car_taxi_yellow", "car_coupe_black", "car_coupe_crimson", "car_van_grey", "car_van_navy"]
 const AVE_X := 4.5            # meia largura do asfalto da avenida
 const SIDE := 2.5             # largura da calçada
 const FAC := 7.0              # linha das fachadas da avenida (x = ±7)
@@ -353,6 +355,8 @@ func _prop_mesh(name: String) -> Mesh:
 	if _prop_cache.has(name):
 		return _prop_cache[name]
 	var path := "res://assets/props/%s.glb" % name
+	if name.begins_with("car_"):
+		path = "res://assets/vehicles/%s.glb" % name
 	var mesh: Mesh = null
 	if ResourceLoader.exists(path):
 		var sc: Node = (load(path) as PackedScene).instantiate()
@@ -1347,7 +1351,7 @@ func _street_props() -> void:
 	# carros estacionados (encostados no meio-fio)
 	for p in [Vector3(-3.3, 0.0, -13.5), Vector3(3.3, 0.0, -25.0), Vector3(-3.3, 0.0, -56.0), Vector3(30.0, 0.0, CROSS_Z - 2.6), Vector3(-34.0, 0.0, CROSS_Z + 2.6)]:
 		var yaw := 0.0 if absf(p.z - CROSS_Z) > 3.0 else PI / 2
-		_prop("carro_sedan", p, yaw + (PI if p.x > 0 and yaw == 0.0 else 0.0))
+		_prop(CARS[_rng.randi() % CARS.size()], p, yaw + (PI if p.x > 0 and yaw == 0.0 else 0.0))
 
 
 func _street_lamp(p: Vector3, real_light: bool, col := Color("#ffcf99")) -> void:
@@ -1474,25 +1478,10 @@ func _spawn_car(a: Vector3, b: Vector3, phase: float) -> void:
 	var car := Node3D.new()
 	add_child(car)
 	var body := MeshInstance3D.new()
-	body.mesh = _prop_mesh("carro_sedan")
+	body.mesh = _prop_mesh(CARS[_rng.randi() % CARS.size()])
 	body.rotation.y = PI   # o modelo do Blender olha para -z; os faróis ficam em +z
 	car.add_child(body)
-	# faróis (emissivos + halo + feixe no chão) e lanternas vermelhas
-	var dir := (b - a).normalized()
-	for sx in [-0.62, 0.62]:
-		var hl := MeshInstance3D.new()
-		var sm := SphereMesh.new()
-		sm.radius = 0.11
-		sm.height = 0.18
-		hl.mesh = sm
-		hl.material_override = _mat(Color(2.5, 2.3, 1.8), 0.0, true)
-		hl.position = Vector3(sx, 0.72, 2.25)
-		car.add_child(hl)
-		var tl := MeshInstance3D.new()
-		tl.mesh = sm
-		tl.material_override = _mat(Color(2.6, 0.2, 0.25), 0.0, true)
-		tl.position = Vector3(sx, 0.78, -2.3)
-		car.add_child(tl)
+	# faróis e lanternas emissivos vêm no próprio modelo; aqui só o halo, o feixe no chão e a luz
 	_lhalo(car, Vector3(0, 0.72, 2.4), Vector2(2.4, 0.9), Color("#fff2d0"), 0.35)
 	_lhalo(car, Vector3(0, 0.04, 6.0), Vector2(3.0, 7.0), Color("#fff2d0"), 0.16, true)
 	_lhalo(car, Vector3(0, 0.04, -3.4), Vector2(2.2, 2.4), Color("#ff3040"), 0.16, true)
