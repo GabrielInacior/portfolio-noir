@@ -1,27 +1,27 @@
 {
- "id": "airmessage",
- "loja": "Central de Mensagens",
- "ambiente": "Uma central telefonica com paineis de campanha.",
- "pieces": [
-  {
-   "titulo": "O produto",
-   "texto": "AirMessage e um SaaS de CRM e disparo multicanal por WhatsApp e SMS, feito para clinicas, estudios e oficinas.",
-   "tipo": "quadro"
-  },
-  {
-   "titulo": "Campanhas e reengajamento",
-   "texto": "Mensagens diretas, campanhas agendadas e reengajamento pos-venda, tudo organizado por cliente.",
-   "tipo": "telao"
-  },
-  {
-   "titulo": "Um codigo, duas plataformas",
-   "texto": "Um unico app em Flutter roda no Android e no Windows, com autenticacao em duas etapas por SMS e e-mail.",
-   "tipo": "objeto"
-  },
-  {
-   "titulo": "Como foi feito",
-   "texto": "Backend Node com Fastify, app Flutter, PostgreSQL, integracao com a API do WhatsApp, cobranca por assinatura e deploy em AWS.",
-   "tipo": "placa_stack"
-  }
- ]
+  "id": "airmessage",
+  "loja": "Central de Mensagens",
+  "ambiente": "Uma central telefônica com painéis de campanha.",
+  "pieces": [
+    {
+      "titulo": "O produto",
+      "texto": "AirMessage é um SaaS de CRM e disparo multicanal por WhatsApp e SMS, feito para clínicas, estúdios e oficinas.",
+      "tipo": "quadro"
+    },
+    {
+      "titulo": "Campanhas e reengajamento",
+      "texto": "Mensagens diretas, campanhas agendadas e reengajamento pós-venda, tudo organizado por cliente.",
+      "tipo": "telao"
+    },
+    {
+      "titulo": "Um código, duas plataformas",
+      "texto": "Um único app em Flutter roda no Android e no Windows, com autenticação em duas etapas por SMS e e-mail.",
+      "tipo": "objeto"
+    },
+    {
+      "titulo": "Como foi feito",
+      "texto": "Backend Node com Fastify, app Flutter, PostgreSQL, integração com a API do WhatsApp, cobrança por assinatura e deploy em AWS.",
+      "tipo": "placa_stack"
+    }
+  ]
 }

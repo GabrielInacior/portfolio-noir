@@ -279,6 +279,247 @@ def _graphic(d, img, box, item, project, st, idx, ink, acc, acc2, bg):
     return area
 
 
+# ═══════════ rodada 8: anúncios como MONTAGEM (gráfico domina, texto curto) ═══════════
+TEXT_MAX = 0.30      # fração máxima da área ocupada por texto
+GRAPH_MIN = 0.38     # fração mínima da área ocupada pelo bloco gráfico (texto fica <= 0,30)
+
+
+def _short(text, n=2, maxc=74):
+    """No máximo n frases curtas (cortadas no limite de palavra)."""
+    out = []
+    for b in _bullets(text, 4):
+        if len(b) > maxc:
+            cut = b[:maxc].rsplit(" ", 1)[0].rstrip(",;:")
+            b = cut + "…"
+        out.append(b)
+        if len(out) >= n:
+            break
+    return out
+
+
+def _icons_for(stack, k=6):
+    out, seen = [], set()
+    for s_ in stack:
+        ic = _tech_icon(s_)
+        if ic is None:
+            continue
+        key = ic.tobytes()[:4096]
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append((s_, ic))
+        if len(out) >= k:
+            break
+    return out
+
+
+def _paste_icon(img, ic, cx, cy, sz):
+    sz = max(8, int(sz))
+    im = ic.resize((sz, sz), Image.LANCZOS)
+    img.paste(im, (int(cx - sz / 2), int(cy - sz / 2)), im)
+
+
+def _g_arch(d, img, box, stack, acc, acc2, ink, bg):
+    """Diagrama de arquitetura em camadas com os logos: cliente -> serviços -> dados."""
+    x0, y0, x1, y1 = box
+    w, h = x1 - x0, y1 - y0
+    for gx in range(int(x0), int(x1), 28):
+        d.line([gx, y0, gx, y1], fill=acc + (16,))
+    for gy in range(int(y0), int(y1), 28):
+        d.line([x0, gy, x1, gy], fill=acc + (16,))
+    icons = _icons_for(stack, 6)
+    if len(icons) < 2:
+        return 0
+    if len(icons) >= 3:
+        rows = [icons[:1], icons[1:-1], icons[-1:]]
+        labels = ["CLIENTE", "SERVIÇOS", "DADOS"]
+    else:
+        rows = [icons[:1], icons[1:]]
+        labels = ["CLIENTE", "BACKEND"]
+    rh = h / len(rows)
+    centers = []
+    fnt = _font(BODY, max(16, int(min(rh * 0.13, w * 0.04))))
+    lfnt = _font(BODY, max(14, int(rh * 0.1)))
+    for r, row in enumerate(rows):
+        cy = y0 + rh * (r + 0.5)
+        d.text((x0 + 6, y0 + rh * r + 4), labels[r], font=lfnt, fill=acc2 + (230,))
+        n = len(row)
+        cw = min(w * 0.9 / n, rh * 1.15)
+        rowc = []
+        for k, (name, ic) in enumerate(row):
+            cx = x0 + w * (k + 0.5) / n
+            d.rounded_rectangle([cx - cw * 0.45, cy - rh * 0.36, cx + cw * 0.45, cy + rh * 0.36], radius=18,
+                                fill=bg + (235,), outline=acc + (255,), width=4)
+            _paste_icon(img, ic, cx, cy - rh * 0.07, min(cw * 0.5, rh * 0.46))
+            d.text((cx, cy + rh * 0.25), name, font=fnt, fill=ink, anchor="mm")
+            rowc.append((cx, cy))
+        centers.append(rowc)
+    for r in range(len(centers) - 1):
+        for a in centers[r]:
+            for b in centers[r + 1]:
+                ya, yb = a[1] + rh * 0.36, b[1] - rh * 0.36
+                d.line([a[0], ya, b[0], yb], fill=acc2 + (230,), width=5)
+                d.polygon([(b[0] - 9, yb - 14), (b[0] + 9, yb - 14), (b[0], yb)], fill=acc2)
+    return w * h
+
+
+def _ui_lines(d, x, y, w, n, acc, ink, gap=26):
+    for k in range(n):
+        ww = w * (0.9 - (k % 3) * 0.22)
+        d.rounded_rectangle([x, y + k * gap, x + ww, y + k * gap + 12], radius=6,
+                            fill=(ink if k else acc) + (90 if k else 230,))
+
+
+def _screen_ui(d, img, sx0, sy0, sx1, sy1, kind_ui, acc, acc2, ink, bg, title, icons):
+    sw, sh = sx1 - sx0, sy1 - sy0
+    d.rectangle([sx0, sy0, sx1, sy1], fill=tuple(max(0, c - 8) for c in bg) + (255,))
+    d.rectangle([sx0, sy0, sx1, sy0 + sh * 0.1], fill=acc)
+    tf = _font(BODY, max(14, int(sh * 0.055)))
+    d.text((sx0 + sw * 0.05, sy0 + sh * 0.05), title[:22], font=tf, fill=bg, anchor="lm")
+    top = sy0 + sh * 0.14
+    if kind_ui == "chat":
+        for k in range(4):
+            left = k % 2 == 0
+            bw_ = sw * (0.62 if left else 0.5)
+            bx = sx0 + sw * 0.06 if left else sx1 - sw * 0.06 - bw_
+            by = top + k * sh * 0.2
+            d.rounded_rectangle([bx, by, bx + bw_, by + sh * 0.14], radius=14,
+                                fill=(acc2 if left else acc) + (220,))
+            _ui_lines(d, bx + 12, by + sh * 0.035, bw_ - 24, 2, bg, bg, gap=int(sh * 0.045))
+    elif kind_ui == "chart":
+        vals = [0.35, 0.6, 0.45, 0.8, 0.65, 0.95]
+        bw_ = sw * 0.8 / len(vals)
+        base = sy1 - sh * 0.12
+        for k, v in enumerate(vals):
+            bx = sx0 + sw * 0.1 + k * bw_
+            d.rectangle([bx + 4, base - v * sh * 0.55, bx + bw_ - 6, base], fill=(acc if k % 2 else acc2) + (230,))
+        d.line([sx0 + sw * 0.08, base, sx1 - sw * 0.06, base], fill=ink, width=3)
+        _ui_lines(d, sx0 + sw * 0.08, top, sw * 0.5, 2, acc, ink, gap=int(sh * 0.06))
+    else:
+        cw = sw * 0.42
+        for k in range(4):
+            cx_ = sx0 + sw * 0.05 + (k % 2) * (cw + sw * 0.06)
+            cy_ = top + (k // 2) * sh * 0.4
+            d.rounded_rectangle([cx_, cy_, cx_ + cw, cy_ + sh * 0.34], radius=12, fill=ink + (26,),
+                                outline=(acc if k == 0 else acc2) + (200,), width=3)
+            if k < len(icons):
+                _paste_icon(img, icons[k][1], cx_ + cw * 0.25, cy_ + sh * 0.12, min(cw * 0.3, sh * 0.16))
+            _ui_lines(d, cx_ + 10, cy_ + sh * 0.23, cw - 20, 2, acc, ink, gap=int(sh * 0.045))
+
+
+def _ui_kind(text):
+    t = text.lower()
+    if any(w in t for w in ("whatsapp", "chat", "mensag", "sms", "conversa", "npc", "fala")):
+        return "chat"
+    if any(w in t for w in ("métric", "seo", "financ", "estoque", "dados", "anális", "nota", "ranking", "licita")):
+        return "chart"
+    return "cards"
+
+
+def _g_phone(d, img, box, title, text, stack, acc, acc2, ink, bg):
+    x0, y0, x1, y1 = box
+    w, h = x1 - x0, y1 - y0
+    ph = h * 0.96
+    pw = min(ph * 0.5, w * 0.5)
+    cx = x0 + w * 0.32
+    px0, py0 = cx - pw / 2, y0 + h * 0.02
+    d.rounded_rectangle([px0 + 10, py0 + 14, px0 + pw + 10, py0 + ph + 14], radius=int(pw * 0.14), fill=(0, 0, 0, 110))
+    d.rounded_rectangle([px0, py0, px0 + pw, py0 + ph], radius=int(pw * 0.14), fill=(18, 18, 26),
+                        outline=acc + (255,), width=5)
+    icons = _icons_for(stack, 4)
+    _screen_ui(d, img, px0 + pw * 0.07, py0 + ph * 0.06, px0 + pw * 0.93, py0 + ph * 0.94, _ui_kind(text),
+               acc, acc2, ink, bg, title, icons)
+    rx = x0 + w * 0.74
+    for k, (name, ic) in enumerate(icons[:3]):
+        cy = y0 + h * (0.2 + k * 0.3)
+        sz = min(w * 0.22, h * 0.2)
+        d.ellipse([rx - sz * 0.62, cy - sz * 0.62, rx + sz * 0.62, cy + sz * 0.62], fill=acc + (40,),
+                  outline=acc + (200,), width=3)
+        _paste_icon(img, ic, rx, cy, sz * 0.8)
+    return w * h
+
+
+def _g_laptop(d, img, box, title, text, stack, acc, acc2, ink, bg):
+    x0, y0, x1, y1 = box
+    w, h = x1 - x0, y1 - y0
+    lw = min(w * 0.96, h * 1.45)
+    lh = lw * 0.62
+    lx0 = x0 + (w - lw) / 2
+    ly0 = y0 + (h - lh * 1.08) / 2
+    d.rounded_rectangle([lx0, ly0, lx0 + lw, ly0 + lh], radius=16, fill=(16, 16, 24), outline=acc + (255,), width=5)
+    d.polygon([(lx0 - lw * 0.06, ly0 + lh + lh * 0.08), (lx0 + lw * 1.06, ly0 + lh + lh * 0.08),
+               (lx0 + lw, ly0 + lh), (lx0, ly0 + lh)], fill=(40, 40, 54))
+    icons = _icons_for(stack, 4)
+    sx0, sy0, sx1, sy1 = lx0 + lw * 0.04, ly0 + lh * 0.06, lx0 + lw * 0.96, ly0 + lh * 0.94
+    d.rectangle([sx0, sy0, sx1, sy0 + lh * 0.07], fill=(30, 30, 42))
+    for k, c in enumerate([(255, 95, 86), (255, 189, 46), (39, 201, 63)]):
+        d.ellipse([sx0 + 10 + k * 22, sy0 + lh * 0.02, sx0 + 24 + k * 22, sy0 + lh * 0.02 + 14], fill=c)
+    _screen_ui(d, img, sx0, sy0 + lh * 0.07, sx1, sy1, _ui_kind(text), acc, acc2, ink, bg, title, icons)
+    return w * h
+
+
+def _g_bignum(d, img, box, num, text, stack, acc, acc2, ink):
+    x0, y0, x1, y1 = box
+    w, h = x1 - x0, y1 - y0
+    fnt = _font(TITLE, int(h * 0.75))
+    while d.textlength(num, font=fnt) > w * 0.62 and fnt.size > 40:
+        fnt = _font(TITLE, fnt.size - 8)
+    d.text((x0 + 8, y0 + h * 0.5 + 6), num, font=fnt, fill=acc2 + (160,), anchor="lm")
+    d.text((x0, y0 + h * 0.5), num, font=fnt, fill=acc, anchor="lm")
+    nw = d.textlength(num, font=fnt)
+    icons = _icons_for(stack, 4)
+    gx = x0 + nw + (w - nw) * 0.08
+    if icons:
+        cols = 2
+        sz = min((x1 - gx) / cols * 0.8, h / 2 * 0.8)
+        for k, (name, ic) in enumerate(icons[:4]):
+            cx = gx + (k % cols + 0.5) * (x1 - gx) / cols
+            cy = y0 + (k // cols + 0.5) * h / 2
+            _paste_icon(img, ic, cx, cy, sz)
+    else:
+        _icon(d, gx + (x1 - gx) / 2, y0 + h / 2, min(x1 - gx, h) * 0.35, _icon_for(text), acc2, acc, ink)
+    return w * h
+
+
+def _g_iconwall(d, img, box, stack, acc, acc2, ink, text):
+    x0, y0, x1, y1 = box
+    w, h = x1 - x0, y1 - y0
+    icons = _icons_for(stack, 6)
+    if not icons:
+        r = min(w, h) * 0.38
+        _icon(d, x0 + w / 2, y0 + h / 2, r, _icon_for(text), acc, acc2, ink)
+        return w * h * 0.6
+    n = len(icons)
+    cols = 3 if n > 4 else 2 if n > 1 else 1
+    rows = (n + cols - 1) // cols
+    cw, ch = w / cols, h / rows
+    fnt = _font(BODY, max(16, int(min(cw, ch) * 0.12)))
+    for k, (name, ic) in enumerate(icons):
+        cx = x0 + (k % cols + 0.5) * cw
+        cy = y0 + (k // cols + 0.5) * ch
+        s = min(cw, ch) * 0.82
+        d.rounded_rectangle([cx - s / 2, cy - s / 2, cx + s / 2, cy + s / 2], radius=20, fill=acc + (28,),
+                            outline=(acc if k % 2 == 0 else acc2) + (210,), width=4)
+        _paste_icon(img, ic, cx, cy - s * 0.08, s * 0.55)
+        d.text((cx, cy + s * 0.34), name, font=fnt, fill=ink, anchor="mm")
+    return w * h
+
+
+def _pick_graphic(item, project, idx):
+    text = (item.get("title", "") + " " + item.get("text", "") + " " + item.get("tag", "")).lower()
+    nums = re.findall(r"\b\d+[\.,]?\d*\+?", text)
+    if any(w in text for w in ("como foi feito", "arquitetura", "backend", "stack", "servidor", "api ", "infra", "deploy")):
+        return "arch", None
+    if nums and idx % 3 == 1:
+        return "bignum", nums[0]
+    if any(w in text for w in ("app", "celular", "flutter", "mobile", "android", "whatsapp")):
+        return "phone", None
+    if any(w in text for w in ("site", "página", "landing", "web", "seo", "painel", "dashboard", "plataforma",
+                               "saas", "crm")):
+        return "laptop", None
+    return ["phone", "laptop", "iconwall", "arch"][idx % 4], None
+
+
 def make(item, pid, project, kind, dst, theme_over=None, tscale=1.0, idx=0):
     kind = kind if kind in SIZES else "frame"
     W, H = SIZES[kind]
@@ -297,147 +538,143 @@ def make(item, pid, project, kind, dst, theme_over=None, tscale=1.0, idx=0):
     acc2 = _hex(st["accent2"])
     img = Image.new("RGB", (W, H), bg)
     d = ImageDraw.Draw(img, "RGBA")
-    M = int(min(W, H) * 0.075)  # margem
+    M = int(min(W, H) * 0.06)
     land = W > H
-    # ── fundo gráfico por estilo
     if style_name == "terminal":
-        for y in range(0, H, 6):
-            d.line([(0, y), (W, y)], fill=(0, 40, 12, 60))
+        for yy in range(0, H, 6):
+            d.line([(0, yy), (W, yy)], fill=(0, 40, 12, 60))
         d.rectangle([M // 2, M // 2, W - M // 2, H - M // 2], outline=acc + (180,), width=4)
-        d.rectangle([M // 2, M // 2, W - M // 2, M // 2 + 46], fill=(10, 30, 16))
-        for k, c in enumerate([(255, 95, 86), (255, 189, 46), (39, 201, 63)]):
-            d.ellipse([M // 2 + 18 + k * 34, M // 2 + 12, M // 2 + 40 + k * 34, M // 2 + 34], fill=c)
     elif style_name == "arcade":
-        for k in range(14):  # raios
-            d.polygon([(W // 2, H * 0.42), (k * W // 7 - W // 2, -10), (k * W // 7 - W // 2 + W // 14, -10)],
-                      fill=acc2 + (22,) if k % 2 else acc + (18,))
+        for k in range(14):
+            d.polygon([(W // 2, H * 0.5), (k * W // 7 - W // 2, -10), (k * W // 7 - W // 2 + W // 14, -10)],
+                      fill=acc2 + (20,) if k % 2 else acc + (16,))
         d.rectangle([M // 3, M // 3, W - M // 3, H - M // 3], outline=acc + (255,), width=10)
-        d.rectangle([M // 3 + 16, M // 3 + 16, W - M // 3 - 16, H - M // 3 - 16], outline=acc2 + (200,), width=4)
-    elif style_name == "cinema" or style_name == "barber":
-        d.rectangle([0, 0, W, int(H * 0.06)], fill=_hex(st["bg"]))
-        d.rectangle([0, H - int(H * 0.09), W, H], fill=_hex(st["bg"]))
-        d.rectangle([M // 2, M // 2 + int(H * 0.06), W - M // 2, H - M // 2 - int(H * 0.09)], outline=acc2 + (230,), width=5)
-        if style_name == "barber":
-            for k in range(0, W + H, 60):  # listras de poste de barbeiro na faixa de cima
-                d.polygon([(k, 0), (k + 30, 0), (k + 30 - int(H * 0.06), int(H * 0.06)), (k - int(H * 0.06), int(H * 0.06))], fill=acc2 + (210,))
+    elif style_name in ("cinema", "barber"):
+        d.rectangle([0, 0, W, int(H * 0.05)], fill=_hex(st["bg"]))
+        d.rectangle([0, H - int(H * 0.07), W, H], fill=_hex(st["bg"]))
+        d.rectangle([M // 2, M // 2 + int(H * 0.05), W - M // 2, H - M // 2 - int(H * 0.07)],
+                    outline=acc2 + (230,), width=5)
     elif style_name == "bar":
         for r_ in range(10, max(W, H), 70):
             d.ellipse([W * 0.7 - r_, H * 0.2 - r_, W * 0.7 + r_, H * 0.2 + r_], outline=acc + (14,), width=3)
         d.rounded_rectangle([M // 2, M // 2, W - M // 2, H - M // 2], radius=40, outline=acc + (230,), width=6)
-    else:  # startup / studio
-        d.polygon([(W, 0), (W, int(H * 0.55)), (int(W * 0.45), 0)], fill=acc + (40,))
-        d.polygon([(0, H), (int(W * 0.35), H), (0, int(H * 0.72))], fill=acc2 + (30,))
-        for k in range(6):
-            d.ellipse([W - M - 26 - k * 30, M, W - M - 10 - k * 30, M + 16], fill=acc + (120,))
-    # ── conteúdo
+    else:
+        d.polygon([(W, 0), (W, int(H * 0.5)), (int(W * 0.5), 0)], fill=acc + (36,))
+        d.polygon([(0, H), (int(W * 0.35), H), (0, int(H * 0.72))], fill=acc2 + (26,))
+    text_area = 0.0
     title = (item.get("title") or project.get("title") or "").upper()
-    tag = item.get("tag", "")
     status = (project.get("status") or "").upper()
-    bullets = _bullets(item.get("text", ""), 2)
+    seal = (project.get("title") or pid).upper() + (("  ·  " + status) if status else "")
+    bullets = _short(item.get("text", ""), 2 if not land else 1, 70 if not land else 64)
     cta = project.get("links", {}).get("site") or project.get("links", {}).get("github") or "inaciodev.online"
     cta = cta.replace("https://", "").replace("http://", "").rstrip("/")
-    x0 = M + (12 if style_name in ("terminal", "arcade") else 0)
-    y = M + (56 if style_name == "terminal" else int(H * 0.06) + 10 if paper else 6)
+    stack = [s_.strip() for s_ in item.get("tag", "").replace(",", "·").split("·") if s_.strip()]
+    stack += [s_ for s_ in project.get("stack", []) if s_ not in stack]
+    gkind, num = _pick_graphic(item, project, idx)
+    if gkind == "arch" and len(_icons_for(stack, 6)) < 2:
+        gkind = "laptop"
+    top_pad = int(H * 0.05) + 8 if paper else 0
+    x0 = M + (10 if style_name in ("terminal", "arcade") else 0)
     inner_w = W - 2 * x0
-    checks = []
-    # selo (projeto / status)
-    seal = (project.get("title") or pid).upper() + (("  ·  " + status) if status else "")
-    fs_seal = int(H * (0.034 if not land else 0.045))
+    if land:
+        tx0, tx1 = int(W * 0.58), W - x0
+        gbox = (x0, M + top_pad, int(W * 0.55), H - M - int(H * 0.04))
+        col_w = tx1 - tx0
+    else:
+        tx0, tx1 = x0, W - x0
+        col_w = inner_w
+    y = M + top_pad + 4
+    fs_seal = int(H * (0.028 if not land else 0.04))
     f = _font(BODY, fs_seal)
-    while d.textlength(seal, font=f) + 34 > inner_w and fs_seal > 14:
+    while d.textlength(seal, font=f) + 30 > col_w and fs_seal > 12:
         fs_seal -= 1
         f = _font(BODY, fs_seal)
-    sw = d.textlength(seal, font=f) + 34
-    d.rounded_rectangle([x0, y, x0 + sw, y + fs_seal + 18], radius=10, fill=acc + (255,))
-    d.text((x0 + 17, y + 6), seal, font=f, fill=bg if _lum(acc) > 0.3 else (255, 255, 255))
-    y += fs_seal + 40
-    # título grande, ajusta para caber em até 2 linhas
-    fs_t = int(H * (0.16 if not land else 0.19) * tscale)
-    while fs_t > 40:
+    sw = d.textlength(seal, font=f) + 30
+    d.rounded_rectangle([tx0, y, tx0 + sw, y + fs_seal + 14], radius=9, fill=acc + (255,))
+    d.text((tx0 + 15, y + 5), seal, font=f, fill=bg if _lum(acc) > 0.3 else (255, 255, 255))
+    text_area += sw * (fs_seal + 14)
+    y += fs_seal + 26
+    fs_t = int(H * (0.11 if not land else 0.13) * tscale)
+    tl, ft = [title], _font(st["title_font"], fs_t)
+    while fs_t > 34:
         ft = _font(st["title_font"], fs_t)
-        tl = _wrap(d, title, ft, inner_w)
-        if len(tl) <= 2 and all(d.textlength(t, font=ft) <= inner_w for t in tl):
+        tl = _wrap(d, title, ft, col_w)
+        if len(tl) <= 2:
             break
         fs_t -= 4
     for t in tl:
         if style_name in ("arcade", "bar"):
-            d.text((x0 + 5, y + 5), t, font=ft, fill=acc2 + (200,))
-        d.text((x0, y), t, font=ft, fill=acc if not paper else ink)
-        y += int(fs_t * 0.92)
-    y += 6
-    # subtítulo (tag)
-    if tag:
-        fs_s = int(H * 0.045)
-        fsub = _font(st["body_font"], fs_s)
-        for t in _wrap(d, tag, fsub, inner_w)[:2]:
-            d.text((x0, y), t, font=fsub, fill=acc2 if not paper else acc2)
-            y += int(fs_s * 1.25)
-    d.line([(x0, y + 10), (x0 + min(inner_w, 260), y + 10)], fill=acc + (255,), width=6)
-    y += 36
-    # linhas (bullets) com corpo mínimo legível a 2 m
+            d.text((tx0 + 4, y + 4), t, font=ft, fill=acc2 + (200,))
+        d.text((tx0, y), t, font=ft, fill=acc if not paper else ink)
+        text_area += d.textlength(t, font=ft) * fs_t * 0.9
+        y += int(fs_t * 0.9)
+    y += 8
     px_per_mm = H / (PHYS_H[kind] * 1000.0)
-    min_px = int(MIN_CAP_MM * px_per_mm / 0.7)  # cap ~70% do corpo
-    footer_h = int(H * 0.11)
-    avail = H - M - footer_h - y
-    fs_b = int(H * (0.052 if not land else 0.075) * (0.5 + 0.5 * tscale))
-    fs_b = max(fs_b, min_px)
-    for _ in range(12):
-        fb = _font(st["body_font"], fs_b)
-        blocks = [_wrap(d, b, fb, inner_w - 46) for b in bullets]
-        need = sum(len(bl) * int(fs_b * 1.3) + int(fs_b * 0.55) for bl in blocks)
-        if need <= avail * 0.62:
-            break
-        if fs_b - 2 >= min_px:
-            fs_b -= 2
-        elif len(bullets) > 1:
-            bullets = bullets[:-1]
-        else:
-            break
+    min_px = int(MIN_CAP_MM * px_per_mm / 0.7)
+    fs_b = max(min_px, int(H * (0.036 if not land else 0.05) * (0.6 + 0.4 * tscale)))
     fb = _font(st["body_font"], fs_b)
-    for bl in [_wrap(d, b, fb, inner_w - 46) for b in bullets]:
-        mark_y = y + int(fs_b * 0.35)
+    blines = []
+    for b in bullets:
+        wl = _wrap(d, b, fb, col_w - 34)
+        if len(wl) > 2:
+            last = wl[1]
+            while last and d.textlength(last + "…", font=fb) > col_w - 34:
+                last = last.rsplit(" ", 1)[0] if " " in last else last[:-1]
+            wl = [wl[0], last.rstrip(",;: ") + "…"]
+        blines.append(wl)
+    if not land:
+        foot = int(H * 0.07)
+        need_b = sum(len(bl) for bl in blines) * int(fs_b * 1.25) + len(blines) * int(fs_b * 0.4)
+        gbox = (x0, y + 6, W - x0, H - M - foot - need_b - 18)
+        by = gbox[3] + 14
+    else:
+        by = y + 6
+    for bl in blines:
+        mark_y = by + int(fs_b * 0.3)
         if style_name == "terminal":
-            d.text((x0, y), ">", font=fb, fill=acc)
+            d.text((tx0, by), ">", font=fb, fill=acc)
         else:
-            d.rectangle([x0, mark_y, x0 + 18, mark_y + 18], fill=acc)
+            d.rectangle([tx0, mark_y, tx0 + 14, mark_y + 14], fill=acc)
         for t in bl:
-            d.text((x0 + 40, y), t, font=fb, fill=ink if not paper else ink)
-            y += int(fs_b * 1.3)
-        y += int(fs_b * 0.55)
-    # bloco gráfico (diagrama, chips, número ou ícone) no espaço que sobrou acima do rodapé
-    gtop = y + 6
-    gbot = H - M - footer_h
+            d.text((tx0 + 30, by), t, font=fb, fill=ink)
+            text_area += d.textlength(t, font=fb) * fs_b * 1.1
+            by += int(fs_b * 1.25)
+        by += int(fs_b * 0.4)
+    g = gbox
     garea = 0
-    if gbot - gtop > H * 0.12:
-        garea = _graphic(d, img, (x0, gtop, W - x0, gbot), item, project, st, idx, ink, acc, acc2, bg)
-    # rodapé: CTA
-    fy = H - M - int(H * 0.06)
-    fs_c = int(H * (0.04 if not land else 0.05))
+    if g[3] - g[1] > H * 0.2:
+        ptitle = project.get("title", pid)
+        if gkind == "arch":
+            garea = _g_arch(d, img, g, stack, acc, acc2, ink, bg)
+        elif gkind == "phone":
+            garea = _g_phone(d, img, g, ptitle, item.get("text", ""), stack, acc, acc2, ink, bg)
+        elif gkind == "laptop":
+            garea = _g_laptop(d, img, g, ptitle, item.get("text", ""), stack, acc, acc2, ink, bg)
+        elif gkind == "bignum":
+            garea = _g_bignum(d, img, g, num, item.get("text", ""), stack, acc, acc2, ink)
+        else:
+            garea = _g_iconwall(d, img, g, stack, acc, acc2, ink, item.get("text", ""))
+    fs_c = int(H * (0.032 if not land else 0.042))
     fc = _font(BODY, fs_c)
-    while d.textlength(">> " + cta, font=fc) > inner_w and fs_c > 14:
+    while d.textlength(">> " + cta, font=fc) > col_w and fs_c > 12:
         fs_c -= 1
         fc = _font(BODY, fs_c)
-    if paper:
-        d.text((x0, H - int(H * 0.09) + int(H * 0.025)), cta.upper(), font=fc, fill=acc)
-    else:
-        d.text((x0, fy), ">> " + cta, font=fc, fill=acc2)
+    cy_ = H - M - fs_c if not paper else H - int(H * 0.07) + int(H * 0.018)
+    d.text((tx0, cy_), (">> " + cta) if not paper else cta.upper(), font=fc, fill=acc2 if not paper else acc)
+    text_area += d.textlength(">> " + cta, font=fc) * fs_c
     img = _texture(img, paper, acc)
-    if style_name == "terminal" or style_name == "arcade":
-        img = img.filter(ImageFilter.SMOOTH)
-    # ── sonda: corte, margem, contraste, legibilidade
-    checks.append(("cabe", y <= H - M - footer_h + 4))
-    checks.append(("nao_so_texto", garea >= W * H * 0.07))
-    checks.append(("selo_cabe", sw <= inner_w + 1))
-    checks.append(("cta_cabe", d.textlength(">> " + cta, font=fc) <= inner_w + 1))
-    checks.append(("corpo_legivel_2m", fs_b >= min_px))
-    checks.append(("contraste_texto", contrast(ink, bg) >= 4.5))
-    checks.append(("contraste_titulo", contrast(acc if not paper else ink, bg) >= 3.0))
-    if not all(c[1] for c in checks) and tscale > 0.55:
-        return make(item, pid, project, kind, dst, theme_over, tscale * 0.85, idx)
+    tfrac = text_area / float(W * H)
+    gfrac = garea / float(W * H)
+    checks = [("cabe", by <= H - M + 2), ("texto_max_30", tfrac <= TEXT_MAX), ("grafico_min", gfrac >= GRAPH_MIN),
+              ("max_2_bullets", len(bullets) <= 2), ("corpo_legivel_2m", fs_b >= min_px),
+              ("contraste_texto", contrast(ink, bg) >= 4.5)]
+    if not all(c[1] for c in checks) and tscale > 0.6:
+        return make(item, pid, project, kind, dst, theme_over, tscale * 0.88, idx)
     os.makedirs(os.path.dirname(dst), exist_ok=True)
     img.save(dst, optimize=True)
-    return {"file": os.path.relpath(dst, ROOT), "kind": kind, "style": style_name, "body_px": fs_b, "min_px": min_px,
-            "bullets": len(bullets), "graphic": round(garea / float(W * H), 2), "ok": all(c[1] for c in checks), "checks": {k: v for k, v in checks}}
+    return {"file": os.path.relpath(dst, ROOT), "kind": kind, "style": style_name, "graphic_kind": gkind,
+            "text_frac": round(tfrac, 3), "graphic_frac": round(gfrac, 3), "bullets": len(bullets),
+            "ok": all(c[1] for c in checks), "checks": {k: v for k, v in checks}}
 
 
 def load_theme_over():

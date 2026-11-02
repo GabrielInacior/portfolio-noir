@@ -51,7 +51,7 @@
   {
    "kind": "frame",
    "title": "O app",
-   "text": "FormataAI transforma uma fala informal em e-mail, mensagem, orcamento ou receita prontos para usar. Foi o meu trabalho de conclusao de curso.",
+   "text": "FormataAI transforma uma fala informal em e-mail, mensagem, orçamento ou receita prontos para usar. Foi o meu trabalho de conclusão de curso.",
    "tag": "",
    "img": "res://assets/museum/formataai/ad_05.png",
    "ad": true
@@ -59,7 +59,7 @@
   {
    "kind": "screen",
    "title": "Voz vira texto",
-   "text": "Voce grava a voz, o app transcreve com o Whisper e formata com o GPT-4o-mini, entregando um texto estruturado e limpo.",
+   "text": "Você grava a voz, o app transcreve com o Whisper e formata com o GPT-4o-mini, entregando um texto estruturado e limpo.",
    "tag": "",
    "img": "res://assets/museum/formataai/ad_06.png",
    "ad": true
@@ -67,7 +67,7 @@
   {
    "kind": "frame",
    "title": "Pensado para incluir",
-   "text": "Feito para quem tem menos fluencia digital: em vez de digitar e formatar, a pessoa so fala e recebe o texto pronto.",
+   "text": "Feito para quem tem menos fluência digital: em vez de digitar e formatar, a pessoa só fala e recebe o texto pronto.",
    "tag": "",
    "img": "res://assets/museum/formataai/ad_07.png",
    "ad": true
@@ -75,7 +75,7 @@
   {
    "kind": "frame",
    "title": "Design de prompt",
-   "text": "O segredo esta no desenho dos prompts e na gestao de contexto, para a saida sair sempre no formato certo.",
+   "text": "O segredo esta no desenho dos prompts e na gestão de contexto, para a saída sair sempre no formato certo.",
    "tag": "",
    "img": "res://assets/museum/formataai/ad_08.png",
    "ad": true

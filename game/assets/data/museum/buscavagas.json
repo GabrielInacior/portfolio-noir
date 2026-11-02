@@ -1,37 +1,37 @@
 {
- "id": "buscavagas",
- "loja": "Agencia de Empregos",
- "ambiente": "Uma agencia com murais de vagas e fichas.",
- "pieces": [
-  {
-   "titulo": "A ideia",
-   "texto": "BuscaVagas cruza o seu curriculo com vagas de desenvolvedor e coloca no topo aquelas em que voce tem chance real: combina com voce, tem poucos candidatos e foi publicada ha pouco.",
-   "tipo": "quadro"
-  },
-  {
-   "titulo": "17 fontes",
-   "texto": "Reune vagas de 17 fontes diferentes num lugar so, sempre atualizadas por uma fila de sincronizacao em segundo plano.",
-   "tipo": "telao"
-  },
-  {
-   "titulo": "Nota de oportunidade",
-   "texto": "Uma nota de match calculada com embeddings locais compara a sua experiencia com cada vaga, sem mandar seus dados para fora.",
-   "tipo": "relatorio"
-  },
-  {
-   "titulo": "Tempo real",
-   "texto": "Novas vagas e mudancas de status aparecem na hora, sem precisar recarregar a pagina.",
-   "tipo": "objeto"
-  },
-  {
-   "titulo": "Desafio técnico",
-   "texto": "Padronizar vagas de 17 fontes com formatos diferentes e rankear por relevancia de forma rapida e barata.",
-   "tipo": "relatorio"
-  },
-  {
-   "titulo": "Como foi feito",
-   "texto": "Nuxt 3 e TypeScript no front, Fastify no back, PostgreSQL e Redis com filas BullMQ, embeddings da Hugging Face e Docker.",
-   "tipo": "placa_stack"
-  }
- ]
+  "id": "buscavagas",
+  "loja": "Agência de Empregos",
+  "ambiente": "Uma agência com murais de vagas e fichas.",
+  "pieces": [
+    {
+      "titulo": "A ideia",
+      "texto": "BuscaVagas cruza o seu currículo com vagas de desenvolvedor e coloca no topo aquelas em que você tem chance real: combina com você, tem poucos candidatos e foi publicada há pouco.",
+      "tipo": "quadro"
+    },
+    {
+      "titulo": "17 fontes",
+      "texto": "Reune vagas de 17 fontes diferentes num lugar só, sempre atualizadas por uma fila de sincronizacao em segundo plano.",
+      "tipo": "telao"
+    },
+    {
+      "titulo": "Nota de oportunidade",
+      "texto": "Uma nota de match calculada com embeddings locais compara a sua experiência com cada vaga, sem mandar seus dados para fora.",
+      "tipo": "relatório"
+    },
+    {
+      "titulo": "Tempo real",
+      "texto": "Novas vagas e mudancas de status aparecem na hora, sem precisar recarregar a página.",
+      "tipo": "objeto"
+    },
+    {
+      "titulo": "Desafio técnico",
+      "texto": "Padronizar vagas de 17 fontes com formatos diferentes e rankear por relevancia de forma rápida e barata.",
+      "tipo": "relatório"
+    },
+    {
+      "titulo": "Como foi feito",
+      "texto": "Nuxt 3 e TypeScript no front, Fastify no back, PostgreSQL e Redis com filas BullMQ, embeddings da Hugging Face e Docker.",
+      "tipo": "placa_stack"
+    }
+  ]
 }

@@ -1,57 +1,57 @@
 {
- "theme": {
-  "room": "escritorio",
-  "floor": "carpete",
-  "wall": "concreto",
-  "warm": "#ffd36a",
-  "cool": "#4e9bff",
-  "accent": "#4e9bff",
-  "sub": "Agência"
- },
- "items": [
-  {
-   "kind": "prop",
-   "model": "monitor_cv",
-   "title": "MBM",
-   "text": "Plataforma de landing pages e blog institucional para empresa de telecom, com CMS, newsletter, analytics e SEO dinâmico.",
-   "tag": "Nuxt · Vue · AWS"
+  "theme": {
+    "room": "escritorio",
+    "floor": "carpete",
+    "wall": "concreto",
+    "warm": "#ffd36a",
+    "cool": "#4e9bff",
+    "accent": "#4e9bff",
+    "sub": "Agência"
   },
-  {
-   "kind": "prop",
-   "model": "cadeado",
-   "title": "Segurança",
-   "text": "Backend com autenticação JWT e 2FA, papéis de acesso e upload para S3.",
-   "tag": "Auth"
-  },
-  {
-   "kind": "frame",
-   "title": "A plataforma",
-   "text": "MBM Site e uma plataforma de landing pages e blog institucional para uma empresa de telecom, com um painel administrativo completo.",
-   "tag": ""
-  },
-  {
-   "kind": "screen",
-   "title": "CMS proprio",
-   "text": "Um CMS feito do zero deixa a equipe criar e editar paginas e posts, com newsletter e analytics integrados.",
-   "tag": ""
-  },
-  {
-   "kind": "frame",
-   "title": "SEO dinamico",
-   "text": "Cada pagina gera seu proprio SEO de forma dinamica, para ranquear melhor nas buscas.",
-   "tag": ""
-  },
-  {
-   "kind": "plaque",
-   "title": "Seguranca",
-   "text": "Login com JWT e duas etapas, papeis de acesso e upload de arquivos para a AWS S3.",
-   "tag": ""
-  },
-  {
-   "kind": "plaque",
-   "title": "Como foi feito",
-   "text": "Nuxt 4 e Vue 3 no front, Node no back, PostgreSQL e armazenamento em AWS S3.",
-   "tag": ""
-  }
- ]
+  "items": [
+    {
+      "kind": "prop",
+      "model": "monitor_cv",
+      "title": "MBM",
+      "text": "Plataforma de landing pages e blog institucional para empresa de telecom, com CMS, newsletter, analytics e SEO dinâmico.",
+      "tag": "Nuxt · Vue · AWS"
+    },
+    {
+      "kind": "prop",
+      "model": "cadeado",
+      "title": "Segurança",
+      "text": "Backend com autenticação JWT e 2FA, papéis de acesso e upload para S3.",
+      "tag": "Auth"
+    },
+    {
+      "kind": "frame",
+      "title": "A plataforma",
+      "text": "MBM Site é uma plataforma de landing pages e blog institucional para uma empresa de telecom, com um painel administrativo completo.",
+      "tag": ""
+    },
+    {
+      "kind": "screen",
+      "title": "CMS próprio",
+      "text": "Um CMS feito do zero deixa a equipe criar e editar páginas e posts, com newsletter e analytics integrados.",
+      "tag": ""
+    },
+    {
+      "kind": "frame",
+      "title": "SEO dinâmico",
+      "text": "Cada página gera seu próprio SEO de forma dinâmica, para ranquear melhor nas buscas.",
+      "tag": ""
+    },
+    {
+      "kind": "plaque",
+      "title": "Segurança",
+      "text": "Login com JWT e duas etapas, papeis de acesso e upload de arquivos para a AWS S3.",
+      "tag": ""
+    },
+    {
+      "kind": "plaque",
+      "title": "Como foi feito",
+      "text": "Nuxt 4 e Vue 3 no front, Node no back, PostgreSQL e armazenamento em AWS S3.",
+      "tag": ""
+    }
+  ]
 }

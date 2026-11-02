@@ -1,37 +1,37 @@
 {
- "id": "inaciocyber",
- "loja": "Laboratorio Blackwall",
- "ambiente": "Um laboratorio escuro com terminais verdes e relatorios.",
- "pieces": [
-  {
-   "titulo": "A ferramenta",
-   "texto": "InacioCyber é um agente de segurança que roda inteiro na sua máquina. Você conversa num chat com estética de terminal e define um alvo que você possui ou tem autorização para testar.",
-   "tipo": "quadro"
-  },
-  {
-   "titulo": "Agente que encadeia ferramentas",
-   "texto": "Um modelo de IA local, via Ollama, decide e encadeia ferramentas de reconhecimento, varredura e auditoria de código, e no fim escreve um relatório em markdown.",
-   "tipo": "telao"
-  },
-  {
-   "titulo": "Tudo local",
-   "texto": "Roda em containers Docker na sua maquina. Nada sai para fora, so as requisicoes que o proprio agente faz contra o alvo autorizado.",
-   "tipo": "relatorio"
-  },
-  {
-   "titulo": "Uso responsável",
-   "texto": "Feito apenas para uso autorizado. Cada sessão exige uma confirmação por escrito de que você tem permissão para testar aquele alvo, e tudo fica auditado.",
-   "tipo": "placa_stack"
-  },
-  {
-   "titulo": "App de verdade",
-   "texto": "Tem app desktop proprio em Electron, chat em tempo real por WebSocket, historico de sessoes e barra de metricas de maquina.",
-   "tipo": "objeto"
-  },
-  {
-   "titulo": "Como foi feito",
-   "texto": "Python no agente e nas ferramentas, modelo local via Ollama, Docker para tudo, Postgres para auditoria e Electron no desktop.",
-   "tipo": "placa_stack"
-  }
- ]
+  "id": "inaciocyber",
+  "loja": "Laboratorio Blackwall",
+  "ambiente": "Um laboratorio escuro com terminais verdes e relatórios.",
+  "pieces": [
+    {
+      "titulo": "A ferramenta",
+      "texto": "InacioCyber é um agente de segurança que roda inteiro na sua máquina. Você conversa num chat com estética de terminal e define um alvo que você possui ou tem autorização para testar.",
+      "tipo": "quadro"
+    },
+    {
+      "titulo": "Agente que encadeia ferramentas",
+      "texto": "Um modelo de IA local, via Ollama, decide e encadeia ferramentas de reconhecimento, varredura e auditoria de código, e no fim escreve um relatório em markdown.",
+      "tipo": "telao"
+    },
+    {
+      "titulo": "Tudo local",
+      "texto": "Roda em containers Docker na sua maquina. Nada sai para fora, só as requisicoes que o próprio agente faz contra o alvo autorizado.",
+      "tipo": "relatório"
+    },
+    {
+      "titulo": "Uso responsável",
+      "texto": "Feito apenas para uso autorizado. Cada sessão exige uma confirmação por escrito de que você tem permissão para testar aquele alvo, e tudo fica auditado.",
+      "tipo": "placa_stack"
+    },
+    {
+      "titulo": "App de verdade",
+      "texto": "Tem app desktop próprio em Electron, chat em tempo real por WebSocket, histórico de sessões e barra de métricas de maquina.",
+      "tipo": "objeto"
+    },
+    {
+      "titulo": "Como foi feito",
+      "texto": "Python no agente e nas ferramentas, modelo local via Ollama, Docker para tudo, Postgres para auditoria e Electron no desktop.",
+      "tipo": "placa_stack"
+    }
+  ]
 }

@@ -1,37 +1,37 @@
 {
- "id": "barbercore",
- "loja": "Barbearia BarberCore",
- "ambiente": "Uma barbearia noir com cadeira clássica, espelhos e o CRM rodando no balcão.",
- "pieces": [
-  {
-   "titulo": "BarberCore",
-   "texto": "CRM completo para barbearias: clientes, agenda, financeiro, estoque e fidelidade num só lugar, com clientes pagantes.",
-   "tipo": "quadro",
-   "tag": "SaaS · em desenvolvimento"
-  },
-  {
-   "titulo": "Agenda que se preenche",
-   "texto": "Agendamentos online e lembretes no WhatsApp reduzem faltas e mantêm a cadeira ocupada.",
-   "tipo": "telao",
-   "tag": "Agenda · WhatsApp"
-  },
-  {
-   "titulo": "Fidelidade e assinaturas",
-   "texto": "Planos recorrentes cobrados no Stripe e programa de pontos para o cliente voltar.",
-   "tipo": "quadro",
-   "tag": "Stripe"
-  },
-  {
-   "titulo": "Financeiro e estoque",
-   "texto": "Caixa do dia, comissões e controle de produtos com alerta de reposição.",
-   "tipo": "relatorio",
-   "tag": "Gestão"
-  },
-  {
-   "titulo": "Multi-tenant na AWS",
-   "texto": "Cada barbearia tem seus dados isolados, rodando na AWS com Next.js, FastAPI, Node e PostgreSQL.",
-   "tipo": "placa_stack",
-   "tag": "Next.js · FastAPI · AWS"
-  }
- ]
+  "id": "barbercore",
+  "loja": "Barbearia BarberCore",
+  "ambiente": "Uma barbearia noir com cadeira clássica, espelhos e o CRM rodando no balcão.",
+  "pieces": [
+    {
+      "titulo": "BarberCore",
+      "texto": "CRM completo para barbearias: clientes, agenda, financeiro, estoque e fidelidade num só lugar, com clientes pagantes.",
+      "tipo": "quadro",
+      "tag": "SaaS · em desenvolvimento"
+    },
+    {
+      "titulo": "Agenda que se preenche",
+      "texto": "Agendamentos online e lembretes no WhatsApp reduzem faltas e mantêm a cadeira ocupada.",
+      "tipo": "telao",
+      "tag": "Agenda · WhatsApp"
+    },
+    {
+      "titulo": "Fidelidade e assinaturas",
+      "texto": "Planos recorrentes cobrados no Stripe e programa de pontos para o cliente voltar.",
+      "tipo": "quadro",
+      "tag": "Stripe"
+    },
+    {
+      "titulo": "Financeiro e estoque",
+      "texto": "Caixa do dia, comissões e controle de produtos com alerta de reposição.",
+      "tipo": "relatório",
+      "tag": "Gestão"
+    },
+    {
+      "titulo": "Multi-tenant na AWS",
+      "texto": "Cada barbearia tem seus dados isolados, rodando na AWS com Next.js, FastAPI, Node e PostgreSQL.",
+      "tipo": "placa_stack",
+      "tag": "Next.js · FastAPI · AWS"
+    }
+  ]
 }
