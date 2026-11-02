@@ -262,3 +262,13 @@ Decisão do usuário: descartar o elenco Meshy e refazer no Blender. Pipeline at
   folha de expressões). Peso total dos personagens: ~1,6 MB.
 - `game/scripts/scene3d/noir_character.gd` mantém a interface (setup/set_expression/set_talking/set_rim/play);
   `set_expression` troca a célula do atlas do rosto; a fala alterna boca aberta/fechada.
+
+## UI/UX: design system e navegação (frente de UI, 2026-11-01)
+- **Design system** em `game/scripts/ui.gd` (autoload UI): tokens de cor, tipografia por papel (`UI.fs("h1")` etc.) e espaçamento (`UI.sp`), alvo de toque (`UI.tap`, 44 px reais no celular), formato de tela (`UI.ff`: phone/land/desk), componentes (`button`, `ghost`, `icon_btn`, `card`, `chip`, `keycap`, `toast`, `kicker`).
+- **Ícones desenhados** em código: `scripts/ui/icon.gd` (`Icon.make("map", cor, tamanho)`), nada de fonte de ícones.
+- **Modal padrão** `scripts/ui/sheet.gd` (`Sheet`): cabeçalho fixo com fechar, corpo com rolagem por toque, rodapé fixo, layouts por formato, Esc/clique fora fecham. Exhibit, Panels e Dossier usam o Sheet.
+- **Tema por projeto** em `game/assets/data/themes.json` + `scripts/ui/themes.gd`: estilo (dossier, arcade, terminal, menu, product, startup, lab, career), cores, fonte do título, sobretítulo e decoração desenhada. O cenário deve usar as mesmas cores nos cartazes 3D.
+- **Navegação**: tela de entrada com comandos por dispositivo (`scripts/ui/gate.gd`, `scripts/nav/controls_card.gd`), menu de lugares (`scripts/nav/places_menu.gd`, viagem com fade em `Nav.travel`), mapa grande clicável e radar (`scripts/map_ui.gd`), tour guiado nas lojas (setas da barra, teclas `,` `.`), seta de HUD sugerindo o próximo projeto ao sair de uma loja. Sem placas flutuantes no mundo (regra do usuário): as placas de rua são físicas, do cenário.
+- **NPC mirado** ganha contorno amarelo e o aviso "[E] conversar" / botão no celular.
+- **Carros**: `tools/blender/car_build.py` gera 8 variações (sedã, táxi, cupê, van) em `game/assets/vehicles/`.
+- **Auditoria**: `bash tools/dev_ui_audit.sh <pasta> res://tools_dev/nav_ui_shot.tscn` (5 tamanhos) e `python tools/dev_ui_sheet.py <pasta> <saida.png>`.

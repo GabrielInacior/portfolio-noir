@@ -48,6 +48,8 @@ func _ready() -> void:
 	add_child(UI.full(_sheet))
 	var wide := kind in ["skills", "arcade", "terminal", "timeline"]
 	_sheet.setup(L.t(str(project.get("title", ""))), L.tx(item, "title") if item.has("title") else "", _accent, 1060.0 if wide else 0.0)
+	Themes.apply(_sheet, Themes.of(project))
+	_accent = _sheet.accent
 	_sheet.closed.connect(func() -> void:
 		Audio.duck(false)
 		closed.emit()

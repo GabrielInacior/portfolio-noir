@@ -8,6 +8,7 @@ var _accent := UI.AMBER
 
 
 var _sheet: Sheet
+var _theme_project: Dictionary = {}
 
 
 func _ready() -> void:
@@ -20,6 +21,9 @@ func _frame(accent: Color, kick := "", ttl := "") -> VBoxContainer:
 	_sheet = Sheet.new()
 	add_child(UI.full(_sheet))
 	_sheet.setup(kick, ttl, accent, 760.0)
+	if not _theme_project.is_empty():
+		Themes.apply(_sheet, Themes.of(_theme_project))
+		_accent = _sheet.accent
 	_sheet.closed.connect(func() -> void:
 		closed.emit()
 		queue_free())
@@ -67,7 +71,9 @@ func _chips(v: VBoxContainer, items: Array, col: Color) -> void:
 
 func setup_project(project: Dictionary) -> void:
 	var accent := Color(str(project.get("neon", "#ffc83d")))
+	_theme_project = project
 	var v := _frame(accent, L.t("Projeto"), L.t(str(project.get("title", ""))).to_upper())
+	accent = _accent
 	_cover(v, project)
 	v.add_child(UI.label(L.tx(project, "tagline"), UI.fs("body"), UI.PAPER, "type"))
 	var meta := HFlowContainer.new()
@@ -135,6 +141,7 @@ func setup_about(profile: Dictionary) -> void:
 
 func setup_contact(profile: Dictionary) -> void:
 	var c: Dictionary = profile.get("contact", {})
+	_theme_project = {"special": "contact"}
 	var v := _frame(UI.GREEN, L.t("Contato"), L.t(str(c.get("title", "VAMOS CONSTRUIR?"))))
 	v.add_child(UI.text(L.t(str(c.get("subtitle", "Tem um projeto em mente? Me chama."))), "body", UI.PAPER))
 	var links: Dictionary = profile.get("links", {})

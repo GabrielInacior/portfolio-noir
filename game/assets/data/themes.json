@@ -1,0 +1,19 @@
+{
+  "_doc": "Tema visual por projeto/loja: usado pelos painéis da UI (scripts/ui/themes.gd) e pelos cartazes 3D do cenário. style: dossier | arcade | terminal | menu | product | startup | lab | career. Cores em hex; title_font: title | type | marker | bold.",
+  "_default": {"style": "startup", "bg": "#0f1528", "bg2": "#151d36", "accent": "", "accent2": "#4ec9ff", "ink": "#eef1fb", "title_font": "title", "kicker": "PROJETO"},
+  "rumor": {"style": "dossier", "bg": "#1b140d", "bg2": "#2a1f14", "accent": "#e3b45a", "accent2": "#d6403a", "ink": "#f1e6cf", "title_font": "type", "kicker": "PROCESSO Nº 01 · CONFIDENCIAL", "stamp": "CASO ABERTO"},
+  "fortress": {"style": "arcade", "bg": "#120a20", "bg2": "#1e1236", "accent": "#ff9a3c", "accent2": "#4ec9ff", "ink": "#fff4e6", "title_font": "title", "kicker": "INSERT COIN · PLAYER 1"},
+  "labia": {"style": "menu", "bg": "#1a0a16", "bg2": "#2a1024", "accent": "#ff4f9a", "accent2": "#ffc83d", "ink": "#fbe9f2", "title_font": "marker", "kicker": "CARDÁPIO DA CASA"},
+  "inaciocyber": {"style": "terminal", "bg": "#030806", "bg2": "#071510", "accent": "#39ff6a", "accent2": "#ff3a4c", "ink": "#c9ffd8", "title_font": "type", "kicker": "root@inaciocyber:~#"},
+  "sitembm": {"style": "product", "bg": "#08161a", "bg2": "#0e2328", "accent": "#21d4c4", "accent2": "#ffffff", "ink": "#e9fbf9", "title_font": "bold", "kicker": "PRODUTO · EM PRODUÇÃO"},
+  "atende360": {"style": "product", "bg": "#08161a", "bg2": "#0e2328", "accent": "#21d4c4", "accent2": "#ffffff", "ink": "#e9fbf9", "title_font": "bold", "kicker": "PRODUTO · EM PRODUÇÃO"},
+  "airmessage": {"style": "product", "bg": "#07150d", "bg2": "#0c2216", "accent": "#25d366", "accent2": "#ffffff", "ink": "#e9fbef", "title_font": "bold", "kicker": "PRODUTO · SAAS"},
+  "buscavagas": {"style": "startup", "bg": "#07150f", "bg2": "#0c2219", "accent": "#00dc82", "accent2": "#ffc83d", "ink": "#eafbf3", "title_font": "title", "kicker": "STARTUP · PRODUTO WEB"},
+  "orbix": {"style": "startup", "bg": "#0a1224", "bg2": "#111c36", "accent": "#4e9bff", "accent2": "#9b7bff", "ink": "#eaf1ff", "title_font": "title", "kicker": "SAAS · MULTI-TENANT"},
+  "formataai": {"style": "startup", "bg": "#1a0b16", "bg2": "#281224", "accent": "#ff6fae", "accent2": "#4ec9ff", "ink": "#fdeef5", "title_font": "title", "kicker": "APP MOBILE · IA"},
+  "ankiana": {"style": "startup", "bg": "#120e22", "bg2": "#1c1634", "accent": "#9b84ff", "accent2": "#ffc83d", "ink": "#f0edff", "title_font": "title", "kicker": "APP MOBILE · IA"},
+  "barbercore": {"style": "product", "bg": "#16120a", "bg2": "#231c10", "accent": "#d9b13c", "accent2": "#ffffff", "ink": "#fbf5e6", "title_font": "bold", "kicker": "PRODUTO · EM DESENVOLVIMENTO"},
+  "_lab": {"style": "lab", "bg": "#0b0f1e", "bg2": "#121933", "accent": "#ffffff", "accent2": "#ff4f9a", "ink": "#eef1fb", "title_font": "title", "kicker": "LAB · SOBRE MIM"},
+  "_carreira": {"style": "career", "bg": "#071226", "bg2": "#0c1c38", "accent": "#5bd0ff", "accent2": "#ffc83d", "ink": "#eaf6ff", "title_font": "title", "kicker": "CARREIRA"},
+  "contato": {"style": "product", "bg": "#07150d", "bg2": "#0c2216", "accent": "#5fe0a0", "accent2": "#ffc83d", "ink": "#e9fbef", "title_font": "title", "kicker": "CONTATO"}
+}

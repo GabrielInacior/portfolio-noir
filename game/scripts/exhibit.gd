@@ -21,6 +21,7 @@ func _ready() -> void:
 	_sheet = Sheet.new()
 	add_child(UI.full(_sheet))
 	_sheet.setup(L.t(str(project.get("title", ""))), L.tx(item, "title"), _accent)
+	Themes.apply(_sheet, Themes.of(project))
 	_sheet.closed.connect(func() -> void:
 		closed.emit()
 		queue_free())
