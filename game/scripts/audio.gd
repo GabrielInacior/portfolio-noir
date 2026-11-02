@@ -100,9 +100,24 @@ func _bus_fx(bus: String, idx: int) -> AudioEffect:
 # ───────────────────────────────────────────────────────────────── API ──
 func start() -> void:
 	_started = true
+	# a música já entra audível (antes começava em -60 dB e subia por quadro; no navegador isso podia
+	# ficar mudo) e o modo de reprodução do web é "stream" (project.godot), para os barramentos e
+	# efeitos funcionarem como no desktop
+	_player.volume_db = -10.0 + linear_to_db(maxf(_music_lin, 0.001)) if _on else -60.0
 	if not _player.playing:
 		_player.play()
 	_set_zone("rua")
+	_report.call_deferred()
+
+
+## log do estado do áudio (aparece no console do navegador): confere se está tocando sem precisar ouvir
+func _report() -> void:
+	await get_tree().create_timer(2.5).timeout
+	var a := _player.get_playback_position()
+	await get_tree().create_timer(1.0).timeout
+	print("AUDIO estado: tocando=%s posicao=%.2f->%.2f vol=%.1f dB mudo_master=%s mix=%d Hz latencia=%.3f s buses=%d on=%s" % [
+		_player.playing, a, _player.get_playback_position(), _player.volume_db, AudioServer.is_bus_mute(0),
+		int(AudioServer.get_mix_rate()), AudioServer.get_output_latency(), AudioServer.bus_count, _on])
 
 
 func set_enabled(on: bool) -> void:
