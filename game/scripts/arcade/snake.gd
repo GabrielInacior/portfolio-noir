@@ -59,6 +59,7 @@ func _process(dt: float) -> void:
 	snake.push_front(head)
 	if head == food:
 		score += 1
+		Audio.arcade_bleep()
 		_food()
 	else:
 		snake.pop_back()

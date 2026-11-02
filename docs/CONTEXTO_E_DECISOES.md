@@ -230,3 +230,12 @@ comparação em `docs/referencias/personagens/comparacao_elenco.jpg`. Vance (det
   ONLY_FOR). Lena não usa perguntando nem bartender (resto de 4 a 5 cm).
 - Prova: `char_anim_grid.tscn` (4 personagens, 12 animações) e `char_ingame_shot.tscn` (rua e
   diálogo, pelo `play()` do personagem, com as trocas valendo como no jogo).
+
+## Áudio (2026-11-01)
+- Sons gerados localmente com Stable Audio Open + triagem CLAP (pipeline herdada do FortressChaos;
+  skill `.claude/skills/portfolio-audio`, detalhes em `docs/AUDIO.md`). Venv `C:\Users\gabri\ai_audio\venv`,
+  token HF em `C:\Users\gabri\.hf_token` (nunca imprimir). Proibido banco de sons pronto e AudioGen/MusicGen.
+- Usuário pediu para não gastar muito tempo no som: conjunto essencial entregue (ambientes de rua e das lojas,
+  passos, portas, painéis, mira, objetos, fliperama), 3,1 MB além da OST. Refazer som só se ele pedir.
+- `Audio` (autoload) faz tudo sozinho observando a cena (zona rua/loja, passos, neon, vapor, carros, objetos
+  pelo item mirado, interruptor, telefone); nada toca antes do ENTRAR; botão de som cala o Master.

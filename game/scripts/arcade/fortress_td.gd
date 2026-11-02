@@ -92,6 +92,7 @@ func _process(dt: float) -> void:
 		if float(enemies[i]["hp"]) <= 0:
 			enemies.remove_at(i)
 			gold += 5
+			Audio.arcade_bleep()
 	for i in range(shots.size() - 1, -1, -1):
 		shots[i]["t"] = float(shots[i]["t"]) - dt
 		if float(shots[i]["t"]) <= 0:

@@ -64,6 +64,7 @@ func _process(dt: float) -> void:
 			bricks.remove_at(i)
 			vel.y = -vel.y
 			score += 10
+			Audio.arcade_bleep()
 			break
 	if bricks.is_empty():
 		_level()
