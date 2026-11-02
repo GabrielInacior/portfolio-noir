@@ -153,3 +153,10 @@ Pendentes desta rodada (pedidos do usuário que chegaram no meio):
 - Música no web: só o buffer foi aumentado; falta pré-compilar shaders no carregamento e espalhar a montagem por quadros, e medir underruns no Chrome.
 - Painel de skills navegável, efeito VHS nos popups de tela, popup = mesma arte da tela 3D, cursor custom, transições de tela, sonda de vazio/qualidade/interação por sala, set dressing completo dos interiores (LAB e lojas de software ainda vazios no centro), glitch nos monitores do InacioCyber.
 - Portas com textura SD/CC0 e varredura completa de gaps (frente e 45°) não feitas nesta rodada.
+
+
+## Pendências de performance e câmera (rodada final)
+- Feito: fusão de malhas, atlas de anúncios, perfis alto/padrão/batata, câmera de toque corrigida (ver docs/PERFORMANCE.md).
+- Falta: .pck 26,6 MB (meta 15): reduzir atlas/áudio/GLB; VRAM 290 MB (meta 250/120): VRAM comprimida só para atlas
+  da língua ativa (carregar um .pck por língua ou ETC2 apenas) e cortar buffers de pós no batata;
+  OccluderInstance3D e visibility_range por quarteirão; pausar telões/tráfego fora da vista; medir em celular real.

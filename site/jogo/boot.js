@@ -1,6 +1,6 @@
 // Gerado por tools/deploy/make_boot.py. Abre a cidade noir por cima da página.
 (function () {
-  var CFG = {"canvasResizePolicy": 2, "emscriptenPoolSize": 8, "ensureCrossOriginIsolationHeaders": true, "executable": "/jogo/index", "experimentalVK": false, "fileSizes": {"index.pck": 54176440, "index.wasm": 39513091}, "focusCanvas": true, "gdextensionLibs": [], "godotPoolSize": 4, "mainPack": "/jogo/index.pck"};
+  var CFG = {"canvasResizePolicy": 2, "emscriptenPoolSize": 8, "ensureCrossOriginIsolationHeaders": true, "executable": "/jogo/index", "experimentalVK": false, "fileSizes": {"index.pck": 26622576, "index.wasm": 39513091}, "focusCanvas": true, "gdextensionLibs": [], "godotPoolSize": 4, "mainPack": "/jogo/index.pck"};
   var path = location.pathname;
   // carregador abre em INGLÊS por padrão (pedido do usuário); a escolha salva no seletor do jogo
   // (localStorage pf_lang) passa a valer; o HTML oculto da home continua em português para o Google
@@ -29,7 +29,8 @@
       '#pfl .r{position:absolute;inset:0;pointer-events:none;opacity:.22;' +
       'background:repeating-linear-gradient(100deg,transparent 0 22px,#9fb3ff22 22px 23px);animation:pfr .6s linear infinite}' +
       '@keyframes pfr{from{background-position:0 0}to{background-position:-40px 160px}}' +
-      'html.pf-lock,html.pf-lock body{overflow:hidden!important}';
+      'html.pf-lock,html.pf-lock body{overflow:hidden!important}' +
+      '#pfl,#pfg{cursor:url(/jogo/cursor_arrow.png) 3 2,auto}#pfl.busy{cursor:url(/jogo/cursor_busy.png) 16 16,progress}';
     document.head.appendChild(css);
     document.documentElement.classList.add('pf-lock');
     var wrap = document.createElement('div');

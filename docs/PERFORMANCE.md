@@ -44,3 +44,25 @@ Medido com `tools_dev/district_shot.tscn` (PERF=1, ponto z=-30 olhando o cruzame
 - Primitivas subiram muito: investigar personagens (12k tris, sombra) e o skyline com recuos; meta < 300 mil.
 - Peso: props 5,6 MB (44 GLB), texturas 6,4 MB. No celular real (`UI.is_mobile()`): sem glow, sem sombra,
   menos chuva/vapor/carros/pedestres, metade dos postes sem luz real.
+
+## Rodada final de performance (PC, sonda `tools_dev/perf_r6.tscn`, 4 pontos da cidade)
+Antes = sem fusão de malhas e com panfletos/anúncios em arquivos soltos e texturas sem compressão.
+Draw calls do mundo (`dc_mundo`), pior ponto (avenida) / ponto típico (cruzamento).
+
+| Perfil | Resolução | Draw calls (cruz./avenida) | Primitivas (cruz.) | VRAM | Quadro médio / pior |
+|---|---|---|---|---|---|
+| Antes (NOMERGE, sem compressão) | 1280x720 | 830 / 1993 | 64 mil | 523 MB | 10,6 / 24 ms |
+| Alto/padrão agora | 1280x720 | 405 / 701 | 107 mil | ~390 MB | 6,2 / 14 ms |
+| Padrão | 405x720 | 209 / 351 | 72 mil | 294 MB | 5,7 / 12 ms |
+| Batata | 405x720 | 151 / 243 | 51 mil | 290 MB | 5,5 / 6 ms |
+
+Feito: fusão de malhas estáticas por célula e material (`render/merge.gd`: 2294 para 483 malhas),
+atlas de anúncios por língua (3 páginas), imagens grandes em WebP com perda
+(`tools/deploy/compress_imports.py`, reaplicado no build porque `.import` não é versionado; VRAM comprimida S3TC+ETC2 baixava a VRAM para ~229 MB, mas o .pck ia a 225 MB, então ficou de fora),
+panfletos da rua em miniaturas de 384 px (`assets/flyers`, antes carregava os prints cheios: -100 MB),
+perfil `UI.quality()` alto/padrão/batata (celular e GPU fraca detectados, queda automática por FPS,
+`?q=batata` ou `localStorage pf_q` forçam), distância de câmera/névoa menores, resolução interna menor.
+Limite conhecido: a fusão tira o culling por objeto (primitivas sobem no PC); falta OccluderInstance3D e
+`visibility_range` por quarteirão, e pausar telões/tráfego fora da vista. `.pck` 26,6 MB (meta 15 MB; antes 24 MB: 6 atlas novos). VRAM de ~290 MB passa da meta (250 padrão, 120 batata):
+vem das texturas sem compressão em GPU e de ~130 MB de buffers de viewport/pós (investigar com a sonda de memória
+`tools_dev/mem_probe.tscn`).
