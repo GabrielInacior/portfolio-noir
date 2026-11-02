@@ -992,7 +992,7 @@ static func _lab(m) -> void:
 	code_monitor(m, mon, Vector3(0.35, 0, 0), 2.0, MATRIX, {"tint": Color("#5bd0ff")})
 	var all_techs := []
 	for cat in cats:
-		all_techs.append_array(skills[cat])
+		all_techs.append_array(groups[cat])
 	laptop(m, d, Vector3(0.7, 0.77, -0.1), all_techs.slice(10, 16), 3.0)
 	m.prop("servidor_ia", Vector3(-W / 2 + 0.5, 0, D / 2 - 0.7), PI / 4, 0.9)
 	tech_shelf(m, Vector3(W / 2 - 0.25, 0, D / 2 - 1.7), -PI / 2, all_techs, 1.4)
