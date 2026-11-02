@@ -1,0 +1,9 @@
+# binários do export web: nunca converter fim de linha
+*.wasm binary
+*.pck binary
+*.png binary
+*.jpg binary
+*.glb binary
+*.ogg binary
+*.mp3 binary
+*.ttf binary
