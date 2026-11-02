@@ -18,6 +18,7 @@ func _ready() -> void:
 	_build_world_view()
 	city = City.new()
 	_world_vp.add_child(city)
+	_sharp.tag(city)
 	var layer := CanvasLayer.new()
 	add_child(layer)
 	hud = Hud.new()
@@ -85,6 +86,7 @@ const RETRO := preload("res://shaders/retro_ps1.gdshader")
 const RETRO_H := {"forte": 360, "suave": 432}
 var _world_vp: SubViewport
 var _world_rect: TextureRect
+var _sharp
 var retro := "forte"
 
 
@@ -106,6 +108,10 @@ func _build_world_view() -> void:
 	under.layer = -1
 	add_child(under)
 	under.add_child(_world_rect)
+	# passada nítida por cima do retrô: textos, imagens e telas do 3D em resolução cheia
+	_sharp = preload("res://scripts/render/sharp_pass.gd").new()
+	add_child(_sharp)
+	_sharp.setup(_world_vp, under)
 	get_window().size_changed.connect(_fit_world)
 	_fit_world()
 

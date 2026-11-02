@@ -791,7 +791,8 @@ func _place_shops() -> void:
 func _shop(face: Vector3, normal: Vector3, project: Dictionary, grand := false) -> void:
 	var neon := Color(str(project.get("neon", "#ffc83d")))
 	var holder := Node3D.new()
-	holder.position = face + normal * 0.02
+	# 16 cm à frente da fachada: o painel de concreto do térreo (14 cm de espessura) cobria a vitrine e a porta
+	holder.position = face + normal * 0.16
 	holder.rotation.y = atan2(normal.x, normal.z)
 	add_child(holder)
 	var W := 5.6 if not grand else 9.0
