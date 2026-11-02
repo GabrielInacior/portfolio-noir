@@ -115,4 +115,7 @@ await atlas.composite(tiles.map((t, i) => ({ input: t.buf, left: (i % cols) * 12
   .toFile(path.join(OUT, "atlas.png"));
 index.forEach((it, i) => { it.atlas = { col: i % cols, row: Math.floor(i / cols), size: 128 }; });
 fs.writeFileSync(path.join(ROOT, "data", "tech_icons.json"), JSON.stringify(index, null, 1));
+// versão lida pelo jogo (ui.gd): {"icons": {nome: {id, file, aliases, color}}}
+const game = { icons: Object.fromEntries(index.map((it) => [it.name, { id: it.id, file: it.id + "_128.png", aliases: it.alias, color: it.color }])) };
+fs.writeFileSync(path.join(ROOT, "game", "assets", "data", "tech_icons.json"), JSON.stringify(game, null, 1));
 console.log("ícones:", index.length);
