@@ -1,112 +1,68 @@
 extends Node3D
-## Personagem NOIR (modelos estilizados: arte conceito por IA, malha pelo Meshy, rig Mixamo; ver
-## docs/CONTEXTO_E_DECISOES.md). Um GLB leve por personagem (12k tris, textura JPEG 1024, shape keys
-## de rosto) e UMA biblioteca de animações comum (anims.glb, esqueleto Mixamo).
+## Personagem NOIR low-poly estilo PS1 (tools/blender/char_ps1_build.py). Substitui o elenco Meshy.
+## Malha construída em volta do esqueleto Mixamo, na pose de repouso dele: TODOS os personagens usam o
+## mesmo esqueleto, então uma única biblioteca de animações (ps1/anims.glb) serve a todos sem conversão
+## (fim dos braços torcendo). Braços nascem separados do tronco; pesos limpos por anel.
+## Cor por vértice (sem textura, como no PS1) e rosto por decalque com atlas 8x2 (expressões x boca
+## fechada/aberta, tools/blender/char_ps1_faces.py). ~900 triângulos por personagem.
 ## Interface: setup(card), set_expression(), set_talking(), set_rim(), play().
-## Desempenho: material único sem brilho; animação pausa quando o personagem sai da tela
-## (VisibleOnScreenNotifier3D); LOD de malha gerado na importação.
 
-const MODELS := {
-	"detetive": "res://assets/characters/meshy/vance.glb",
-	"couro": "res://assets/characters/meshy/lena.glb",
-	"bartender": "res://assets/characters/meshy/otto.glb",
-	"hacker": "res://assets/characters/meshy/kai.glb",
-}
-const ANIMS := "res://assets/characters/meshy/anims.glb"
-## biblioteca já convertida para o esqueleto de cada um (tools_dev/char_bake_anims.gd): sem isso a
-## mesma rotação aplicada a esqueletos com repouso diferente torce ombros e braços
-const BAKED := {"detetive": "vance", "couro": "lena", "bartender": "otto", "hacker": "kai"}
-static var _baked := {}
-## Animações por personagem. Ficaram fora da biblioteca (tools_dev/char_bake_anims.gd, DROP):
-## encostado (precisa de parede), sentado e digitando (precisam de cadeira). A conversão aplica uma
-## restrição braço x tronco e mede o que sobra: na Lena, "perguntando" e "bartender" ainda encostam
-## a mão na jaqueta, então ela usa "falando" no lugar.
-const SAFE_ANIMS := {"couro": ["idle", "respirando", "falando", "pensativo", "sim", "nao", "olhando", "apontando",
-	"fumando", "andando"]}
-## animação que só faz sentido para um personagem (bartender se curva sobre um balcão)
-const ONLY_FOR := {"bartender": ["bartender"]}
-## troca de animação que saiu ou não serve para o personagem
-const SUBST := {"encostado": "respirando", "sentado": "idle", "digitando": "olhando", "perguntando": "falando",
-	"bartender": "respirando"}
-## expressão -> pesos das shape keys (contidas, adultas)
-const EXPR := {
-	"serio": {"brow_down": 0.55},
-	"desconfiado": {"brow_down": 1.0, "squint": 0.9},
-	"intrigado": {"brow_up": 1.0},
-	"pensativo": {"brow_down": 0.35, "squint": 0.4, "smile_r": 0.15},
-	"sorriso_canto": {"smile_r": 1.0, "brow_up": 0.2},
-	"cansado": {"squint": 1.0, "brow_up": 0.35},
-	"firme": {"brow_down": 0.85},
-}
-const ALIAS := {"neutro": "serio", "feliz": "sorriso_canto", "satisfeito": "sorriso_canto", "surpreso": "intrigado",
+const DIR := "res://assets/characters/ps1/"
+## ficha (cast.gd / city.gd) -> modelo
+const MODELS := {"detetive": "vance", "couro": "lena", "lena": "lena", "bartender": "otto", "hacker": "kai",
+	"vance": "vance", "otto": "otto", "kai": "kai", "extra1": "extra1", "extra2": "extra2"}
+const SCALE := {"lena": 0.95, "kai": 0.98, "extra2": 0.95}
+const EXPRS := ["serio", "desconfiado", "intrigado", "pensativo", "sorriso_canto", "cansado", "firme", "neutro"]
+const ALIAS := {"feliz": "sorriso_canto", "satisfeito": "sorriso_canto", "surpreso": "intrigado",
 	"bravo": "firme", "triste": "cansado", "nervoso": "pensativo"}
 ## gesto que acompanha a expressão (as falas pedem expressão; o corpo responde junto)
 const GESTO := {"pensativo": "pensativo", "desconfiado": "nao", "intrigado": "olhando", "sorriso_canto": "sim",
-	"firme": "apontando", "cansado": "respirando", "serio": "idle"}
+	"firme": "bracos_cruzados", "cansado": "respirando", "serio": "idle"}
+## nomes pedidos pelo resto do jogo -> animação existente na biblioteca
+const SUBST := {"idle": "idle_serio", "walking": "andando", "apontando": "falando", "encostado": "maos_bolsos",
+	"sentado": "idle_serio", "digitando": "olhando"}
+## bartender se curva sobre um balcão: só o Otto (os outros respiram)
+const ONLY_FOR := {"bartender": ["otto"]}
 
-static var _anim_lib: AnimationLibrary
+static var _lib: AnimationLibrary
 
 var card: Dictionary = {}
 var expression := "serio"
 var talking := false
 var model: Node3D
 var anim: AnimationPlayer
-var body: MeshInstance3D          # a malha com shape keys (cabeça)
-var meshes: Array = []
-var _mat: StandardMaterial3D
+var face_mat: StandardMaterial3D
+var body_mat: StandardMaterial3D
 var rim := Color("#ff3d8a")
-var _target := {}
-var _cur := {}
 var _talk_t := 0.0
-var _jaw := 0.0
-var _id := "detetive"
+var _mouth_open := false
+var _id := "vance"
 
 
 func setup(p_card: Dictionary) -> void:
 	card = p_card
-	_id = str(card.get("id", "detetive"))
-	if not MODELS.has(_id):
-		_id = ["detetive", "bartender", "hacker", "couro"][absi(hash(_id)) % 4]
+	var key := str(card.get("id", "detetive"))
+	_id = str(MODELS.get(key, ""))
+	if _id == "":
+		_id = ["vance", "otto", "kai", "lena", "extra1", "extra2"][absi(hash(key)) % 6]
 	rim = Color(str(card.get("rim", card.get("look", {}).get("accent", "#ff3d8a"))))
 	for c in get_children():
 		c.queue_free()
-	model = (load(MODELS[_id]) as PackedScene).instantiate()
+	model = (load(DIR + _id + ".glb") as PackedScene).instantiate()
 	add_child(model)
-	# o material é um só (mesma textura) para corpo e cabeça; a cabeça tem as shape keys
-	var shared: StandardMaterial3D = null
+	model.scale = Vector3.ONE * float(SCALE.get(_id, 1.0))
 	for mi in model.find_children("*", "MeshInstance3D", true, false):
 		var m3 := mi as MeshInstance3D
-		meshes.append(m3)
-		if m3.mesh.get_blend_shape_count() > 0:
-			body = m3
 		m3.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF if _is_mobile() else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
-		for s in m3.mesh.get_surface_count():
-			var src := m3.mesh.surface_get_material(s)
-			if src is StandardMaterial3D:
-				if shared == null:
-					# o mesmo material PS1 do cenário (scripts/ps1.gd): luz por vértice, textura NEAREST na
-					# paleta do jogo (tools/blender/char_ps1_textures.py), sem brilho nem especular.
-					# NEAREST e sem mipmap também evita o vazamento entre as ilhas da textura da Meshy.
-					shared = load("res://scripts/ps1.gd").to_ps1(src as StandardMaterial3D)
-					# o contorno de neon continua: é o que liga o personagem à luz da cidade
-					shared.rim_enabled = true
-					shared.rim = 0.55
-					shared.rim_tint = 0.85
-					# luz por pixel só no personagem: por vértice o rosto fica chapado e some a leitura
-					# das expressões (são 4 personagens; o custo é pequeno)
-					shared.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
-					# o contorno do Godot abre com a rugosidade: em 1,0 o personagem inteiro "estoura"
-					shared.roughness = 0.8
-					shared.rim = 0.4
-					# contorno pesado pelo inverso da claridade do tecido (tools/blender/char_ps1_textures.py)
-					var tex_path := String((src as StandardMaterial3D).albedo_texture.resource_path) if (src as StandardMaterial3D).albedo_texture else ""
-					var rim_path := tex_path.replace(".jpg", "_rim.png")
-					if tex_path != "" and ResourceLoader.exists(rim_path):
-						shared.rim_texture = load(rim_path)
-				m3.set_surface_override_material(s, shared)
-	_mat = shared
+		var is_face := String(m3.name).begins_with("Face")
+		if is_face:
+			m3.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			face_mat = _make_face_mat()
+			m3.material_override = face_mat
+		else:
+			body_mat = _make_body_mat()
+			m3.material_override = body_mat
 	_setup_anim()
-	# animação para quando sai da tela
 	var vis := VisibleOnScreenNotifier3D.new()
 	vis.aabb = AABB(Vector3(-0.6, 0, -0.6), Vector3(1.2, 1.95, 1.2))
 	vis.screen_exited.connect(func() -> void:
@@ -125,6 +81,34 @@ static func _is_mobile() -> bool:
 	return OS.has_feature("mobile") or OS.has_feature("web_android") or OS.has_feature("web_ios")
 
 
+func _make_body_mat() -> StandardMaterial3D:
+	# o mesmo grão PS1 do cenário: cor de vértice, luz por vértice, sem brilho; contorno de neon fraco
+	var m := StandardMaterial3D.new()
+	m.vertex_color_use_as_albedo = true
+	# o glTF guarda cor de vértice linear: não converter de novo (sem isso a pele fica laranja)
+	m.vertex_color_is_srgb = false
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
+	m.roughness = 1.0
+	m.metallic = 0.0
+	m.specular_mode = BaseMaterial3D.SPECULAR_DISABLED
+	m.rim_enabled = true
+	m.rim = 0.5
+	m.rim_tint = 0.8
+	return m
+
+
+func _make_face_mat() -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = load(DIR + "face_%s.png" % _id)
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+	m.alpha_scissor_threshold = 0.5
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
+	m.roughness = 1.0
+	m.specular_mode = BaseMaterial3D.SPECULAR_DISABLED
+	return m
+
+
 func _setup_anim() -> void:
 	var skel: Skeleton3D = null
 	for s in model.find_children("*", "Skeleton3D", true, false):
@@ -132,72 +116,54 @@ func _setup_anim() -> void:
 		break
 	if skel == null:
 		return
-	var baked_path := "res://assets/characters/meshy/anims_%s.res" % BAKED.get(_id, "vance")
-	if ResourceLoader.exists(baked_path):
-		if not _baked.has(_id):
-			_baked[_id] = load(baked_path)
-		anim = AnimationPlayer.new()
-		add_child(anim)
-		anim.root_node = anim.get_path_to(skel.get_parent())
-		var blib := AnimationLibrary.new()
-		var bsk := String(skel.name)
-		var srcb: AnimationLibrary = _baked[_id]
-		for a in srcb.get_animation_list():
-			var r := srcb.get_animation(a).duplicate() as Animation
-			for t in r.get_track_count():
-				r.track_set_path(t, NodePath(String(r.track_get_path(t)).replace("%SKEL", bsk)))
-			blib.add_animation(a, r)
-		anim.add_animation_library("", blib)
-		anim.playback_default_blend_time = 0.3
-		return
-	if _anim_lib == null:
-		var src := (load(ANIMS) as PackedScene).instantiate()
+	if _lib == null:
+		# esqueleto idêntico em todos: a biblioteca é carregada uma vez e só o nome do nó muda
+		var src := (load(DIR + "anims.glb") as PackedScene).instantiate()
 		var ap: AnimationPlayer = src.find_children("*", "AnimationPlayer", true, false)[0]
-		_anim_lib = AnimationLibrary.new()
+		_lib = AnimationLibrary.new()
 		for lib_name in ap.get_animation_library_list():
 			var lib := ap.get_animation_library(lib_name)
 			for a in lib.get_animation_list():
-				var anim_res := lib.get_animation(a).duplicate(true) as Animation
-				# só rotação (e posição do quadril): posição/escala dos outros ossos imporiam as
-				# proporções do esqueleto de origem aos outros personagens
-				for t in range(anim_res.get_track_count() - 1, -1, -1):
-					var tp := anim_res.track_get_type(t)
-					var pth := String(anim_res.track_get_path(t))
+				var r := lib.get_animation(a).duplicate(true) as Animation
+				for t in range(r.get_track_count() - 1, -1, -1):
+					var tp := r.track_get_type(t)
+					var pth := String(r.track_get_path(t))
+					# escala nunca; posição só do quadril (balanço do corpo), e sem andar para fora do lugar
 					if tp == Animation.TYPE_SCALE_3D or (tp == Animation.TYPE_POSITION_3D and not pth.ends_with("Hips")):
-						anim_res.remove_track(t)
-				# trilhas apontam para o esqueleto pelo caminho relativo; deixa só o nome do osso
-				for t in anim_res.get_track_count():
-					var p := String(anim_res.track_get_path(t))
+						r.remove_track(t)
+				for t in r.get_track_count():
+					var p := String(r.track_get_path(t))
 					var i := p.find(":")
 					if i >= 0:
-						anim_res.track_set_path(t, NodePath("%SKEL" + p.substr(i)))
-				anim_res.loop_mode = Animation.LOOP_LINEAR if a != "apontando" else Animation.LOOP_NONE
-				_anim_lib.add_animation(a, anim_res)
+						r.track_set_path(t, NodePath("%SKEL" + p.substr(i)))
+				r.loop_mode = Animation.LOOP_LINEAR
+				var nm := String(a).split("|")[0]
+				_lib.add_animation(nm, r)
 		src.free()
 	anim = AnimationPlayer.new()
 	add_child(anim)
 	anim.root_node = anim.get_path_to(skel.get_parent())
-	var lib := AnimationLibrary.new()
+	var lib2 := AnimationLibrary.new()
 	var skel_name := String(skel.name)
-	for a in _anim_lib.get_animation_list():
-		var r := _anim_lib.get_animation(a).duplicate() as Animation
+	for a in _lib.get_animation_list():
+		var r := _lib.get_animation(a).duplicate() as Animation
 		for t in r.get_track_count():
 			r.track_set_path(t, NodePath(String(r.track_get_path(t)).replace("%SKEL", skel_name)))
-		lib.add_animation(a, r)
-	anim.add_animation_library("", lib)
+		lib2.add_animation(a, r)
+	anim.add_animation_library("", lib2)
 	anim.playback_default_blend_time = 0.3
 
 
 func set_rim(c: Color, strength := 0.9) -> void:
 	rim = c
-	if _mat:
-		_mat.rim = 0.35 + 0.4 * strength
+	if body_mat:
+		body_mat.rim = 0.3 + 0.35 * strength
 
 
 func set_expression(e: String) -> void:
 	e = ALIAS.get(e, e)
-	expression = e if EXPR.has(e) else "serio"
-	_target = EXPR[expression]
+	expression = e if EXPRS.has(e) else "serio"
+	_apply_face()
 	var g: String = GESTO.get(expression, "idle")
 	if g != "idle":
 		play(g)
@@ -206,44 +172,38 @@ func set_expression(e: String) -> void:
 func set_talking(t: bool) -> void:
 	talking = t
 	if t:
-		play("falando" if not SAFE_ANIMS.has(_id) else "respirando")
+		play("falando")
+	else:
+		_mouth_open = false
+		_apply_face()
+
+
+func _apply_face() -> void:
+	if face_mat == null:
+		return
+	var col := EXPRS.find(expression)
+	face_mat.uv1_offset = Vector3(col / 8.0, 0.5 if _mouth_open else 0.0, 0.0)
 
 
 func play(name: String) -> void:
 	if anim == null:
 		return
 	if ONLY_FOR.has(name) and not (ONLY_FOR[name] as Array).has(_id):
-		name = SUBST.get(name, "idle")
-	if SAFE_ANIMS.has(_id) and not (SAFE_ANIMS[_id] as Array).has(name):
-		name = SUBST.get(name, "idle")
-		if not (SAFE_ANIMS[_id] as Array).has(name):
-			name = "idle"
+		name = "respirando"
 	if not anim.has_animation(name):
-		name = SUBST.get(name, "idle")
+		name = SUBST.get(name, "idle_serio")
 		if not anim.has_animation(name):
-			name = "idle"
+			name = "idle_serio"
 	if anim.current_animation != name:
 		anim.play(name, 0.35)
-		if name == "apontando":
-			anim.animation_finished.connect(func(_n: StringName) -> void: play("idle"), CONNECT_ONE_SHOT)
 
 
 func _process(dt: float) -> void:
-	if body == null or body.mesh == null:
+	if not talking or face_mat == null:
 		return
-	# fala: queixo abre e fecha em sílabas irregulares
-	if talking:
-		_talk_t -= dt
-		if _talk_t <= 0.0:
-			_jaw = randf_range(0.25, 1.0) if _jaw < 0.2 else randf_range(0.0, 0.15)
-			_talk_t = randf_range(0.07, 0.14)
-	else:
-		_jaw = 0.0
-	var k := clampf(dt * 10.0, 0.0, 1.0)
-	for key in ["brow_down", "brow_up", "smile_r", "squint", "jaw"]:
-		var want: float = _jaw if key == "jaw" else float(_target.get(key, 0.0))
-		var v: float = lerpf(float(_cur.get(key, 0.0)), want, k)
-		_cur[key] = v
-		var idx := body.find_blend_shape_by_name(key)
-		if idx >= 0:
-			body.set_blend_shape_value(idx, v)
+	# fala: boca abre e fecha em sílabas irregulares
+	_talk_t -= dt
+	if _talk_t <= 0.0:
+		_mouth_open = not _mouth_open if randf() > 0.25 else _mouth_open
+		_talk_t = randf_range(0.08, 0.16)
+		_apply_face()

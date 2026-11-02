@@ -239,3 +239,26 @@ comparação em `docs/referencias/personagens/comparacao_elenco.jpg`. Vance (det
   passos, portas, painéis, mira, objetos, fliperama), 3,1 MB além da OST. Refazer som só se ele pedir.
 - `Audio` (autoload) faz tudo sozinho observando a cena (zona rua/loja, passos, neon, vapor, carros, objetos
   pelo item mirado, interruptor, telefone); nada toca antes do ENTRAR; botão de som cala o Master.
+
+## Personagens PS1 feitos no Blender (2026-11-01, substituem os Meshy)
+Decisão do usuário: descartar o elenco Meshy e refazer no Blender. Pipeline atual (tudo por código):
+- `tools/blender/char_ps1_faces.py`: rostos pixel art 64x64 por expressão, atlas 8x2 por personagem
+  (`game/assets/characters/ps1/face_<id>.png`): sério, desconfiado, intrigado, pensativo, sorriso de canto,
+  cansado, firme, neutro; linha de baixo = boca aberta (fala).
+- `tools/blender/char_ps1_build.py -- <id|all|anims>`: malha low-poly (~850 a 980 tris) construída em volta
+  do esqueleto Mixamo de `tools/mixamo_raw/vance_idle_serio.fbx`, na pose de repouso dele, com braços
+  SEPARADOS do tronco e pesos por anel (1 a 2 ossos). Cor por vértice (sem textura) + decalque de rosto.
+  Elenco: vance, lena, otto, kai, extra1 (boné), extra2 (sobretudo vinho). Saída `ps1/<id>.glb`.
+- Animações (`ps1/anims.glb`, ~0,9 MB, 13 animações): CAUSA DOS BRAÇOS TORTOS ACHADA: os FBX "sem pele" da
+  Mixamo vêm com repouso em T, e o personagem estava em A; copiar a rotação local torcia os braços para
+  dentro. Agora cada FBX é transferido por COPY_TRANSFORMS em espaço do mundo, osso a osso, e assado
+  (`bake_from`). Depois, `correct_arms` mede antebraço/mão contra o tronco do Otto (o mais largo) quadro a
+  quadro e assa a menor abdução/flexão do ombro que tira de dentro (margem 1,2 cm).
+  Novas por pose-chave (IK + bake): `bracos_cruzados` e `maos_bolsos`. Fora: sentado, digitando, encostado,
+  apontando (precisam de cenário). Todos os personagens usam o MESMO esqueleto: uma biblioteca serve a todos.
+- Medida: `tools/blender/char_ps1_check.py -- vance,lena,otto,kai,extra1,extra2` (penetração de antebraço e
+  mão no tronco, por paridade de raio): máximo 0,4 cm (Kai, braços cruzados apoiados no moletom); 0 nas demais.
+- Prova no Godot: `game/tools_dev/char_ps1_grid.tscn` (cada personagem em cada animação, frente e 3/4, e
+  folha de expressões). Peso total dos personagens: ~1,6 MB.
+- `game/scripts/scene3d/noir_character.gd` mantém a interface (setup/set_expression/set_talking/set_rim/play);
+  `set_expression` troca a célula do atlas do rosto; a fala alterna boca aberta/fechada.
