@@ -55,19 +55,25 @@
    "kind": "frame",
    "title": "A ferramenta",
    "text": "InacioCyber é um agente de segurança que roda inteiro na sua máquina. Você conversa num chat com estética de terminal e define um alvo que você possui ou tem autorização para testar.",
-   "tag": ""
+   "tag": "",
+   "img": "res://assets/museum/inaciocyber/ad_01.png",
+   "ad": true
   },
   {
    "kind": "screen",
    "title": "Agente que encadeia ferramentas",
    "text": "Um modelo de IA local, via Ollama, decide e encadeia ferramentas de reconhecimento, varredura e auditoria de código, e no fim escreve um relatório em markdown.",
-   "tag": ""
+   "tag": "",
+   "img": "res://assets/museum/inaciocyber/ad_02.png",
+   "ad": true
   },
   {
    "kind": "plaque",
    "title": "Uso responsável",
    "text": "Feito apenas para uso autorizado. Cada sessão exige uma confirmação por escrito de que você tem permissão para testar aquele alvo, e tudo fica auditado.",
-   "tag": ""
+   "tag": "",
+   "img": "res://assets/museum/inaciocyber/ad_03.png",
+   "ad": true
   }
  ]
 }

@@ -20,7 +20,7 @@ os.makedirs(OUT, exist_ok=True)
 W, H = 1280, 800
 NEON = {"rumor": "#ffc83d", "fortress": "#c8762b", "buscavagas": "#00dc82", "orbix": "#4e9bff",
         "formataai": "#ff6fae", "labia": "#b06bff", "airmessage": "#25d366", "inaciocyber": "#e2384f",
-        "ankiana": "#6750a4", "sitembm": "#00bcd4"}
+        "ankiana": "#6750a4", "atende360": "#00bcd4"}
 
 GA = os.path.join(P, "GabrielInacior", "assets", "projects")
 IMG = {
@@ -33,7 +33,7 @@ IMG = {
     "formataai": [os.path.join(P, "FormataAI", ".playwright-mcp", x) for x in
                   ["page-2026-03-25T17-30-30-872Z.png", "page-2026-03-25T17-31-10-310Z.png", "page-2026-03-25T17-31-48-063Z.png"]],
     "labia": [os.path.join(GA, "labia_logo.png")],
-    "sitembm": [os.path.join(P, "siteMbm", ".playwright-mcp", x) for x in os.listdir(os.path.join(P, "siteMbm", ".playwright-mcp"))
+    "atende360": [os.path.join(P, "siteMbm", ".playwright-mcp", x) for x in os.listdir(os.path.join(P, "siteMbm", ".playwright-mcp"))
                 if x.endswith(".png")][:4] if os.path.isdir(os.path.join(P, "siteMbm", ".playwright-mcp")) else [],
 }
 

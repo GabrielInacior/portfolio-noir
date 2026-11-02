@@ -774,7 +774,7 @@ func _place_shops() -> void:
 		["fortress", Vector3(-22.0, 0, zn), Vector3(0, 0, -1)],
 		["airmessage", Vector3(-26.0, 0, zs), Vector3(0, 0, 1)],
 		["ankiana", Vector3(22.0, 0, zn), Vector3(0, 0, -1)],
-		["sitembm", Vector3(20.0, 0, zs), Vector3(0, 0, 1)],
+		["atende360", Vector3(20.0, 0, zs), Vector3(0, 0, 1)],
 	]
 	for s in spots:
 		if by_id.has(s[0]):

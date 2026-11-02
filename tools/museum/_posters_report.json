@@ -1,0 +1,922 @@
+[
+ {
+  "file": "game\\assets\\museum\\rumor\\ad_01.png",
+  "kind": "frame",
+  "style": "cinema",
+  "body_px": 38,
+  "min_px": 14,
+  "bullets": 2,
+  "graphic": 0.09,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "rumor"
+ },
+ {
+  "file": "game\\assets\\museum\\rumor\\ad_02.png",
+  "kind": "screen",
+  "style": "cinema",
+  "body_px": 49,
+  "min_px": 14,
+  "bullets": 2,
+  "graphic": 0.09,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "rumor"
+ },
+ {
+  "file": "game\\assets\\museum\\fortress\\ad_01.png",
+  "kind": "frame",
+  "style": "arcade",
+  "body_px": 48,
+  "min_px": 14,
+  "bullets": 2,
+  "graphic": 0.11,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "fortress"
+ },
+ {
+  "file": "game\\assets\\museum\\inaciocyber\\ad_01.png",
+  "kind": "frame",
+  "style": "terminal",
+  "body_px": 35,
+  "min_px": 14,
+  "bullets": 2,
+  "graphic": 0.08,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "inaciocyber"
+ },
+ {
+  "file": "game\\assets\\museum\\inaciocyber\\ad_02.png",
+  "kind": "screen",
+  "style": "terminal",
+  "body_px": 48,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.1,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "inaciocyber"
+ },
+ {
+  "file": "game\\assets\\museum\\inaciocyber\\ad_03.png",
+  "kind": "plaque",
+  "style": "terminal",
+  "body_px": 39,
+  "min_px": 14,
+  "bullets": 2,
+  "graphic": 0.08,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "inaciocyber"
+ },
+ {
+  "file": "game\\assets\\museum\\buscavagas\\ad_01.png",
+  "kind": "frame",
+  "style": "startup",
+  "body_px": 42,
+  "min_px": 14,
+  "bullets": 2,
+  "graphic": 0.11,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "buscavagas"
+ },
+ {
+  "file": "game\\assets\\museum\\buscavagas\\ad_02.png",
+  "kind": "frame",
+  "style": "startup",
+  "body_px": 44,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.09,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "buscavagas"
+ },
+ {
+  "file": "game\\assets\\museum\\orbix\\ad_01.png",
+  "kind": "monitor",
+  "style": "startup",
+  "body_px": 47,
+  "min_px": 14,
+  "bullets": 2,
+  "graphic": 0.09,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "orbix"
+ },
+ {
+  "file": "game\\assets\\museum\\orbix\\ad_02.png",
+  "kind": "monitor",
+  "style": "startup",
+  "body_px": 58,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.07,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "orbix"
+ },
+ {
+  "file": "game\\assets\\museum\\orbix\\ad_03.png",
+  "kind": "frame",
+  "style": "startup",
+  "body_px": 42,
+  "min_px": 14,
+  "bullets": 2,
+  "graphic": 0.09,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "orbix"
+ },
+ {
+  "file": "game\\assets\\museum\\orbix\\ad_04.png",
+  "kind": "frame",
+  "style": "startup",
+  "body_px": 44,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.1,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "orbix"
+ },
+ {
+  "file": "game\\assets\\museum\\orbix\\ad_05.png",
+  "kind": "frame",
+  "style": "startup",
+  "body_px": 42,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.09,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "orbix"
+ },
+ {
+  "file": "game\\assets\\museum\\orbix\\ad_06.png",
+  "kind": "frame",
+  "style": "startup",
+  "body_px": 56,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.08,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "orbix"
+ },
+ {
+  "file": "game\\assets\\museum\\orbix\\ad_07.png",
+  "kind": "frame",
+  "style": "startup",
+  "body_px": 46,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.1,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "orbix"
+ },
+ {
+  "file": "game\\assets\\museum\\orbix\\ad_08.png",
+  "kind": "plaque",
+  "style": "startup",
+  "body_px": 63,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.12,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "orbix"
+ },
+ {
+  "file": "game\\assets\\museum\\formataai\\ad_01.png",
+  "kind": "monitor",
+  "style": "studio",
+  "body_px": 55,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.13,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "formataai"
+ },
+ {
+  "file": "game\\assets\\museum\\formataai\\ad_02.png",
+  "kind": "monitor",
+  "style": "studio",
+  "body_px": 53,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.09,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "formataai"
+ },
+ {
+  "file": "game\\assets\\museum\\formataai\\ad_03.png",
+  "kind": "monitor",
+  "style": "studio",
+  "body_px": 49,
+  "min_px": 14,
+  "bullets": 2,
+  "graphic": 0.11,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "formataai"
+ },
+ {
+  "file": "game\\assets\\museum\\formataai\\ad_04.png",
+  "kind": "frame",
+  "style": "studio",
+  "body_px": 38,
+  "min_px": 14,
+  "bullets": 2,
+  "graphic": 0.11,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "formataai"
+ },
+ {
+  "file": "game\\assets\\museum\\formataai\\ad_05.png",
+  "kind": "frame",
+  "style": "studio",
+  "body_px": 44,
+  "min_px": 14,
+  "bullets": 2,
+  "graphic": 0.1,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "formataai"
+ },
+ {
+  "file": "game\\assets\\museum\\formataai\\ad_06.png",
+  "kind": "screen",
+  "style": "studio",
+  "body_px": 59,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.11,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "formataai"
+ },
+ {
+  "file": "game\\assets\\museum\\formataai\\ad_07.png",
+  "kind": "frame",
+  "style": "studio",
+  "body_px": 38,
+  "min_px": 14,
+  "bullets": 2,
+  "graphic": 0.12,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "formataai"
+ },
+ {
+  "file": "game\\assets\\museum\\formataai\\ad_08.png",
+  "kind": "frame",
+  "style": "studio",
+  "body_px": 48,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.09,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "formataai"
+ },
+ {
+  "file": "game\\assets\\museum\\labia\\ad_01.png",
+  "kind": "frame",
+  "style": "bar",
+  "body_px": 44,
+  "min_px": 14,
+  "bullets": 2,
+  "graphic": 0.1,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "labia"
+ },
+ {
+  "file": "game\\assets\\museum\\labia\\ad_02.png",
+  "kind": "screen",
+  "style": "bar",
+  "body_px": 49,
+  "min_px": 14,
+  "bullets": 2,
+  "graphic": 0.1,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "labia"
+ },
+ {
+  "file": "game\\assets\\museum\\labia\\ad_03.png",
+  "kind": "frame",
+  "style": "bar",
+  "body_px": 44,
+  "min_px": 14,
+  "bullets": 2,
+  "graphic": 0.09,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "labia"
+ },
+ {
+  "file": "game\\assets\\museum\\labia\\ad_04.png",
+  "kind": "frame",
+  "style": "bar",
+  "body_px": 62,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.14,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "labia"
+ },
+ {
+  "file": "game\\assets\\museum\\labia\\ad_05.png",
+  "kind": "plaque",
+  "style": "bar",
+  "body_px": 49,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.13,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "labia"
+ },
+ {
+  "file": "game\\assets\\museum\\ankiana\\ad_01.png",
+  "kind": "frame",
+  "style": "studio",
+  "body_px": 56,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.1,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "ankiana"
+ },
+ {
+  "file": "game\\assets\\museum\\ankiana\\ad_02.png",
+  "kind": "screen",
+  "style": "studio",
+  "body_px": 59,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.11,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "ankiana"
+ },
+ {
+  "file": "game\\assets\\museum\\ankiana\\ad_03.png",
+  "kind": "frame",
+  "style": "studio",
+  "body_px": 48,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.12,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "ankiana"
+ },
+ {
+  "file": "game\\assets\\museum\\ankiana\\ad_04.png",
+  "kind": "plaque",
+  "style": "studio",
+  "body_px": 63,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.11,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "ankiana"
+ },
+ {
+  "file": "game\\assets\\museum\\airmessage\\ad_01.png",
+  "kind": "frame",
+  "style": "startup",
+  "body_px": 56,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.1,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "airmessage"
+ },
+ {
+  "file": "game\\assets\\museum\\airmessage\\ad_02.png",
+  "kind": "screen",
+  "style": "startup",
+  "body_px": 64,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.09,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "airmessage"
+ },
+ {
+  "file": "game\\assets\\museum\\airmessage\\ad_03.png",
+  "kind": "frame",
+  "style": "startup",
+  "body_px": 52,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.13,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "airmessage"
+ },
+ {
+  "file": "game\\assets\\museum\\airmessage\\ad_04.png",
+  "kind": "plaque",
+  "style": "startup",
+  "body_px": 49,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.11,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "airmessage"
+ },
+ {
+  "file": "game\\assets\\museum\\atende360\\ad_01.png",
+  "kind": "screen",
+  "style": "startup",
+  "body_px": 53,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.08,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "atende360"
+ },
+ {
+  "file": "game\\assets\\museum\\atende360\\ad_02.png",
+  "kind": "frame",
+  "style": "startup",
+  "body_px": 42,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.08,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "atende360"
+ },
+ {
+  "file": "game\\assets\\museum\\atende360\\ad_03.png",
+  "kind": "frame",
+  "style": "startup",
+  "body_px": 38,
+  "min_px": 14,
+  "bullets": 2,
+  "graphic": 0.1,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "atende360"
+ },
+ {
+  "file": "game\\assets\\museum\\atende360\\ad_04.png",
+  "kind": "plaque",
+  "style": "startup",
+  "body_px": 51,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.11,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "atende360"
+ },
+ {
+  "file": "game\\assets\\museum\\barbercore\\ad_01.png",
+  "kind": "poster",
+  "style": "barber",
+  "body_px": 45,
+  "min_px": 13,
+  "bullets": 2,
+  "graphic": 0.11,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "barbercore"
+ },
+ {
+  "file": "game\\assets\\museum\\barbercore\\ad_02.png",
+  "kind": "screen",
+  "style": "barber",
+  "body_px": 60,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.08,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "barbercore"
+ },
+ {
+  "file": "game\\assets\\museum\\barbercore\\ad_03.png",
+  "kind": "frame",
+  "style": "barber",
+  "body_px": 47,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.08,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "barbercore"
+ },
+ {
+  "file": "game\\assets\\museum\\barbercore\\ad_04.png",
+  "kind": "plaque",
+  "style": "barber",
+  "body_px": 52,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.09,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "barbercore"
+ },
+ {
+  "file": "game\\assets\\museum\\barbercore\\ad_05.png",
+  "kind": "frame",
+  "style": "barber",
+  "body_px": 53,
+  "min_px": 14,
+  "bullets": 1,
+  "graphic": 0.08,
+  "ok": true,
+  "checks": {
+   "cabe": true,
+   "nao_so_texto": true,
+   "selo_cabe": true,
+   "cta_cabe": true,
+   "corpo_legivel_2m": true,
+   "contraste_texto": true,
+   "contraste_titulo": true
+  },
+  "pid": "barbercore"
+ }
+]

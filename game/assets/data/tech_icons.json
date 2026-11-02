@@ -1,0 +1,641 @@
+[
+ {
+  "id": "godot",
+  "name": "Godot",
+  "alias": [
+   "GDScript",
+   "Godot 4"
+  ],
+  "color": "#478CBF",
+  "source": "Simple Icons: Godot Engine",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 0,
+   "row": 0,
+   "size": 128
+  }
+ },
+ {
+  "id": "blender",
+  "name": "Blender",
+  "alias": [],
+  "color": "#E87D0D",
+  "source": "Simple Icons: Blender",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 1,
+   "row": 0,
+   "size": 128
+  }
+ },
+ {
+  "id": "node",
+  "name": "Node.js",
+  "alias": [
+   "Node",
+   "Node.js"
+  ],
+  "color": "#5FA04E",
+  "source": "Simple Icons: Node.js",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 2,
+   "row": 0,
+   "size": 128
+  }
+ },
+ {
+  "id": "vue",
+  "name": "Vue",
+  "alias": [
+   "Vue.js",
+   "Vue 3"
+  ],
+  "color": "#4FC08D",
+  "source": "Simple Icons: Vue.js",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 3,
+   "row": 0,
+   "size": 128
+  }
+ },
+ {
+  "id": "react",
+  "name": "React",
+  "alias": [
+   "React Native"
+  ],
+  "color": "#61DAFB",
+  "source": "Simple Icons: React",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 4,
+   "row": 0,
+   "size": 128
+  }
+ },
+ {
+  "id": "nuxt",
+  "name": "Nuxt",
+  "alias": [
+   "Nuxt 3",
+   "Nuxt 4",
+   "Nuxt.js"
+  ],
+  "color": "#00DC82",
+  "source": "Simple Icons: Nuxt",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 5,
+   "row": 0,
+   "size": 128
+  }
+ },
+ {
+  "id": "next",
+  "name": "Next.js",
+  "alias": [
+   "Next"
+  ],
+  "color": "#000000",
+  "source": "Simple Icons: Next.js",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 6,
+   "row": 0,
+   "size": 128
+  }
+ },
+ {
+  "id": "flutter",
+  "name": "Flutter",
+  "alias": [],
+  "color": "#02569B",
+  "source": "Simple Icons: Flutter",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 7,
+   "row": 0,
+   "size": 128
+  }
+ },
+ {
+  "id": "dart",
+  "name": "Dart",
+  "alias": [],
+  "color": "#0175C2",
+  "source": "Simple Icons: Dart",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 0,
+   "row": 1,
+   "size": 128
+  }
+ },
+ {
+  "id": "typescript",
+  "name": "TypeScript",
+  "alias": [
+   "TS"
+  ],
+  "color": "#3178C6",
+  "source": "Simple Icons: TypeScript",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 1,
+   "row": 1,
+   "size": 128
+  }
+ },
+ {
+  "id": "javascript",
+  "name": "JavaScript",
+  "alias": [
+   "JS"
+  ],
+  "color": "#F7DF1E",
+  "source": "Simple Icons: JavaScript",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 2,
+   "row": 1,
+   "size": 128
+  }
+ },
+ {
+  "id": "python",
+  "name": "Python",
+  "alias": [],
+  "color": "#3776AB",
+  "source": "Simple Icons: Python",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 3,
+   "row": 1,
+   "size": 128
+  }
+ },
+ {
+  "id": "rust",
+  "name": "Rust",
+  "alias": [],
+  "color": "#000000",
+  "source": "Simple Icons: Rust",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 4,
+   "row": 1,
+   "size": 128
+  }
+ },
+ {
+  "id": "tauri",
+  "name": "Tauri",
+  "alias": [],
+  "color": "#24C8D8",
+  "source": "Simple Icons: Tauri",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 5,
+   "row": 1,
+   "size": 128
+  }
+ },
+ {
+  "id": "docker",
+  "name": "Docker",
+  "alias": [],
+  "color": "#2496ED",
+  "source": "Simple Icons: Docker",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 6,
+   "row": 1,
+   "size": 128
+  }
+ },
+ {
+  "id": "postgres",
+  "name": "PostgreSQL",
+  "alias": [
+   "Postgres",
+   "RLS",
+   "Postgres RLS"
+  ],
+  "color": "#4169E1",
+  "source": "Simple Icons: PostgreSQL",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 7,
+   "row": 1,
+   "size": 128
+  }
+ },
+ {
+  "id": "redis",
+  "name": "Redis",
+  "alias": [
+   "BullMQ"
+  ],
+  "color": "#FF4438",
+  "source": "Simple Icons: Redis",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 0,
+   "row": 2,
+   "size": 128
+  }
+ },
+ {
+  "id": "mongodb",
+  "name": "MongoDB",
+  "alias": [],
+  "color": "#47A248",
+  "source": "Simple Icons: MongoDB",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 1,
+   "row": 2,
+   "size": 128
+  }
+ },
+ {
+  "id": "prisma",
+  "name": "Prisma",
+  "alias": [],
+  "color": "#2D3748",
+  "source": "Simple Icons: Prisma",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 2,
+   "row": 2,
+   "size": 128
+  }
+ },
+ {
+  "id": "nest",
+  "name": "NestJS",
+  "alias": [],
+  "color": "#E0234E",
+  "source": "Simple Icons: NestJS",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 3,
+   "row": 2,
+   "size": 128
+  }
+ },
+ {
+  "id": "express",
+  "name": "Express",
+  "alias": [],
+  "color": "#000000",
+  "source": "Simple Icons: Express",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 4,
+   "row": 2,
+   "size": 128
+  }
+ },
+ {
+  "id": "fastify",
+  "name": "Fastify",
+  "alias": [],
+  "color": "#000000",
+  "source": "Simple Icons: Fastify",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 5,
+   "row": 2,
+   "size": 128
+  }
+ },
+ {
+  "id": "fastapi",
+  "name": "FastAPI",
+  "alias": [],
+  "color": "#009688",
+  "source": "Simple Icons: FastAPI",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 6,
+   "row": 2,
+   "size": 128
+  }
+ },
+ {
+  "id": "spring",
+  "name": "Spring",
+  "alias": [
+   "Spring Boot"
+  ],
+  "color": "#6DB33F",
+  "source": "Simple Icons: Spring",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 7,
+   "row": 2,
+   "size": 128
+  }
+ },
+ {
+  "id": "aws",
+  "name": "AWS",
+  "alias": [
+   "AWS S3",
+   "S3",
+   "Amazon S3"
+  ],
+  "color": "#FF9900",
+  "source": "Devicon: amazonwebservices",
+  "license": "MIT",
+  "atlas": {
+   "col": 0,
+   "row": 3,
+   "size": 128
+  }
+ },
+ {
+  "id": "linux",
+  "name": "Linux",
+  "alias": [],
+  "color": "#FCC624",
+  "source": "Simple Icons: Linux",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 1,
+   "row": 3,
+   "size": 128
+  }
+ },
+ {
+  "id": "kali",
+  "name": "Kali Linux",
+  "alias": [
+   "Pentest"
+  ],
+  "color": "#557C94",
+  "source": "Simple Icons: Kali Linux",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 2,
+   "row": 3,
+   "size": 128
+  }
+ },
+ {
+  "id": "nginx",
+  "name": "Nginx",
+  "alias": [],
+  "color": "#009639",
+  "source": "Simple Icons: NGINX",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 3,
+   "row": 3,
+   "size": 128
+  }
+ },
+ {
+  "id": "openai",
+  "name": "OpenAI",
+  "alias": [
+   "GPT-4o-mini",
+   "Whisper"
+  ],
+  "color": "#412991",
+  "source": "Simple Icons: OpenAI",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 4,
+   "row": 3,
+   "size": 128
+  }
+ },
+ {
+  "id": "claude",
+  "name": "Claude",
+  "alias": [
+   "Anthropic",
+   "agentes",
+   "IA"
+  ],
+  "color": "#D97757",
+  "source": "Simple Icons: Claude",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 5,
+   "row": 3,
+   "size": 128
+  }
+ },
+ {
+  "id": "ollama",
+  "name": "Ollama",
+  "alias": [
+   "IA local",
+   "LLM local"
+  ],
+  "color": "#000000",
+  "source": "Simple Icons: Ollama",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 6,
+   "row": 3,
+   "size": 128
+  }
+ },
+ {
+  "id": "gemini",
+  "name": "Gemini",
+  "alias": [
+   "IA (Gemini)"
+  ],
+  "color": "#8E75B2",
+  "source": "Simple Icons: Google Gemini",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 7,
+   "row": 3,
+   "size": 128
+  }
+ },
+ {
+  "id": "huggingface",
+  "name": "Hugging Face",
+  "alias": [],
+  "color": "#FFD21E",
+  "source": "Simple Icons: Hugging Face",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 0,
+   "row": 4,
+   "size": 128
+  }
+ },
+ {
+  "id": "stripe",
+  "name": "Stripe",
+  "alias": [],
+  "color": "#635BFF",
+  "source": "Simple Icons: Stripe",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 1,
+   "row": 4,
+   "size": 128
+  }
+ },
+ {
+  "id": "whatsapp",
+  "name": "WhatsApp",
+  "alias": [],
+  "color": "#25D366",
+  "source": "Simple Icons: WhatsApp",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 2,
+   "row": 4,
+   "size": 128
+  }
+ },
+ {
+  "id": "steam",
+  "name": "Steam",
+  "alias": [],
+  "color": "#000000",
+  "source": "Simple Icons: Steam",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 3,
+   "row": 4,
+   "size": 128
+  }
+ },
+ {
+  "id": "gsap",
+  "name": "GSAP",
+  "alias": [],
+  "color": "#88CE02",
+  "source": "Simple Icons: GreenSock",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 4,
+   "row": 4,
+   "size": 128
+  }
+ },
+ {
+  "id": "materialdesign",
+  "name": "Material 3",
+  "alias": [
+   "Material"
+  ],
+  "color": "#6750A4",
+  "source": "Simple Icons: Material Design",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 5,
+   "row": 4,
+   "size": 128
+  }
+ },
+ {
+  "id": "socketio",
+  "name": "WebSocket",
+  "alias": [
+   "Socket.io",
+   "WebSockets"
+  ],
+  "color": "#010101",
+  "source": "Simple Icons: Socket.io",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 6,
+   "row": 4,
+   "size": 128
+  }
+ },
+ {
+  "id": "electron",
+  "name": "Electron",
+  "alias": [],
+  "color": "#47848F",
+  "source": "Simple Icons: Electron",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 7,
+   "row": 4,
+   "size": 128
+  }
+ },
+ {
+  "id": "tailwind",
+  "name": "Tailwind",
+  "alias": [
+   "TailwindCSS"
+  ],
+  "color": "#06B6D4",
+  "source": "Simple Icons: Tailwind CSS",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 0,
+   "row": 5,
+   "size": 128
+  }
+ },
+ {
+  "id": "git",
+  "name": "Git",
+  "alias": [],
+  "color": "#F05032",
+  "source": "Simple Icons: Git",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 1,
+   "row": 5,
+   "size": 128
+  }
+ },
+ {
+  "id": "github",
+  "name": "GitHub",
+  "alias": [],
+  "color": "#181717",
+  "source": "Simple Icons: GitHub",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 2,
+   "row": 5,
+   "size": 128
+  }
+ },
+ {
+  "id": "figma",
+  "name": "Figma",
+  "alias": [],
+  "color": "#F24E1E",
+  "source": "Simple Icons: Figma",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 3,
+   "row": 5,
+   "size": 128
+  }
+ },
+ {
+  "id": "vite",
+  "name": "Vite",
+  "alias": [],
+  "color": "#646CFF",
+  "source": "Simple Icons: Vite",
+  "license": "CC0-1.0",
+  "atlas": {
+   "col": 4,
+   "row": 5,
+   "size": 128
+  }
+ }
+]

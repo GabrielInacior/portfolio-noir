@@ -27,25 +27,33 @@
    "kind": "frame",
    "title": "O app",
    "text": "AnkiAna vira um tema, um texto ou um PDF em dezenas de flashcards com IA, para voce estudar sem montar os cartoes na mao.",
-   "tag": ""
+   "tag": "",
+   "img": "res://assets/museum/ankiana/ad_01.png",
+   "ad": true
   },
   {
    "kind": "screen",
    "title": "Repeticao espacada",
    "text": "Usa repeticao espacada, o metodo SM-2, para mostrar cada cartao na hora certa de lembrar e fixar melhor o conteudo.",
-   "tag": ""
+   "tag": "",
+   "img": "res://assets/museum/ankiana/ad_02.png",
+   "ad": true
   },
   {
    "kind": "frame",
    "title": "Interface moderna",
    "text": "Visual Material 3 moderno e acessivel, pensado para estudar no celular com conforto.",
-   "tag": ""
+   "tag": "",
+   "img": "res://assets/museum/ankiana/ad_03.png",
+   "ad": true
   },
   {
    "kind": "plaque",
    "title": "Como foi feito",
    "text": "App em Flutter com Dart, integracao com IA para gerar os cartoes e design Material 3.",
-   "tag": ""
+   "tag": "",
+   "img": "res://assets/museum/ankiana/ad_04.png",
+   "ad": true
   }
  ]
 }

@@ -11,24 +11,27 @@
  "items": [
   {
    "kind": "monitor",
-   "img": "res://assets/museum/orbix/rls.png",
    "title": "Multi-tenant de verdade",
    "text": "Isolamento por Row-Level Security no próprio PostgreSQL: cada empresa só enxerga o que é dela, mesmo se a aplicação errar.",
-   "tag": "Postgres RLS"
+   "tag": "Postgres RLS",
+   "img": "res://assets/museum/orbix/ad_01.png",
+   "ad": true
   },
   {
    "kind": "monitor",
-   "img": "res://assets/museum/orbix/arquitetura.png",
    "title": "Uma API, vários produtos",
    "text": "O orbix-api centraliza login, OTP, tokens e finanças e serve vários produtos, como CRM e gestão de oficinas.",
-   "tag": "NestJS · Flutter"
+   "tag": "NestJS · Flutter",
+   "img": "res://assets/museum/orbix/ad_02.png",
+   "ad": true
   },
   {
    "kind": "frame",
-   "img": "res://assets/museum/orbix/login.jpg",
    "title": "Entrada única",
    "text": "Toda a camada de autenticação é delegada ao orbix-api via proxy. Um só lugar para login e segurança.",
-   "tag": "Auth"
+   "tag": "Auth",
+   "img": "res://assets/museum/orbix/ad_03.png",
+   "ad": true
   },
   {
    "kind": "prop",
@@ -41,31 +44,41 @@
    "kind": "frame",
    "title": "A plataforma",
    "text": "OrbixHub é um SaaS multi-tenant onde vários produtos, como um CRM e uma gestão de oficinas, nascem sobre uma base comum.",
-   "tag": ""
+   "tag": "",
+   "img": "res://assets/museum/orbix/ad_04.png",
+   "ad": true
   },
   {
    "kind": "frame",
    "title": "Isolamento por tenant",
    "text": "Cada cliente fica isolado no próprio espaço usando Row-Level Security do Postgres, então os dados de um nunca alcançam o do outro.",
-   "tag": ""
+   "tag": "",
+   "img": "res://assets/museum/orbix/ad_05.png",
+   "ad": true
   },
   {
    "kind": "frame",
    "title": "API central",
    "text": "Uma orbix-api cuida de autenticação, OTP, tokens e finanças e serve todos os produtos, evitando reescrever o mesmo núcleo.",
-   "tag": ""
+   "tag": "",
+   "img": "res://assets/museum/orbix/ad_06.png",
+   "ad": true
   },
   {
    "kind": "frame",
    "title": "Desafio técnico",
    "text": "Servir produtos diferentes a partir de um núcleo só, mantendo segurança, finanças e isolamento de dados por cliente.",
-   "tag": ""
+   "tag": "",
+   "img": "res://assets/museum/orbix/ad_07.png",
+   "ad": true
   },
   {
    "kind": "plaque",
    "title": "Como foi feito",
    "text": "NestJS e Fastify no back, Flutter no mobile, PostgreSQL com RLS e Docker.",
-   "tag": ""
+   "tag": "",
+   "img": "res://assets/museum/orbix/ad_08.png",
+   "ad": true
   }
  ]
 }

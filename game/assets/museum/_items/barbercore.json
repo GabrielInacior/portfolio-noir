@@ -1,0 +1,60 @@
+{
+ "theme": {
+  "room": "bar",
+  "floor": "ladrilho",
+  "wall": "tijolo",
+  "warm": "#ffb86b",
+  "cool": "#c9a227",
+  "accent": "#c9a227",
+  "sub": "Barbearia"
+ },
+ "items": [
+  {
+   "kind": "poster",
+   "title": "BarberCore",
+   "text": "CRM completo para barbearias: clientes, agenda, financeiro, estoque e fidelidade num só lugar, com clientes pagantes.",
+   "tag": "SaaS · em desenvolvimento",
+   "img": "res://assets/museum/barbercore/ad_01.png",
+   "ad": true
+  },
+  {
+   "kind": "screen",
+   "title": "Agenda que se preenche",
+   "text": "Agendamentos online e lembretes no WhatsApp reduzem faltas e mantêm a cadeira ocupada.",
+   "tag": "Agenda · WhatsApp",
+   "img": "res://assets/museum/barbercore/ad_02.png",
+   "ad": true
+  },
+  {
+   "kind": "frame",
+   "title": "Fidelidade e assinaturas",
+   "text": "Planos recorrentes cobrados no Stripe e programa de pontos para o cliente voltar.",
+   "tag": "Stripe",
+   "img": "res://assets/museum/barbercore/ad_03.png",
+   "ad": true
+  },
+  {
+   "kind": "plaque",
+   "title": "Multi-tenant na AWS",
+   "text": "Cada barbearia com seus dados isolados, rodando na AWS com Next.js, FastAPI, Node e PostgreSQL.",
+   "tag": "Next.js · FastAPI · AWS",
+   "img": "res://assets/museum/barbercore/ad_04.png",
+   "ad": true
+  },
+  {
+   "kind": "prop",
+   "model": "cadeira_barbeiro",
+   "title": "A cadeira",
+   "text": "O sistema nasceu da rotina de uma barbearia de verdade: cada tela foi pensada para quem está com a máquina na mão.",
+   "tag": "Produto"
+  },
+  {
+   "kind": "frame",
+   "title": "Financeiro e estoque",
+   "text": "Caixa do dia, comissões e controle de produtos com alerta de reposição.",
+   "tag": "Gestão",
+   "img": "res://assets/museum/barbercore/ad_05.png",
+   "ad": true
+  }
+ ]
+}

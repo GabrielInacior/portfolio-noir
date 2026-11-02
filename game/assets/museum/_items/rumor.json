@@ -62,13 +62,17 @@
    "kind": "frame",
    "title": "O caso",
    "text": "RUMOR é um jogo de detetive multiplayer feito para a sala de aula. A turma se divide em equipes e cada aluno investiga pelo próprio celular.",
-   "tag": ""
+   "tag": "",
+   "img": "res://assets/museum/rumor/ad_01.png",
+   "ad": true
   },
   {
    "kind": "screen",
    "title": "A escola em 3D",
    "text": "Doze cômodos da escola em 3D para explorar. O aluno arrasta para olhar em volta e toca no que brilha para achar pistas.",
-   "tag": ""
+   "tag": "",
+   "img": "res://assets/museum/rumor/ad_02.png",
+   "ad": true
   }
  ]
 }

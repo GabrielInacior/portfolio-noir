@@ -762,7 +762,7 @@ static func _postit_words(id: String, stack: Array) -> Array:
 	var base := {"buscavagas": ["17 fontes", "Embeddings", "Redis", "Kanban", "WebSocket", "Ranking", "IA local", "Docker"],
 		"orbix": ["RLS", "Multi-tenant", "OTP", "NestJS", "Flutter", "Monorepo", "Finanças", "SaaS"],
 		"airmessage": ["WhatsApp", "Campanhas", "2FA", "Flutter", "Stripe", "AWS", "Fastify", "CRM"],
-		"sitembm": ["Nuxt 4", "SSR", "SEO", "S3", "CMS", "Vue 3", "Node", "Postgres"]}
+		"atende360": ["Nuxt 4", "SSR", "SEO", "S3", "CMS", "Vue 3", "Node", "Postgres"]}
 	return base.get(id, stack.slice(0, 8))
 
 

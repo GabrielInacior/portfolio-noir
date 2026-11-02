@@ -634,7 +634,21 @@ def pilha_papeis():
             M(["#c9a76a", PAPER, "#d6b67a", "#e8e1cf", "#b8925a", PAPER][k]), 0.003, rot=(0, 0, R.uniform(-0.2, 0.2)))
 
 
-ALL = [mesa_detetive, maquina_escrever, abajur_banqueiro, arquivo_aco, quadro_cortica, cabideiro, telefone_antigo,
+def cadeira_barbeiro():
+    chrome, red = M("#b8bcc4"), M(RED)
+    cyl((0, 0, 0.03), 0.3, 0.06, chrome, 14)
+    cyl((0, 0, 0.25), 0.07, 0.4, chrome, 10)
+    box((0, 0, 0.5), (0.6, 0.6, 0.14), red, 0.04)  # assento
+    box((0, 0.27, 0.95), (0.56, 0.12, 0.8), red, 0.05, rot=(0.15, 0, 0))  # encosto
+    box((0, 0.32, 1.42), (0.3, 0.1, 0.16), red, 0.04, rot=(0.15, 0, 0))  # apoio de cabeça
+    for s_ in (-1, 1):
+        box((s_ * 0.33, 0.0, 0.72), (0.08, 0.5, 0.06), chrome, 0.02)
+        box((s_ * 0.33, 0.15, 0.62), (0.05, 0.05, 0.2), chrome, 0)
+    box((0, -0.42, 0.2), (0.4, 0.06, 0.04), chrome, 0.01, rot=(0.6, 0, 0))  # apoio de pé
+    box((0, -0.2, 0.32), (0.06, 0.4, 0.04), chrome, 0.01, rot=(0.6, 0, 0))
+
+
+ALL = [cadeira_barbeiro, mesa_detetive, maquina_escrever, abajur_banqueiro, arquivo_aco, quadro_cortica, cabideiro, telefone_antigo,
        rack_servidor, mesa_monitores, cadeira_gamer, cadeado, roteador, fliperama, mesa_cartas, miniatura_fortaleza,
        trofeu, bancada_lab, servidor_ia, estante_livros, balcao_bar, banqueta_bar, garrafas, microfone_estudio,
        mesa_som, mesa_escritorio, cadeira_escritorio, monitor, planta_vaso, sofa_couro, luminaria_teto, pilha_papeis]

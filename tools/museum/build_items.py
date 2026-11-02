@@ -34,8 +34,10 @@ THEMES = {
                 "accent": "#5fd38a", "sub": "Sala de estudos"},
     "airmessage": {"room": "escritorio", "floor": "carpete", "wall": "concreto", "warm": "#ffd36a", "cool": "#5bd0ff",
                    "accent": "#5bd0ff", "sub": "Central de mensagens"},
-    "sitembm": {"room": "escritorio", "floor": "carpete", "wall": "concreto", "warm": "#ffd36a", "cool": "#4e9bff",
-                "accent": "#4e9bff", "sub": "Agência"},
+    "barbercore": {"room": "bar", "floor": "ladrilho", "wall": "tijolo", "warm": "#ffb86b", "cool": "#c9a227",
+                   "accent": "#c9a227", "sub": "Barbearia"},
+    "atende360": {"room": "escritorio", "floor": "carpete", "wall": "concreto", "warm": "#ffd36a", "cool": "#00bcd4",
+                  "accent": "#00bcd4", "sub": "Agência de comunicação"},
 }
 
 # kinds de objeto 3D (o museu sabe montar cada um): quadro (frame), telao (screen), poster,
@@ -106,23 +108,23 @@ ITEMS = {
          "text": "Tudo local e de graça. A chave da OpenAI é opcional: sem ela o ranking funciona por completo com o modelo local.", "tag": "IA local"},
     ],
     "orbix": [
-        {"kind": "monitor", "img": img("orbix", "rls.png"), "title": "Multi-tenant de verdade",
+        {"kind": "monitor", "title": "Multi-tenant de verdade",
          "text": "Isolamento por Row-Level Security no próprio PostgreSQL: cada empresa só enxerga o que é dela, mesmo se a aplicação errar.", "tag": "Postgres RLS"},
-        {"kind": "monitor", "img": img("orbix", "arquitetura.png"), "title": "Uma API, vários produtos",
+        {"kind": "monitor", "title": "Uma API, vários produtos",
          "text": "O orbix-api centraliza login, OTP, tokens e finanças e serve vários produtos, como CRM e gestão de oficinas.", "tag": "NestJS · Flutter"},
-        {"kind": "frame", "img": img("orbix", "login.jpg"), "title": "Entrada única",
+        {"kind": "frame", "title": "Entrada única",
          "text": "Toda a camada de autenticação é delegada ao orbix-api via proxy. Um só lugar para login e segurança.", "tag": "Auth"},
         {"kind": "prop", "model": "servidor", "title": "Monorepo",
          "text": "NestJS e Flutter no mesmo repositório, com Docker. Plataforma SaaS pensada para crescer com muitos clientes.", "tag": "Infra"},
     ],
     "formataai": [
-        {"kind": "monitor", "img": img("formataai", "fluxo.png"), "title": "Da voz ao texto pronto",
+        {"kind": "monitor", "title": "Da voz ao texto pronto",
          "text": "Grava a voz, o Whisper transcreve, o GPT-4o-mini formata e você compartilha em um toque.", "tag": "Flutter · OpenAI"},
-        {"kind": "monitor", "img": img("formataai", "formatos.png"), "title": "Nove formatos",
+        {"kind": "monitor", "title": "Nove formatos",
          "text": "WhatsApp, e-mail, documento, orçamento, receita, currículo, post social, lista ou outro, da mesma fala.", "tag": "Versatilidade"},
-        {"kind": "monitor", "img": img("formataai", "arquitetura.png"), "title": "Arquitetura",
+        {"kind": "monitor", "title": "Arquitetura",
          "text": "Flutter no celular, Nginx com SSL, Node com Express, Prisma e Postgres. A IA é orquestrada, não embutida.", "tag": "Backend"},
-        {"kind": "frame", "img": img("formataai", "tcc.png"), "title": "Trabalho de conclusão",
+        {"kind": "frame", "title": "Trabalho de conclusão",
          "text": "Feito como TCC, para quem tem menos fluência digital. Basta falar e o texto formal sai pronto.", "tag": "Propósito"},
         {"kind": "prop", "model": "microfone", "title": "Acessibilidade",
          "text": "Pensado para maior faixa etária e rotinas corridas: elimina a barreira de redigir mensagens formais.", "tag": "Inclusão"},
@@ -147,11 +149,29 @@ ITEMS = {
         {"kind": "prop", "model": "servidor", "title": "Operação",
          "text": "Billing mensal e deploy em AWS. Pensado para pequenos negócios manterem contato com os clientes.", "tag": "SaaS"},
     ],
-    "sitembm": [
-        {"kind": "prop", "model": "monitor_cv", "title": "MBM",
-         "text": "Plataforma de landing pages e blog institucional para empresa de telecom, com CMS, newsletter, analytics e SEO dinâmico.", "tag": "Nuxt · Vue · AWS"},
+    "atende360": [
+        {"kind": "screen", "img": img("atende360", "01_home.jpg"), "title": "Atende 360",
+         "text": "Site corporativo de uma plataforma de comunicação empresarial: gestão de WhatsApp com chatbots, telefonia e SMS numa única central integrada.", "tag": "Em produção · atn360.com.br"},
+        {"kind": "frame", "img": img("atende360", "03_whatsapp.jpg"), "title": "Nenhum cliente sem resposta",
+         "text": "A gestão de WhatsApp organiza conversas, distribui atendimentos e mantém chatbots respondendo 24 horas.", "tag": "WhatsApp · chatbots"},
+        {"kind": "screen", "img": img("atende360", "02_contato.jpg"), "title": "Captação de clientes",
+         "text": "Formulário de contato integrado ao painel: o especialista recebe o lead na hora, com a origem de cada visita.", "tag": "Leads · painel"},
+        {"kind": "prop", "model": "monitor_cv", "title": "CMS próprio",
+         "text": "Painel administrativo feito do zero para criar páginas e posts, com IA (Gemini) gerando artigos para o blog.", "tag": "Nuxt · Vue · IA"},
         {"kind": "prop", "model": "cadeado", "title": "Segurança",
-         "text": "Backend com autenticação JWT e 2FA, papéis de acesso e upload para S3.", "tag": "Auth"},
+         "text": "Login com JWT e verificação em duas etapas, papéis de acesso e upload de arquivos para a AWS S3.", "tag": "JWT · 2FA · S3"},
+    ],
+    "barbercore": [
+        {"kind": "poster", "title": "BarberCore",
+         "text": "CRM completo para barbearias: clientes, agenda, financeiro, estoque e fidelidade num só lugar, com clientes pagantes.", "tag": "SaaS · em desenvolvimento"},
+        {"kind": "screen", "title": "Agenda que se preenche",
+         "text": "Agendamentos online e lembretes no WhatsApp reduzem faltas e mantêm a cadeira ocupada.", "tag": "Agenda · WhatsApp"},
+        {"kind": "frame", "title": "Fidelidade e assinaturas",
+         "text": "Planos recorrentes cobrados no Stripe e programa de pontos para o cliente voltar.", "tag": "Stripe"},
+        {"kind": "plaque", "title": "Multi-tenant na AWS",
+         "text": "Cada barbearia com seus dados isolados, rodando na AWS com Next.js, FastAPI, Node e PostgreSQL.", "tag": "Next.js · FastAPI · AWS"},
+        {"kind": "prop", "model": "cadeira_barbeiro", "title": "A cadeira",
+         "text": "O sistema nasceu da rotina de uma barbearia de verdade: cada tela foi pensada para quem está com a máquina na mão.", "tag": "Produto"},
     ],
 }
 
@@ -178,7 +198,7 @@ SKILLS_LAB = {
 
 KIND_BY_TIPO = {"quadro": "frame", "telao": "screen", "tela": "screen", "placa_stack": "plaque", "placa": "plaque",
                 "relatorio": "frame", "objeto": "frame", "poster": "poster"}
-MODEL_BY_ID = {"airmessage": "telefone", "ankiana": "livro", "sitembm": "monitor_cv", "labia": "microfone", "orbix": "servidor"}
+MODEL_BY_ID = {"airmessage": "telefone", "ankiana": "livro", "atende360": "monitor_cv", "labia": "microfone", "orbix": "servidor"}
 
 
 def enrich(pid, items):
@@ -199,9 +219,39 @@ def enrich(pid, items):
     return out
 
 
+def _posters():
+    """Peças sem print real viram anúncios de design (tools/museum/posters.py), com sonda de leitura."""
+    import sys
+    sys.path.insert(0, os.path.dirname(__file__))
+    import posters
+    projs = json.load(open(os.path.join(ROOT, "data", "projects.json"), encoding="utf8"))
+    projs = {p["id"]: p for p in (projs if isinstance(projs, list) else projs.get("projects", []))}
+    themes = posters.load_theme_over()
+    report = []
+    for pid, items in ITEMS.items():
+        k = 0
+        for it in items:
+            if it.get("img") or it.get("kind") not in posters.SIZES:
+                continue
+            k += 1
+            dst = os.path.join(ROOT, "game", "assets", "museum", pid, "ad_%02d.png" % k)
+            r = posters.make(it, pid, projs.get(pid, {"title": pid}), it["kind"], dst, themes.get(pid), 1.0, k)
+            it["img"] = img(pid, "ad_%02d.png" % k)
+            it["ad"] = True
+            r["pid"] = pid
+            report.append(r)
+    json.dump(report, open(os.path.join(os.path.dirname(__file__), "_posters_report.json"), "w", encoding="utf8"),
+              ensure_ascii=False, indent=1)
+    bad = [r for r in report if not r["ok"]]
+    print("anúncios:", len(report), "reprovados:", len(bad))
+    for r in bad:
+        print("  REPROVADO", r["file"], r["checks"])
+
+
 def main():
     for pid in list(ITEMS.keys()):
         ITEMS[pid] = enrich(pid, ITEMS[pid])
+    _posters()
     for pid, items in ITEMS.items():
         theme = THEMES.get(pid, {"room": "escritorio", "floor": "carpete", "wall": "concreto",
                                  "warm": "#ffd36a", "cool": "#4e9bff", "accent": "#ffc83d", "sub": ""})

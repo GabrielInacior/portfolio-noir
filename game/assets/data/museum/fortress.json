@@ -1,37 +1,37 @@
 {
-  "id": "fortress",
-  "loja": "Fliperama Fortaleza",
-  "ambiente": "Um fliperama com gabinetes e cartas na parede.",
-  "pieces": [
-    {
-      "titulo": "O jogo",
-      "texto": "Fortress Chaos e um roguelite 3D de construir fortaleza e defender de ondas de inimigos. Voce ergue muralhas, posiciona torres e sobrevive.",
-      "tipo": "quadro"
-    },
-    {
-      "titulo": "Cartas e sinergias",
-      "texto": "Entre as batalhas voce escolhe cartas que se combinam. Cada partida monta um baralho diferente e abre novas estrategias.",
-      "tipo": "objeto"
-    },
-    {
-      "titulo": "Civilizacoes e biomas",
-      "texto": "Varias civilizacoes, biomas e chefes, cada um mudando o jeito de jogar. Arte 3D low-poly com interface em pixel art feita a mao.",
-      "tipo": "telao"
-    },
-    {
-      "titulo": "Chefes",
-      "texto": "Chefes grandes fecham cada ciclo e exigem que o jogador leia o campo e adapte a fortaleza na hora.",
-      "tipo": "objeto"
-    },
-    {
-      "titulo": "Plataformas",
-      "texto": "Em desenvolvimento ativo para Windows e Android, pensado desde o inicio para rodar bem nos dois.",
-      "tipo": "placa_stack"
-    },
-    {
-      "titulo": "Como foi feito",
-      "texto": "Godot e GDScript no jogo, Blender para os modelos 3D, com preparo para publicar na Steam.",
-      "tipo": "placa_stack"
-    }
-  ]
+ "id": "fortress",
+ "loja": "Fliperama Fortaleza",
+ "ambiente": "Um fliperama com gabinetes e cartas na parede.",
+ "pieces": [
+  {
+   "titulo": "O jogo",
+   "texto": "Fortress Chaos é um roguelite 3D de construir fortaleza e defender de ondas de inimigos. Você ergue muralhas, posiciona torres e sobrevive.",
+   "tipo": "quadro"
+  },
+  {
+   "titulo": "Cartas e sinergias",
+   "texto": "Entre as batalhas voce escolhe cartas que se combinam. Cada partida monta um baralho diferente e abre novas estrategias.",
+   "tipo": "objeto"
+  },
+  {
+   "titulo": "Civilizacoes e biomas",
+   "texto": "Varias civilizacoes, biomas e chefes, cada um mudando o jeito de jogar. Arte 3D low-poly com interface em pixel art feita a mao.",
+   "tipo": "telao"
+  },
+  {
+   "titulo": "Chefes",
+   "texto": "Chefes grandes fecham cada ciclo e exigem que o jogador leia o campo e adapte a fortaleza na hora.",
+   "tipo": "objeto"
+  },
+  {
+   "titulo": "Plataformas",
+   "texto": "Em desenvolvimento ativo para Windows e Android, pensado desde o inicio para rodar bem nos dois.",
+   "tipo": "placa_stack"
+  },
+  {
+   "titulo": "Como foi feito",
+   "texto": "Godot e GDScript no jogo, Blender para os modelos 3D, com preparo para publicar na Steam.",
+   "tipo": "placa_stack"
+  }
+ ]
 }

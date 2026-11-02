@@ -313,7 +313,7 @@ func _wall_slots(style: String) -> Array:
 	return out
 
 
-const PROP_GLB := {"servidor": "servidor_ia", "cadeado": "cadeado", "microfone": "microfone_estudio", "monitor_cv": "monitor",
+const PROP_GLB := {"cadeira_barbeiro": "cadeira_barbeiro", "servidor": "servidor_ia", "cadeado": "cadeado", "microfone": "microfone_estudio", "monitor_cv": "monitor",
 	"maquina": "maquina_escrever", "typewriter": "maquina_escrever", "telefone": "telefone_antigo", "livro": "pilha_livros",
 	"trofeu": "trofeu", "roteador": "roteador", "carta": "mesa_cartas", "fliperama": "fliperama", "rack": "rack_servidor",
 	"maquina_escrever": "maquina_escrever", "cortica": "quadro_cortica"}

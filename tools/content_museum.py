@@ -76,7 +76,7 @@ M = {
    ("Interface moderna", "Visual Material 3 moderno e acessivel, pensado para estudar no celular com conforto.", "foto", None),
    ("Como foi feito", "App em Flutter com Dart, integracao com IA para gerar os cartoes e design Material 3.", "placa_stack", None)
  ]},
- "sitembm": {"loja": "Redacao MBM", "obj": "Uma redacao com bancas de jornal e paineis de analytics.", "pieces": [
+ "atende360": {"loja": "Redacao MBM", "obj": "Uma redacao com bancas de jornal e paineis de analytics.", "pieces": [
    ("A plataforma", "MBM Site e uma plataforma de landing pages e blog institucional para uma empresa de telecom, com um painel administrativo completo.", "quadro", None),
    ("CMS proprio", "Um CMS feito do zero deixa a equipe criar e editar paginas e posts, com newsletter e analytics integrados.", "telao", None),
    ("SEO dinamico", "Cada pagina gera seu proprio SEO de forma dinamica, para ranquear melhor nas buscas.", "relatorio", None),

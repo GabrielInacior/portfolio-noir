@@ -27,25 +27,33 @@
    "kind": "frame",
    "title": "O produto",
    "text": "AirMessage e um SaaS de CRM e disparo multicanal por WhatsApp e SMS, feito para clinicas, estudios e oficinas.",
-   "tag": ""
+   "tag": "",
+   "img": "res://assets/museum/airmessage/ad_01.png",
+   "ad": true
   },
   {
    "kind": "screen",
    "title": "Campanhas e reengajamento",
    "text": "Mensagens diretas, campanhas agendadas e reengajamento pos-venda, tudo organizado por cliente.",
-   "tag": ""
+   "tag": "",
+   "img": "res://assets/museum/airmessage/ad_02.png",
+   "ad": true
   },
   {
    "kind": "frame",
    "title": "Um codigo, duas plataformas",
    "text": "Um unico app em Flutter roda no Android e no Windows, com autenticacao em duas etapas por SMS e e-mail.",
-   "tag": ""
+   "tag": "",
+   "img": "res://assets/museum/airmessage/ad_03.png",
+   "ad": true
   },
   {
    "kind": "plaque",
    "title": "Como foi feito",
    "text": "Backend Node com Fastify, app Flutter, PostgreSQL, integracao com a API do WhatsApp, cobranca por assinatura e deploy em AWS.",
-   "tag": ""
+   "tag": "",
+   "img": "res://assets/museum/airmessage/ad_04.png",
+   "ad": true
   }
  ]
 }

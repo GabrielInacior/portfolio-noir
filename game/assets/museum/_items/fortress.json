@@ -68,7 +68,9 @@
    "kind": "frame",
    "title": "O jogo",
    "text": "Fortress Chaos é um roguelite 3D de construir fortaleza e defender de ondas de inimigos. Você ergue muralhas, posiciona torres e sobrevive.",
-   "tag": ""
+   "tag": "",
+   "img": "res://assets/museum/fortress/ad_01.png",
+   "ad": true
   }
  ]
 }

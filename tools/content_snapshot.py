@@ -17,7 +17,7 @@ REPO = {
     "rumor": "rumor", "fortress": "fortress-chaos", "buscavagas": "BuscaVagas",
     "orbix": "Orbix", "formataai": "FormataAI", "labia": "JoogoLabia",
     "airmessage": "AirMessage", "inaciocyber": "InacioCyber", "ankiana": "AnkiAna",
-    "sitembm": "SiteMbm",
+    "atende360": "SiteMbm",
 }
 
 

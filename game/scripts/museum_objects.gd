@@ -122,7 +122,7 @@ static func framed(h: Node, tex: Texture2D, accent: Color, warm: Color) -> void:
 	_box(h, Vector3(0, 0, 0.0), Vector3(pw + 0.18, ph + 0.18, 0.08), _mat(Color("#120f0a")))   # moldura
 	_box(h, Vector3(0, 0, 0.05), Vector3(pw + 0.26, ph + 0.26, 0.04), _mat(warm.darkened(0.3)))  # borda dourada
 	if tex:
-		img(h, Vector3(0, 0, 0.101), pw, ph, tex, 0.3, "cover")
+		img(h, Vector3(0, 0, 0.101), pw, ph, tex, 0.0, "cover")
 	else:
 		_box(h, Vector3(0, 0, 0.09), Vector3(pw, ph, 0.02), _mat(Color("#14110c")))
 	# vidro com reflexo
@@ -183,7 +183,7 @@ static func poster(h: Node, tex: Texture2D, accent: Color) -> void:
 	var ph := 1.5
 	var pw := ph * r
 	if tex:
-		img(h, Vector3(0, 0, 0.026), pw, ph, tex, 0.2, "cover")
+		img(h, Vector3(0, 0, 0.026), pw, ph, tex, 0.0, "cover")
 	else:
 		_box(h, Vector3(0, 0, 0.02), Vector3(pw, ph, 0.01), _mat(Color("#0d0f18")))
 	for c in [Vector3(-pw / 2, ph / 2, 0.03), Vector3(pw / 2, ph / 2, 0.03), Vector3(-pw / 2, -ph / 2, 0.03), Vector3(pw / 2, -ph / 2, 0.03)]:
@@ -195,7 +195,7 @@ static func plaque(h: Node, tex: Texture2D, accent: Color) -> void:
 	_box(h, Vector3(0, 0, 0), Vector3(1.6, 1.0, 0.06), _mat(Color("#2a2f3c")))
 	_box(h, Vector3(0, 0, 0.035), Vector3(1.5, 0.9, 0.02), _mat(accent.darkened(0.2)))
 	if tex:
-		img(h, Vector3(0, 0, 0.056), 1.3, 0.72, tex, 0.4, "contain")
+		img(h, Vector3(0, 0, 0.056), 1.3, 0.72, tex, 0.0, "contain")
 	for sx in [-0.72, 0.72]:
 		for sy in [-0.44, 0.44]:
 			_cyl(h, Vector3(sx, sy, 0.05), 0.04, 0.03, _mat(accent, 1.0), Vector3(PI / 2, 0, 0))

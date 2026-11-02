@@ -11,31 +11,35 @@
  "items": [
   {
    "kind": "monitor",
-   "img": "res://assets/museum/formataai/fluxo.png",
    "title": "Da voz ao texto pronto",
    "text": "Grava a voz, o Whisper transcreve, o GPT-4o-mini formata e você compartilha em um toque.",
-   "tag": "Flutter · OpenAI"
+   "tag": "Flutter · OpenAI",
+   "img": "res://assets/museum/formataai/ad_01.png",
+   "ad": true
   },
   {
    "kind": "monitor",
-   "img": "res://assets/museum/formataai/formatos.png",
    "title": "Nove formatos",
    "text": "WhatsApp, e-mail, documento, orçamento, receita, currículo, post social, lista ou outro, da mesma fala.",
-   "tag": "Versatilidade"
+   "tag": "Versatilidade",
+   "img": "res://assets/museum/formataai/ad_02.png",
+   "ad": true
   },
   {
    "kind": "monitor",
-   "img": "res://assets/museum/formataai/arquitetura.png",
    "title": "Arquitetura",
    "text": "Flutter no celular, Nginx com SSL, Node com Express, Prisma e Postgres. A IA é orquestrada, não embutida.",
-   "tag": "Backend"
+   "tag": "Backend",
+   "img": "res://assets/museum/formataai/ad_03.png",
+   "ad": true
   },
   {
    "kind": "frame",
-   "img": "res://assets/museum/formataai/tcc.png",
    "title": "Trabalho de conclusão",
    "text": "Feito como TCC, para quem tem menos fluência digital. Basta falar e o texto formal sai pronto.",
-   "tag": "Propósito"
+   "tag": "Propósito",
+   "img": "res://assets/museum/formataai/ad_04.png",
+   "ad": true
   },
   {
    "kind": "prop",
@@ -48,25 +52,33 @@
    "kind": "frame",
    "title": "O app",
    "text": "FormataAI transforma uma fala informal em e-mail, mensagem, orcamento ou receita prontos para usar. Foi o meu trabalho de conclusao de curso.",
-   "tag": ""
+   "tag": "",
+   "img": "res://assets/museum/formataai/ad_05.png",
+   "ad": true
   },
   {
    "kind": "screen",
    "title": "Voz vira texto",
    "text": "Voce grava a voz, o app transcreve com o Whisper e formata com o GPT-4o-mini, entregando um texto estruturado e limpo.",
-   "tag": ""
+   "tag": "",
+   "img": "res://assets/museum/formataai/ad_06.png",
+   "ad": true
   },
   {
    "kind": "frame",
    "title": "Pensado para incluir",
    "text": "Feito para quem tem menos fluencia digital: em vez de digitar e formatar, a pessoa so fala e recebe o texto pronto.",
-   "tag": ""
+   "tag": "",
+   "img": "res://assets/museum/formataai/ad_07.png",
+   "ad": true
   },
   {
    "kind": "frame",
    "title": "Design de prompt",
    "text": "O segredo esta no desenho dos prompts e na gestao de contexto, para a saida sair sempre no formato certo.",
-   "tag": ""
+   "tag": "",
+   "img": "res://assets/museum/formataai/ad_08.png",
+   "ad": true
   }
  ]
 }

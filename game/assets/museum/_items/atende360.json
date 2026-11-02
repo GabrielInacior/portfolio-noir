@@ -1,0 +1,80 @@
+{
+ "theme": {
+  "room": "escritorio",
+  "floor": "carpete",
+  "wall": "concreto",
+  "warm": "#ffd36a",
+  "cool": "#00bcd4",
+  "accent": "#00bcd4",
+  "sub": "Agência de comunicação"
+ },
+ "items": [
+  {
+   "kind": "screen",
+   "img": "res://assets/museum/atende360/01_home.jpg",
+   "title": "Atende 360",
+   "text": "Site corporativo de uma plataforma de comunicação empresarial: gestão de WhatsApp com chatbots, telefonia e SMS numa única central integrada.",
+   "tag": "Em produção · atn360.com.br"
+  },
+  {
+   "kind": "frame",
+   "img": "res://assets/museum/atende360/03_whatsapp.jpg",
+   "title": "Nenhum cliente sem resposta",
+   "text": "A gestão de WhatsApp organiza conversas, distribui atendimentos e mantém chatbots respondendo 24 horas.",
+   "tag": "WhatsApp · chatbots"
+  },
+  {
+   "kind": "screen",
+   "img": "res://assets/museum/atende360/02_contato.jpg",
+   "title": "Captação de clientes",
+   "text": "Formulário de contato integrado ao painel: o especialista recebe o lead na hora, com a origem de cada visita.",
+   "tag": "Leads · painel"
+  },
+  {
+   "kind": "prop",
+   "model": "monitor_cv",
+   "title": "CMS próprio",
+   "text": "Painel administrativo feito do zero para criar páginas e posts, com IA (Gemini) gerando artigos para o blog.",
+   "tag": "Nuxt · Vue · IA"
+  },
+  {
+   "kind": "prop",
+   "model": "cadeado",
+   "title": "Segurança",
+   "text": "Login com JWT e verificação em duas etapas, papéis de acesso e upload de arquivos para a AWS S3.",
+   "tag": "JWT · 2FA · S3"
+  },
+  {
+   "kind": "screen",
+   "title": "Atendimento 24h",
+   "text": "A página principal apresenta chatbots que atendem a qualquer hora, organizam contatos e distribuem conversas entre a equipe.",
+   "tag": "WhatsApp · chatbots",
+   "img": "res://assets/museum/atende360/ad_01.png",
+   "ad": true
+  },
+  {
+   "kind": "frame",
+   "title": "Animações que vendem",
+   "text": "Seções animadas com GSAP conduzem o visitante do problema à solução, sem pesar o carregamento.",
+   "tag": "Nuxt · GSAP",
+   "img": "res://assets/museum/atende360/ad_02.png",
+   "ad": true
+  },
+  {
+   "kind": "frame",
+   "title": "SEO nota 100",
+   "text": "Renderização no servidor, metadados dinâmicos por página e cinco idiomas: o site nasce pronto para ser encontrado.",
+   "tag": "SSR · 5 idiomas",
+   "img": "res://assets/museum/atende360/ad_03.png",
+   "ad": true
+  },
+  {
+   "kind": "plaque",
+   "title": "Como foi feito",
+   "text": "Nuxt e Vue 3 com TypeScript no front, Node e Express no back, Prisma com PostgreSQL e arquivos na AWS.",
+   "tag": "Full-stack",
+   "img": "res://assets/museum/atende360/ad_04.png",
+   "ad": true
+  }
+ ]
+}

@@ -1,0 +1,49 @@
+{
+ "id": "atende360",
+ "loja": "Agência Atende 360",
+ "ambiente": "Uma agência de comunicação com telões de atendimento e balcão de WhatsApp.",
+ "pieces": [
+  {
+   "titulo": "Atende 360",
+   "texto": "Site corporativo de uma plataforma de comunicação empresarial: gestão de WhatsApp com chatbots, telefonia e SMS numa única central integrada.",
+   "tipo": "quadro",
+   "tag": "Em produção · atn360.com.br"
+  },
+  {
+   "titulo": "Atendimento 24h",
+   "texto": "A página principal apresenta chatbots que atendem a qualquer hora, organizam contatos e distribuem conversas entre a equipe.",
+   "tipo": "telao",
+   "tag": "WhatsApp · chatbots"
+  },
+  {
+   "titulo": "Animações que vendem",
+   "texto": "Seções animadas com GSAP conduzem o visitante do problema à solução, sem pesar o carregamento.",
+   "tipo": "quadro",
+   "tag": "Nuxt · GSAP"
+  },
+  {
+   "titulo": "CMS próprio",
+   "texto": "Um painel administrativo feito do zero permite à equipe criar páginas e posts, com IA (Gemini) sugerindo e gerando artigos para o blog.",
+   "tipo": "telao",
+   "tag": "Painel admin · IA"
+  },
+  {
+   "titulo": "SEO nota 100",
+   "texto": "Renderização no servidor, metadados dinâmicos por página e cinco idiomas: o site nasce pronto para ser encontrado.",
+   "tipo": "relatorio",
+   "tag": "SSR · 5 idiomas"
+  },
+  {
+   "titulo": "Segurança",
+   "texto": "Login com JWT e verificação em duas etapas, papéis de acesso e upload de arquivos direto para a AWS S3.",
+   "tipo": "placa_stack",
+   "tag": "JWT · 2FA · S3"
+  },
+  {
+   "titulo": "Como foi feito",
+   "texto": "Nuxt e Vue 3 com TypeScript no front, Node e Express no back, Prisma com PostgreSQL e arquivos na AWS.",
+   "tipo": "placa_stack",
+   "tag": "Full-stack"
+  }
+ ]
+}

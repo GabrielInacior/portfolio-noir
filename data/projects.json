@@ -81,7 +81,6 @@
    "Docker"
   ],
   "links": {},
-  "cover": "orbix.png",
   "private": true,
   "highlight": true
  },
@@ -104,7 +103,6 @@
   "links": {
    "github": "https://github.com/GabrielInacior/FormataAI"
   },
-  "cover": null,
   "private": false,
   "highlight": false,
   "status": "concluído",
@@ -146,7 +144,6 @@
    "WhatsApp"
   ],
   "links": {},
-  "cover": null,
   "private": true,
   "highlight": false
  },
@@ -186,14 +183,13 @@
   "links": {
    "github": "https://github.com/GabrielInacior/AnkiAna"
   },
-  "cover": null,
   "private": false,
   "highlight": false,
   "status": "concluído",
   "desc_old": "App mobile de estudos com geração nativa de flashcards via IA, inspirado no Anki. Aprenda mais rápido com repetição espaçada inteligente."
  },
  {
-  "id": "sitembm",
+  "id": "atende360",
   "title": "Atende 360",
   "tagline": "Comunicação empresarial numa única plataforma integrada",
   "year": 2026,
@@ -244,7 +240,6 @@
    "WhatsApp"
   ],
   "links": {},
-  "cover": null,
   "private": true,
   "highlight": false,
   "status": "em desenvolvimento"

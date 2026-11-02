@@ -11,8 +11,8 @@ extends Node
 const SHARP_LAYER := 1 << 19      # camada 20: elementos nítidos
 const OCC_LAYER := 1 << 18        # camada 19: oclusores (só nesta passada)
 const SHARP_SHADERS := ["code_scroll", "chart_screen", "led_panel", "matrix_rain", "arcade_attract"]
-const SHARP_TEX_HINTS := ["/museum/", "/collages/", "/covers/", "foto_gabriel", "/readmes/", "/captures/"]
-const RETRO_TEX_HINTS := ["janelas_atlas", "fachada_janelas", "/tex/", "_Image_0", "/characters/", "sky_"]
+const SHARP_TEX_HINTS := ["/museum/", "/collages/", "/covers/", "foto_gabriel", "/readmes/", "/captures/", "/billboards/", "/flyers/"]
+const RETRO_TEX_HINTS := ["janelas_atlas", "fachada_janelas", "/tex/", "/characters/", "sky_"]
 
 var world_vp: SubViewport
 var vp: SubViewport
@@ -46,7 +46,7 @@ func setup(p_world_vp: SubViewport, under_layer: CanvasLayer) -> void:
 	rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	# recorta a cor-chave dos oclusores (magenta exato) na composição
 	var key := Shader.new()
-	key.code = "shader_type canvas_item;\nvoid fragment(){ vec4 c = texture(TEXTURE, UV); float d = abs(c.r - 1.0) + c.g + abs(c.b - 1.0); if (d < 0.06) { c.a = 0.0; } COLOR = c; }\n"
+	key.code = "shader_type canvas_item;\nvoid fragment(){ vec4 c = texture(TEXTURE, UV); if (c.g < 0.03 && abs(c.r - c.b) < 0.03 && c.r > 0.45) { c.a = 0.0; } COLOR = c; }\n"
 	var km := ShaderMaterial.new()
 	km.shader = key
 	rect.material = km
@@ -86,8 +86,9 @@ func _process(_dt: float) -> void:
 	_sync_env()
 
 
-## ambiente desta câmera: o mesmo do mundo, sem névoa, brilho, ajustes nem tonemap (a cor-chave
-## dos oclusores precisa sair exata)
+## ambiente desta câmera: o MESMO do mundo (luz, névoa de distância, tonemap e ajuste de cor), para
+## quadros e letreiros nítidos reagirem à cena como o resto; só sai o fundo (transparente) e o glow.
+## Os oclusores usam fog_disabled e a cor-chave é detectada de forma robusta ao tonemap.
 var _env_src: Environment
 
 
@@ -106,11 +107,7 @@ func _sync_env() -> void:
 	var e: Environment = src.duplicate() if src else Environment.new()
 	e.background_mode = Environment.BG_CLEAR_COLOR
 	e.glow_enabled = false
-	e.fog_enabled = false
 	e.volumetric_fog_enabled = false
-	e.adjustment_enabled = false
-	e.tonemap_mode = Environment.TONE_MAPPER_LINEAR
-	e.tonemap_exposure = 1.0
 	cam.environment = e
 
 
