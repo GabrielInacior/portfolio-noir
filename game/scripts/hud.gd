@@ -55,49 +55,67 @@ func _ready() -> void:
 	set_process_input(true)
 
 
+var _topbar: Control
+var _topbar_narrow := -1
+
+
+## Barra de cima responsiva: no PC uma linha (nome, contador, som, idioma, retrô, projetos); no
+## celular em pé duas linhas, com nome e contador em cima e botões de toque de 88 px embaixo
+## (antes a linha única passava da largura de 720 e a barra sumia no celular).
 func _build_topbar() -> void:
+	var narrow := get_viewport_rect().size.x < 900.0
+	_topbar_narrow = 1 if narrow else 0
+	if _topbar and is_instance_valid(_topbar):
+		_topbar.queue_free()
 	var bar := PanelContainer.new()
-	bar.add_theme_stylebox_override("panel", UI.box(Color(UI.INK, 0.5), Color.TRANSPARENT, 0, 0))
+	_topbar = bar
+	bar.add_theme_stylebox_override("panel", UI.box(Color(UI.INK, 0.62), Color.TRANSPARENT, 0, 0))
 	bar.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-	bar.offset_bottom = 76
 	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var pad := MarginContainer.new()
 	pad.add_theme_constant_override("margin_left", 18)
 	pad.add_theme_constant_override("margin_right", 16)
-	pad.add_theme_constant_override("margin_top", 12)
+	pad.add_theme_constant_override("margin_top", 12 + _safe_top())
 	pad.add_theme_constant_override("margin_bottom", 8)
 	bar.add_child(pad)
+	var rows := UI.vbox(6)
+	pad.add_child(rows)
 	var h := UI.hbox(14)
-	pad.add_child(h)
-	var nm := UI.title("GABRIEL INÁCIO", 36, UI.PAPER)
+	rows.add_child(h)
+	var nm := UI.title("GABRIEL INÁCIO", 34 if narrow else 36, UI.PAPER)
 	nm.autowrap_mode = TextServer.AUTOWRAP_OFF
 	nm.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	h.add_child(nm)
-	counter_label = UI.label("", 20, UI.AMBER, "type")
+	counter_label = UI.label(counter_label.text if counter_label and is_instance_valid(counter_label) else "", 20, UI.AMBER, "type")
 	counter_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	counter_label.clip_text = true
+	counter_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	counter_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	h.add_child(counter_label)
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	h.add_child(spacer)
-	var snd := UI.ghost("♪", UI.PINK, 48)
-	snd.custom_minimum_size.x = 56
+	var btns := h
+	if narrow:
+		btns = UI.hbox(10)
+		rows.add_child(btns)
+	var bh := 76 if narrow else 48
+	var snd := UI.ghost("♪" if Audio.is_on() else "✕", UI.PINK, bh)
+	snd.custom_minimum_size.x = 88 if narrow else 56
 	snd.add_theme_font_override("font", UI.font("body"))
+	snd.tooltip_text = L.t("Som")
 	snd.pressed.connect(func() -> void:
 		var on := not Audio.is_on()
 		Audio.set_enabled(on)
 		snd.text = "♪" if on else "✕")
-	h.add_child(snd)
+	btns.add_child(snd)
 	# idioma (PT/EN) e visual retrô (forte/suave/desligado), salvos no navegador
-	var lang := UI.ghost("EN" if L.lang == "pt" else "PT", UI.CYAN, 48)
-	lang.custom_minimum_size.x = 64
+	var lang := UI.ghost("EN" if L.lang == "pt" else "PT", UI.CYAN, bh)
+	lang.custom_minimum_size.x = 88 if narrow else 64
 	lang.tooltip_text = "English" if L.lang == "pt" else "Português"
 	lang.pressed.connect(func() -> void: L.set_lang("en" if L.lang == "pt" else "pt"))
-	h.add_child(lang)
+	btns.add_child(lang)
 	var main_node := get_tree().current_scene
 	var names := {"forte": "RETRÔ", "suave": "RETRÔ ½", "off": "HD"}
-	var rb := UI.ghost(names.get(str(main_node.get("retro")) if main_node and main_node.get("retro") != null else "forte", "RETRÔ"), UI.GREEN, 48)
-	rb.custom_minimum_size.x = 110
+	var rb := UI.ghost(L.t(names.get(str(main_node.get("retro")) if main_node and main_node.get("retro") != null else "forte", "RETRÔ")), UI.GREEN, bh)
+	rb.custom_minimum_size.x = 130 if narrow else 110
 	rb.pressed.connect(func() -> void:
 		var mn := get_tree().current_scene
 		if mn == null or not mn.has_method("set_retro"):
@@ -106,11 +124,39 @@ func _build_topbar() -> void:
 		var nxt: String = order[(order.find(str(mn.get("retro"))) + 1) % 3]
 		mn.set_retro(nxt)
 		rb.text = L.t(names[nxt]))
-	h.add_child(rb)
-	var lst := UI.ghost("PROJETOS", UI.AMBER, 48)
+	btns.add_child(rb)
+	var lst := UI.ghost(L.t("PROJETOS"), UI.AMBER, bh)
 	lst.custom_minimum_size.x = 150
+	if narrow:
+		lst.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lst.pressed.connect(_open_list)
-	h.add_child(lst)
+	btns.add_child(lst)
+	add_child(bar)
+	move_child(bar, 0)
+	# minimapa logo abaixo da barra (que no celular tem duas linhas)
+	if minimap:
+		_place_minimap()
+
+
+func _safe_top() -> int:
+	# entalhe/barra de status: área segura do sistema (no navegador vem da janela inteira)
+	var safe := DisplayServer.get_display_safe_area()
+	var win := DisplayServer.window_get_position()
+	var top := safe.position.y - win.y
+	return clampi(top, 0, 60)
+
+
+func _place_minimap() -> void:
+	var top := 172 if _topbar_narrow == 1 else 86
+	minimap.offset_top = top
+	minimap.offset_bottom = top + 150
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED and _topbar_narrow != -1:
+		var narrow := 1 if get_viewport_rect().size.x < 900.0 else 0
+		if narrow != _topbar_narrow:
+			_build_topbar.call_deferred()
 
 
 func _build_minimap() -> void:
@@ -118,12 +164,11 @@ func _build_minimap() -> void:
 	minimap.custom_minimum_size = Vector2(190, 150)
 	minimap.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
 	minimap.offset_left = -206
-	minimap.offset_top = 86
 	minimap.offset_right = -16
-	minimap.offset_bottom = 236
 	minimap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	minimap.clip_contents = true
 	add_child(minimap)
+	_place_minimap()
 
 
 func _build_prompt() -> void:
