@@ -31,6 +31,22 @@ func open(c) -> void:
 	pl.autowrap_mode = TextServer.AUTOWRAP_OFF
 	prog.add_child(pl)
 	footer.add_child(prog)
+	# celular: sensibilidade da câmera (arrastar para olhar), salva no navegador
+	if UI.is_touch():
+		var sr := UI.hbox(UI.sp(1))
+		var sl := UI.text(L.t("Câmera"), "small", UI.MIST)
+		sl.autowrap_mode = TextServer.AUTOWRAP_OFF
+		sr.add_child(sl)
+		var hs := HSlider.new()
+		hs.min_value = 0.3
+		hs.max_value = 2.0
+		hs.step = 0.05
+		hs.value = UI.look_sens()
+		hs.custom_minimum_size = Vector2(UI.sp(16), UI.tap(self) * 0.6)
+		hs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hs.value_changed.connect(func(v: float) -> void: UI.set_look_sens(v))
+		sr.add_child(hs)
+		footer.add_child(sr)
 
 
 func _card(p: Dictionary) -> Control:

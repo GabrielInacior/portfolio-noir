@@ -16,7 +16,10 @@ var _mouse_captured := false
 
 # controle mobile (preenchido pelo HUD)
 var move_vec := Vector2.ZERO
-var look_delta := Vector2.ZERO
+var look_delta := Vector2.ZERO      # mouse/legado (pixels)
+var look_rad := Vector2.ZERO        # toque: já em radianos (o HUD normaliza pela tela)
+var _yaw_t := 0.0                   # alvo suavizado do olhar no celular
+var _pitch_t := 0.0
 
 signal target_changed(project: Dictionary)
 signal interacted(project: Dictionary)
@@ -50,6 +53,12 @@ func _ready() -> void:
 	head.add_child(cam)
 
 
+## teleporte/viagem: o alvo suavizado do olhar acompanha (senão a câmera "volta" girando)
+func sync_look() -> void:
+	_yaw_t = _yaw
+	_pitch_t = _pitch
+
+
 func set_target(k: Dictionary) -> void:
 	if k.get("project", {}) != _target_kiosk.get("project", {}):
 		_target_kiosk = k
@@ -67,7 +76,7 @@ func try_interact() -> void:
 
 func _unhandled_input(e: InputEvent) -> void:
 	if e is InputEventMouseButton and (e as InputEventMouseButton).pressed:
-		if not UI.is_mobile() and not _mouse_captured:
+		if not UI.is_mobile() and not UI.is_touch() and not _mouse_captured:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 			_mouse_captured = true
 	elif e is InputEventMouseMotion and _mouse_captured:
@@ -87,6 +96,22 @@ func _physics_process(dt: float) -> void:
 		_yaw -= look_delta.x * LOOK_SENS * 2.2
 		_pitch = clampf(_pitch - look_delta.y * LOOK_SENS * 2.2, -1.2, 1.0)
 		look_delta = Vector2.ZERO
+		_yaw_t = _yaw
+		_pitch_t = _pitch
+	# toque: acumula num alvo e chega nele com suavização (nada de giro brusco no celular)
+	if look_rad != Vector2.ZERO:
+		var lr := look_rad.limit_length(0.35)
+		_yaw_t -= lr.x
+		_pitch_t = clampf(_pitch_t - lr.y, -1.0, 0.85)
+		look_rad = Vector2.ZERO
+	if UI.is_touch():
+		var k := clampf(dt * 14.0, 0.0, 1.0)
+		var dy := clampf(angle_difference(_yaw, _yaw_t) * k, -0.09, 0.09)
+		_yaw += dy
+		_pitch = lerpf(_pitch, _pitch_t, k)
+	else:
+		_yaw_t = _yaw
+		_pitch_t = _pitch
 	rotation.y = _yaw
 	head.rotation.x = _pitch
 
@@ -107,6 +132,7 @@ func _physics_process(dt: float) -> void:
 			dir = to.normalized()
 			# vira o rosto suavemente para o alvo
 			_yaw = lerp_angle(_yaw, atan2(-dir.x, -dir.z), clampf(dt * 3.0, 0, 1))
+			_yaw_t = _yaw
 		if input != Vector2.ZERO:
 			_auto_target = Vector3.INF
 

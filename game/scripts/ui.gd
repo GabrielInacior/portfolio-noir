@@ -438,7 +438,7 @@ func is_mobile() -> bool:
 
 ## o dispositivo tem toque (para escolher a legenda de comandos)
 func is_touch() -> bool:
-	return is_mobile() or DisplayServer.is_touchscreen_available() and _vs().y > _vs().x
+	return is_mobile() or OS.get_environment("PF_TOUCH") != "" or DisplayServer.is_touchscreen_available() and _vs().y > _vs().x
 
 
 ## área segura de cima (entalhe/barra do navegador), em unidades lógicas

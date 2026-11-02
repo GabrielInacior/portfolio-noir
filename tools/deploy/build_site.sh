@@ -15,6 +15,8 @@ mkdir -p site/jogo
 # jogo
 cd game
 "$GODOT" --headless --audio-driver Dummy --path . --import >/dev/null 2>&1 || true
+python ../tools/deploy/compress_imports.py
+"$GODOT" --headless --audio-driver Dummy --path . --import >/dev/null 2>&1 || true
 "$GODOT" --headless --audio-driver Dummy --path . --export-release "Web" ../site/jogo/index.html 2>&1 | grep -E "ERROR|error" | grep -v "^$" | head -20 || true
 cd "$ROOT"
 # boot.js: o jogo abre por cima de todas as páginas (home, /en/, projetos)

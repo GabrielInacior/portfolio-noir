@@ -93,6 +93,8 @@ static func travel(hud, place: Dictionary) -> void:
 	if to.length() > 0.01:
 		player._yaw = atan2(-to.x, -to.z)
 		player.rotation.y = player._yaw
+	if player.has_method("sync_look"):
+		player.sync_look()
 	var pr: Dictionary = place["project"]
 	if str(pr.get("special", "")) == "contact":
 		hud.open_dossier(pr)

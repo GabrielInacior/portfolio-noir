@@ -33,6 +33,8 @@ var stick_base: Control
 var stick_knob: Control
 var _stick_touch := -1
 var _look_touch := -1
+var _look_last := Vector2.ZERO
+var _look_live := false   # passou da zona morta
 var _stick_center := Vector2.ZERO
 var _touch_start := {}
 var _current: Dictionary = {}
@@ -413,7 +415,8 @@ func _tour_step(dir: int) -> void:
 			player.rotation.y = player._yaw
 			player._pitch = clampf(atan2(to.y, Vector2(to.x, to.z).length()), -0.6, 0.5)
 			if player.head:
-				player.head.rotation.x = player._pitch)
+				player.head.rotation.x = player._pitch
+			player.sync_look())
 		tw.tween_property(fade, "color:a", 0.0, 0.2)
 		tw.tween_callback(fade.queue_free)
 		await tw.finished
@@ -522,8 +525,11 @@ func _input(e: InputEvent) -> void:
 				_stick_center = t.position
 				if stick_base:
 					stick_base.position = t.position - stick_base.size / 2.0
-			elif _look_touch == -1 and t.position.y > _topbar_bottom():
+			elif _look_touch == -1 and t.position.y > _topbar_bottom() and t.index != _stick_touch 					and (t.position.x >= size.x * 0.4 or _stick_touch != -1 and t.position.distance_to(_stick_center) > 220.0):
+				# olhar só com o dedo que NÃO está na alavanca, e (sem alavanca ativa) só na parte direita
 				_look_touch = t.index
+				_look_last = t.position
+				_look_live = false
 		else:
 			var st: Vector2 = _touch_start.get(t.index, t.position)
 			var was_tap := st.distance_to(t.position) < 18.0
@@ -544,7 +550,21 @@ func _input(e: InputEvent) -> void:
 			if stick_knob:
 				stick_knob.position = _stick_center + off - stick_knob.size / 2.0
 		elif d.index == _look_touch:
-			player.look_delta += d.relative
+			# delta calculado pela posição deste dedo (o relative do navegador às vezes salta entre dedos)
+			var st: Vector2 = _touch_start.get(d.index, d.position)
+			if not _look_live:
+				if st.distance_to(d.position) < 10.0:
+					return
+				_look_live = true
+				_look_last = d.position
+				return
+			var dl := (d.position - _look_last).limit_length(48.0)
+			_look_last = d.position
+			# um arrasto da largura da tela gira ~120° (x sensibilidade escolhida); curva suave
+			var w := maxf(size.x, 1.0)
+			var v := dl / w
+			var accel := 1.0 + clampf(v.length() * 6.0, 0.0, 0.6)
+			player.look_rad += Vector2(v.x * 2.1, v.y * 1.5) * accel * UI.look_sens()
 
 
 ## toque curto no mundo: placa, NPC ou objeto mirado
@@ -708,6 +728,8 @@ func enter_museum(project: Dictionary) -> void:
 	player.global_position = _museum.spawn_pos()
 	player._yaw = PI
 	player.rotation.y = PI
+	player._pitch = 0.0
+	player.sync_look()
 	player.set_meta("walk", player.walk_rects)
 	player.walk_rects = []
 	var br: Rect2 = _museum.bounds()
@@ -726,6 +748,8 @@ func exit_museum() -> void:
 	player.get_parent().remove_child(player)
 	city.add_child(player)
 	player.global_transform = _entry_xform
+	player._yaw = player.rotation.y
+	player.sync_look()
 	player.walk_rects = player.get_meta("walk", [])
 	_museum.queue_free()
 	_museum = null
