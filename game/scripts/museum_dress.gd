@@ -916,6 +916,81 @@ static func _career(m) -> void:
 	m.prop("sd_cabos", Vector3(-1.6, 0, -D / 2 + 5.4), 0.4)
 	m.prop("caixas_papelao", Vector3(W / 2 - 0.5, 0, D / 2 - 0.5), 0.3, 0.7)
 	_switch(m, Vector3(1.05, 1.25, D / 2 - 0.12))
+	_career_islands(m, zones)
+
+
+## Ilhas de exposição no meio do corredor, uma por empresa, com os objetos do trabalho feito lá e um
+## spot de destaque. Preenche o vão central (antes vazio) e conta a história de cada fase.
+static func _career_islands(m, zones: Array) -> void:
+	var D: float = m.D
+	var wood: StandardMaterial3D = m.flat(Color("#2b2320"))
+	var trim: StandardMaterial3D = m.flat(Color("#c9a45c"), 0.0)
+	var glass := StandardMaterial3D.new()
+	glass.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	glass.albedo_color = Color(0.7, 0.85, 1.0, 0.12)
+	glass.roughness = 0.1
+	var centers := [-D / 2 + 2.6, -D / 2 + 6.6, D / 2 - 2.9]
+	for i in 3:
+		var z: float = centers[i]
+		var col: Color = zones[i][1]
+		var base := Node3D.new()
+		base.position = Vector3(0, 0, z)
+		m.add_child(base)
+		# pedestal largo com tampo de vidro e friso dourado
+		m.box(Vector3(0, 0.42, 0), Vector3(1.5, 0.84, 0.9), wood, base)
+		m.box(Vector3(0, 0.85, 0), Vector3(1.56, 0.03, 0.96), trim, base)
+		m.box(Vector3(0, 1.12, 0), Vector3(1.5, 0.5, 0.9), glass, base)
+		var strip: MeshInstance3D = m.box(Vector3(0, 0.05, 0.46), Vector3(1.5, 0.03, 0.02), m.flat(col, 2.2), base)
+		strip.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		match i:
+			0:
+				# licitações: pilhas de editais, caixa de arquivo e monitor com a tabela de milhões de linhas
+				m.prop("pilha_papeis", Vector3(-0.45, 0.87, 0.05), 0.2, 0.9, base)
+				m.prop("sd_pastas", Vector3(-0.1, 0.87, 0.2), -0.4, 0.8, base)
+				m.prop("sd_caixa_arquivo", Vector3(0.5, 0.87, 0.15), 0.1, 0.55, base)
+				var mon := Node3D.new()
+				mon.position = Vector3(0.25, 0.87, -0.2)
+				base.add_child(mon)
+				code_monitor(m, mon, Vector3.ZERO, 3.0, CHART, {"accent": col, "accent2": Color("#ffc83d")})
+				label3d(m, "EDITAIS · MILHÕES DE LINHAS", Vector3(0, 0.62, 0.47), 0, 20, Color("#e8e2d0"), "type", base)
+			1:
+				# SysGuide: servidor de vídeo, câmera de streaming, notebook (Rust + Tauri) e microfone (Whisper)
+				m.prop("servidor_ia", Vector3(-0.5, 0.87, 0.0), 0.3, 0.5, base)
+				m.prop("microfone_estudio", Vector3(0.55, 0.87, 0.2), -0.5, 0.55, base)
+				_tripod_cam(m, base, Vector3(0.6, 0.87, -0.25), col)
+				laptop(m, base, Vector3(0.0, 0.87, 0.12), ["Rust", "Tauri", "Whisper", "LLM local"], 1.7)
+				label3d(m, "STREAMING · RUST + TAURI · WHISPER", Vector3(0, 0.62, 0.47), 0, 20, Color("#e8e2d0"), "type", base)
+			2:
+				# Loop, UNESP e freelas: livros, diploma, notebook e caneca
+				m.prop("pilha_livros", Vector3(-0.5, 0.87, 0.1), 0.6, 0.7, base)
+				m.prop("caneca", Vector3(0.55, 0.87, 0.25), 0.0, 1.0, base)
+				laptop(m, base, Vector3(0.05, 0.87, 0.05), ["C#", "WPF", "Python", "Vue"], 2.9)
+				var frame: MeshInstance3D = m.box(Vector3(0.45, 1.05, -0.3), Vector3(0.36, 0.28, 0.02), m.flat(Color("#e8e2d0")), base)
+				frame.rotation.x = -0.25
+				label3d(m, "PESQUISA · DESKTOP · FREELAS", Vector3(0, 0.62, 0.47), 0, 20, Color("#e8e2d0"), "type", base)
+		# spot de destaque sobre a ilha (uma luz por ilha, sem sombra)
+		var sp := SpotLight3D.new()
+		sp.position = Vector3(0, m.H - 0.2, z)
+		sp.rotation_degrees = Vector3(-90, 0, 0)
+		sp.light_color = col.lerp(Color("#ffe6c0"), 0.55)
+		sp.light_energy = 1.5
+		sp.spot_range = 4.0
+		sp.spot_angle = 30.0
+		sp.shadow_enabled = false
+		m.add_child(sp)
+
+
+static func _tripod_cam(m, parent: Node3D, pos: Vector3, col: Color) -> void:
+	var leg: StandardMaterial3D = m.flat(Color("#1a1c22"))
+	for k in 3:
+		var a := TAU * k / 3.0
+		var l: MeshInstance3D = m.box(pos + Vector3(cos(a) * 0.07, 0.11, sin(a) * 0.07), Vector3(0.012, 0.24, 0.012), leg, parent)
+		l.rotation = Vector3(sin(a) * 0.3, 0, -cos(a) * 0.3)
+	m.box(pos + Vector3(0, 0.26, 0), Vector3(0.14, 0.09, 0.1), m.flat(Color("#23262e")), parent)
+	var lens: MeshInstance3D = m.box(pos + Vector3(0, 0.26, 0.08), Vector3(0.06, 0.06, 0.06), m.flat(Color("#0c0d10")), parent)
+	lens.rotation.x = 0.0
+	var rec: MeshInstance3D = m.box(pos + Vector3(0.05, 0.32, 0.03), Vector3(0.015, 0.015, 0.015), m.flat(Color("#ff3344"), 4.0), parent)
+	rec.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
 # ═════════════════════════════════════════════ comuns: interruptor, poeira, relógio, telão GitHub
