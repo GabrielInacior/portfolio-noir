@@ -11,6 +11,7 @@ var _gate: Control
 
 
 func _ready() -> void:
+	_setup_input()
 	# tela lógica por orientação: celular em pé 720x1280; deitado baixo (celular) 960x540; PC 1280x720
 	get_window().size_changed.connect(_fit_scale)
 	_fit_scale()
@@ -47,6 +48,32 @@ func _read_args() -> void:
 			L.force(kv[1])
 		elif kv[0] == "loja":
 			_open_shop = kv[1]
+
+
+## Teclas registradas por código: o mapa de ações escrito à mão no project.godot estava num formato
+## que o Godot ignora (as ações ficavam sem tecla e nada andava). Tecla lógica + física (WASD também
+## funciona em teclados AZERTY pela posição), setas e espaço/Enter para interagir.
+func _setup_input() -> void:
+	var map := {
+		"move_forward": [KEY_W, KEY_UP, KEY_Z],
+		"move_back": [KEY_S, KEY_DOWN],
+		"move_left": [KEY_A, KEY_LEFT, KEY_Q],
+		"move_right": [KEY_D, KEY_RIGHT],
+		"interact": [KEY_E, KEY_SPACE, KEY_ENTER],
+	}
+	for action in map:
+		if not InputMap.has_action(action):
+			InputMap.add_action(action, 0.2)
+		InputMap.action_erase_events(action)
+		for k in map[action]:
+			var ev := InputEventKey.new()
+			ev.keycode = k
+			InputMap.action_add_event(action, ev)
+			# Z e Q só pela posição física de W/A (AZERTY); as demais também pela posição
+			if k not in [KEY_Z, KEY_Q]:
+				var ph := InputEventKey.new()
+				ph.physical_keycode = k
+				InputMap.action_add_event(action, ph)
 
 
 # ───────────────────────────────── visual retrô (PS1): 3D em baixa resolução, ampliado sem borrar
