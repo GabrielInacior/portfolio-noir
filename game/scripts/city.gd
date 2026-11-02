@@ -125,7 +125,8 @@ func _build_env() -> void:
 	moon.light_color = Color("#7f90d0")
 	moon.light_energy = 0.35
 	moon.rotation_degrees = Vector3(-48, 128, 0)
-	moon.shadow_enabled = not _light
+	# no navegador a sombra direcional custa caro demais no WebGL (passada extra); só no app nativo
+	moon.shadow_enabled = not _light and not OS.has_feature("web")
 	moon.directional_shadow_max_distance = 26.0
 	moon.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
 	add_child(moon)
