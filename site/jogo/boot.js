@@ -1,6 +1,6 @@
 // Gerado por tools/deploy/make_boot.py. Abre a cidade noir por cima da página.
 (function () {
-  var CFG = {"canvasResizePolicy": 2, "emscriptenPoolSize": 8, "ensureCrossOriginIsolationHeaders": true, "executable": "/jogo/index", "experimentalVK": false, "fileSizes": {"index.pck": 13454344, "index.wasm": 39513091}, "focusCanvas": true, "gdextensionLibs": [], "godotPoolSize": 4, "mainPack": "/jogo/index.pck"};
+  var CFG = {"canvasResizePolicy": 2, "emscriptenPoolSize": 8, "ensureCrossOriginIsolationHeaders": true, "executable": "/jogo/index", "experimentalVK": false, "fileSizes": {"index.pck": 13455064, "index.wasm": 39513091}, "focusCanvas": true, "gdextensionLibs": [], "godotPoolSize": 4, "mainPack": "/jogo/index.pck"};
   var path = location.pathname;
   var en = /^\/en(\/|$)/.test(path) || document.documentElement.lang === 'en';
   var loja = (path.match(/^\/projetos\/([^\/]+)/) || [])[1] || new URLSearchParams(location.search).get('loja') || '';
