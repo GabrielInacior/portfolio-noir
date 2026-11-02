@@ -72,6 +72,11 @@ def head(title, desc, canonical, og_img="/assets/og.png", extra_ld=None, alt_lan
   <meta property="og:title" content="{title}">
   <meta property="og:description" content="{desc}">
   <meta property="og:image" content="{site}{og}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="627">
+  <meta property="og:image:alt" content="{og_alt}">
+  <meta property="og:site_name" content="Gabriel Inácio">
+  <meta name="keywords" content="{kw}">
   <meta property="og:url" content="{canonical}">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="{title}">
@@ -86,7 +91,9 @@ def head(title, desc, canonical, og_img="/assets/og.png", extra_ld=None, alt_lan
 <body class="pf">
 {card}
 <div class="sr-only" id="conteudo">""".format(card=_card(canonical), title=e(title), desc=e(desc), canonical=e(canonical), alt=alt,
-                 site=SITE, og=og_img, ld=ld_tags)
+                 site=SITE, og=og_img, ld=ld_tags,
+                 og_alt=e("Gabriel Inácio, portfólio: uma cidade noir em 3D com os projetos de engenharia de software, games e IA"),
+                 kw=e(", ".join(profile.get("meta_keywords", [])) if isinstance(profile.get("meta_keywords"), list) else str(profile.get("meta_keywords", ""))))
 
 
 def _card(canonical):
@@ -201,7 +208,7 @@ def index_en():
             id=p["id"], n=p.get("neon", "#ffc83d"), t=e(p["title"]), tag=e(_en(p["tagline"]))) for p in projects)
     s = head("Gabriel Inácio · Portfolio · Full-Stack Software Engineer, Game Dev and AI",
              "Full-stack software engineer with 4+ years building web, mobile and backend systems, LLM integration and game development.",
-             SITE + "/en/", alt_lang=("pt-BR", SITE + "/"))
+             SITE + "/en/", og_img="/assets/og_en.png", alt_lang=("pt-BR", SITE + "/"))
     s += nav()
     s += """
   <main>
@@ -378,7 +385,7 @@ def main():
     if os.path.exists(foto):
         shutil.copy2(foto, os.path.join(WEB, "assets", "foto.jpg"))
         shutil.copy2(foto, os.path.join(WEB, "assets", "favicon.png"))
-    og_image()
+    # a imagem de prévia vem de uma captura real do jogo (tools/deploy/og_image.py), não é gerada aqui
     # sitemap
     urls = [SITE + "/", SITE + "/en/"] + ["%s/projetos/%s/" % (SITE, p["id"]) for p in projects]
     sm = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'

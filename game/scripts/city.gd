@@ -71,6 +71,9 @@ func _ready() -> void:
 	_build_landmark()
 	_street_props()
 	_dress_alley()
+	_build_billboards()
+	_build_wayfinding()
+	_build_extras()
 	_commit_batches()
 	_commit_multi()
 	_build_life()
@@ -627,7 +630,22 @@ func _soft_dot() -> Texture2D:
 var _shop_slots: Array = []   # [{pos, normal, project}]
 
 
+var _reserved: Array = []    # fachadas de loja (Vector3): sem escada/ar-condicionado na frente do letreiro
+
+
+func _near_shop(p: Vector3) -> bool:
+	for q in _reserved:
+		if Vector2(p.x - q.x, p.z - q.z).length() < 5.0:
+			return true
+	return false
+
+
 func _build_blocks() -> void:
+	var zn0 := CROSS_Z + CROSS_HW + SIDE
+	var zs0 := CROSS_Z - CROSS_HW - SIDE
+	_reserved = [Vector3(-FAC, 0, -6.0), Vector3(-FAC, 0, -17.0), Vector3(-FAC, 0, -28.0), Vector3(FAC, 0, -7.0),
+		Vector3(FAC, 0, -29.0), Vector3(-22.0, 0, zn0), Vector3(-26.0, 0, zs0), Vector3(22.0, 0, zn0), Vector3(20.0, 0, zs0),
+		Vector3(-40.0, 0, zs0), Vector3(34.0, 0, zn0), Vector3(0, 0, AVE_END)]
 	var segs := [
 		# avenida esquerda (fachada x=-7, olha +x) e direita (x=+7, olha -x)
 		[Vector3(-FAC, 0, AVE_START), Vector3(-FAC, 0, CROSS_Z + CROSS_HW + SIDE), Vector3(1, 0, 0)],
@@ -715,10 +733,11 @@ func _building(face_center: Vector3, normal: Vector3, w: float, h_force := 0.0, 
 				# apagada: o quarto mal se vê (luz da rua)
 				_wquad(wp + normal * 0.035, Vector2(1.1, 1.4), normal, cell, Color(0.12, 0.12, 0.2))
 	# escada de incêndio e ar-condicionado
-	if not is_end and h > 11.0 and _rng.randf() < 0.45:
+	var busy := _near_shop(face_center)
+	if not is_end and not busy and h > 11.0 and _rng.randf() < 0.45:
 		for k in range(1, mini(4, rows)):
 			_prop("escada_incendio", face_center + normal * 0.7 + right * (w * 0.22) + Vector3(0, 3.6 + (k - 1) * 3.0, 0), yaw + PI)
-	if _rng.randf() < 0.5:
+	if not busy and _rng.randf() < 0.5:
 		var ac := face_center + normal * 0.35 + right * _rng.randf_range(-w / 3, w / 3) + Vector3(0, 4.4 + _rng.randi_range(0, 2) * 2.6, 0)
 		_sbox(ac, Vector3(0.9, 0.6, 0.55), _painted("metal", Color("#6a7088"), 0.5, 0.4, 2.0), yaw)
 		if _fans.size() < 10:
@@ -775,6 +794,7 @@ func _place_shops() -> void:
 		["airmessage", Vector3(-26.0, 0, zs), Vector3(0, 0, 1)],
 		["ankiana", Vector3(22.0, 0, zn), Vector3(0, 0, -1)],
 		["atende360", Vector3(20.0, 0, zs), Vector3(0, 0, 1)],
+		["barbercore", Vector3(-40.0, 0, zs), Vector3(0, 0, 1)],
 	]
 	for s in spots:
 		if by_id.has(s[0]):
@@ -807,9 +827,7 @@ func _shop(face: Vector3, normal: Vector3, project: Dictionary, grand := false) 
 	_lbox(holder, Vector3(0, 3.3, 0.18), Vector3(W, 0.5, 0.36), dark)
 	# porta (à esquerda) com vidro escuro e luz quente vazando
 	var door_x := -W / 2 + 1.25
-	_lbox(holder, Vector3(door_x, 1.2, 0.02), Vector3(1.2, 2.4, 0.06), _mat(Color("#1a1410")))
-	_lbox(holder, Vector3(door_x, 1.35, 0.06), Vector3(0.9, 1.7, 0.02), _mat(Color("#ffb860"), 1.3, true))
-	_lbox(holder, Vector3(door_x + 0.35, 1.15, 0.1), Vector3(0.05, 0.3, 0.05), _mat(Color("#c8a050"), 0.6))
+	_door(holder, Vector3(door_x, 0, 0.02), "porta_loja", neon)
 	# vitrine com a colagem do projeto (ou a capa)
 	var vw := W - 2.6
 	var vx := door_x + 0.75 + vw / 2
@@ -845,6 +863,11 @@ func _shop(face: Vector3, normal: Vector3, project: Dictionary, grand := false) 
 	sign.font = UI.font("title")
 	sign.font_size = 230 if not grand else 300
 	sign.pixel_size = 0.0048 if not grand else 0.006
+	sign.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sign.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	var tw := sign.font.get_string_size(sign.text, HORIZONTAL_ALIGNMENT_LEFT, -1, sign.font_size).x * sign.pixel_size
+	if tw > W * 0.86:
+		sign.font_size = int(sign.font_size * W * 0.86 / tw)
 	sign.modulate = Color(neon.r * 1.6, neon.g * 1.6, neon.b * 1.6)
 	sign.position = Vector3(0, 4.15, 0.32)
 	sign.shaded = false
@@ -877,13 +900,11 @@ func _shop(face: Vector3, normal: Vector3, project: Dictionary, grand := false) 
 		_swing.append({"node": flag, "seed": _rng.randf() * TAU, "amp": 0.06})
 	# toldo sobre a vitrine
 	if not grand:
-		var aw := _prop_mesh("toldo")
-		if aw:
-			var an := MeshInstance3D.new()
-			an.mesh = aw
-			an.position = Vector3(vx, 2.85, 0.6)
-			an.scale = Vector3.ONE * (vw / 2.6)
-			holder.add_child(an)
+		_awning(holder, vx, vw + 0.3, 3.02, neon)
+	if not grand:
+		_flyers(holder, Vector3(-W / 2 - 1.05, 1.55, 0.0), project)
+		_neon_arrow(holder, Vector3(-W / 2 - 1.05, 2.95, 0.04), PI, neon, str(project.get("title", "")))
+		_floor_arrow(holder, Vector3(door_x, 0.035, 3.3), neon)
 	# luz colorida real tingindo parede e chão (corta com a distância)
 	var l := OmniLight3D.new()
 	l.position = Vector3(0, 2.6, 1.6)
@@ -1703,3 +1724,538 @@ func _process(dt: float) -> void:
 				near = k
 	player.set_target(near)
 	near_changed.emit(near.get("project", {}))
+
+
+# ═════════════════════════════════════════════ rodada 7: portas, toldos, panfletos, setas, outdoors, placas
+## Porta modelada (kit em props_kit.py / door_kit) ou montada aqui: batente em relevo, soleira, vidro
+## com luz quente, puxador; nunca a textura da parede.
+func _door(parent: Node3D, pos: Vector3, kind: String, accent := Color("#ffc83d")) -> void:
+	var d := Node3D.new()
+	d.position = pos
+	parent.add_child(d)
+	var frame := _mat(Color("#2a1f18"), 0.0, false, 0.6)
+	_lbox(d, Vector3(0, 1.22, 0), Vector3(1.32, 2.5, 0.12), frame)             # batente
+	_lbox(d, Vector3(0, 0.02, 0.1), Vector3(1.4, 0.05, 0.3), _mat(Color("#55504a")))  # soleira
+	match kind:
+		"porta_loja":
+			_lbox(d, Vector3(0, 1.18, 0.06), Vector3(1.1, 2.3, 0.05), _mat(Color("#3a2a1e"), 0.0, false, 0.5))
+			_lbox(d, Vector3(0, 1.45, 0.09), Vector3(0.84, 1.45, 0.02), _mat(Color("#ffb860"), 1.1, true))  # vidro aceso
+			_lbox(d, Vector3(0, 0.35, 0.09), Vector3(0.9, 0.4, 0.02), _mat(Color("#4a3626")))      # chapa de chute
+			_lbox(d, Vector3(0.4, 1.1, 0.13), Vector3(0.04, 0.45, 0.04), _mat(Color("#c8a050"), 0.4))  # puxador
+			var ab := Label3D.new()
+			ab.text = L.t("ABERTO")
+			ab.font = UI.font("title")
+			ab.font_size = 70
+			ab.pixel_size = 0.0035
+			ab.modulate = Color(accent.r * 1.5, accent.g * 1.5, accent.b * 1.5)
+			ab.position = Vector3(0, 1.75, 0.105)
+			ab.shaded = false
+			d.add_child(ab)
+		"porta_metal":
+			_lbox(d, Vector3(0, 1.18, 0.06), Vector3(1.1, 2.3, 0.05), _painted("metal", Color("#5a6070"), 0.5, 0.4, 2.0))
+			for y in [0.5, 1.2, 1.9]:
+				_lbox(d, Vector3(0, y, 0.09), Vector3(1.0, 0.04, 0.02), _mat(Color("#3a3e48")))
+			_lbox(d, Vector3(0.42, 1.05, 0.12), Vector3(0.18, 0.05, 0.05), _mat(Color("#9aa0ac"), 0.2))
+		_:  # porta de prédio: madeira com painéis e bandeira de vidro em cima
+			_lbox(d, Vector3(0, 1.08, 0.06), Vector3(1.1, 2.1, 0.05), _mat(Color("#4a2f1e"), 0.0, false, 0.6))
+			for y in [0.55, 1.45]:
+				for x in [-0.25, 0.25]:
+					_lbox(d, Vector3(x, y, 0.09), Vector3(0.38, 0.62, 0.02), _mat(Color("#5e3c26")))
+			_lbox(d, Vector3(0, 2.3, 0.07), Vector3(1.1, 0.26, 0.03), _mat(Color("#ffcf8a"), 0.9, true))
+			_lbox(d, Vector3(0.42, 1.05, 0.12), Vector3(0.06, 0.06, 0.06), _mat(Color("#c8a050"), 0.4))
+			var nr := Label3D.new()
+			nr.text = str(100 + _rng.randi_range(1, 899))
+			nr.font = UI.font("type")
+			nr.font_size = 60
+			nr.pixel_size = 0.003
+			nr.modulate = Color("#1a120a")
+			nr.position = Vector3(0, 2.3, 0.09)
+			d.add_child(nr)
+
+
+## Toldo listrado preso na parede (borda de trás na fachada) e inclinado para a frente e para baixo.
+func _awning(parent: Node3D, cx: float, width: float, top: float, accent: Color) -> void:
+	var depth := 1.25
+	var drop := 0.55
+	var ang := atan2(drop, depth)
+	var slope := sqrt(depth * depth + drop * drop)
+	var stripes := int(width / 0.36)
+	var sw := width / stripes
+	var a := _mat(accent.darkened(0.25), 0.0, false, 0.8)
+	var b := _mat(Color("#e8e0cc"), 0.0, false, 0.8)
+	for k in stripes:
+		var mi := MeshInstance3D.new()
+		var bm := BoxMesh.new()
+		bm.size = Vector3(sw, 0.03, slope)
+		mi.mesh = bm
+		mi.material_override = a if k % 2 == 0 else b
+		mi.position = Vector3(cx - width / 2 + sw * (k + 0.5), top - drop / 2, 0.02 + depth / 2)
+		mi.rotation.x = ang
+		parent.add_child(mi)
+		# saia (aba vertical) na frente
+		var fr := MeshInstance3D.new()
+		var fm := BoxMesh.new()
+		fm.size = Vector3(sw, 0.22, 0.02)
+		fr.mesh = fm
+		fr.material_override = mi.material_override
+		fr.position = Vector3(mi.position.x, top - drop - 0.1, 0.02 + depth)
+		parent.add_child(fr)
+	# barra de fixação na parede e braços
+	_lbox(parent, Vector3(cx, top + 0.02, 0.05), Vector3(width + 0.06, 0.06, 0.08), _mat(Color("#20232c")))
+	for x in [cx - width / 2 + 0.05, cx + width / 2 - 0.05]:
+		var arm := MeshInstance3D.new()
+		var am := BoxMesh.new()
+		am.size = Vector3(0.03, 0.03, slope)
+		arm.mesh = am
+		arm.material_override = _mat(Color("#20232c"))
+		arm.position = Vector3(x, top - drop / 2 - 0.02, 0.02 + depth / 2)
+		arm.rotation.x = ang
+		parent.add_child(arm)
+
+
+## Panfletos e cartazes colados na parede ao lado da porta: prints reais do projeto (ou os anúncios
+## de design da loja), sobrepostos, tortos, alguns com canto dobrado; nítidos e iluminados pela cena.
+func _flyers(parent: Node3D, center: Vector3, project: Dictionary) -> void:
+	var id := str(project.get("id", ""))
+	var pics: Array = []
+	var dir := "res://assets/museum/%s/" % id
+	if DirAccess.dir_exists_absolute(dir):
+		for f in DirAccess.get_files_at(dir):
+			if f.ends_with(".import") and (f.contains(".jpg") or f.contains(".png")):
+				var src := f.trim_suffix(".import")
+				if not src.begins_with("numeros"):
+					pics.append(dir + src)
+	pics.sort()
+	if pics.is_empty():
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(id)
+	var spots := [Vector2(-0.32, 0.45), Vector2(0.3, 0.38), Vector2(-0.25, -0.25), Vector2(0.33, -0.3), Vector2(0.02, 0.05)]
+	for i in mini(spots.size(), maxi(3, pics.size())):
+		var tex: Texture2D = load(pics[i % pics.size()])
+		if tex == null:
+			continue
+		var r := float(tex.get_width()) / maxf(1.0, tex.get_height())
+		var h := 0.62 if r < 1.0 else 0.44
+		var w := clampf(h * r, 0.36, 0.78)
+		var mi := MeshInstance3D.new()
+		var q := QuadMesh.new()
+		q.size = Vector2(w, w / r)
+		mi.mesh = q
+		var m := StandardMaterial3D.new()
+		m.albedo_texture = tex
+		m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+		m.roughness = 0.95
+		m.emission_enabled = true          # leve, só para ler no escuro; o resto vem da luz da rua
+		m.emission_texture = tex
+		m.emission_energy_multiplier = 0.18
+		mi.material_override = m
+		mi.position = center + Vector3(spots[i].x, spots[i].y, 0.02 + i * 0.004)
+		mi.rotation.z = rng.randf_range(-0.12, 0.12)
+		parent.add_child(mi)
+		# fita/grampo no topo
+		_lbox(parent, mi.position + Vector3(0, w / r / 2 - 0.02, 0.006), Vector3(0.1, 0.03, 0.004), _mat(Color("#d9d2b8")))
+
+
+## Seta de neon com o nome do projeto (aponta para a porta). ang = direção da ponta no plano da parede.
+func _neon_arrow(parent: Node3D, pos: Vector3, ang: float, col: Color, label: String) -> void:
+	var h := Node3D.new()
+	h.position = pos
+	h.rotation.z = ang  # 0 = ponta para cima, PI = para baixo (para a porta)
+	parent.add_child(h)
+	var nm := _neon_mat(col)
+	_lbox(h, Vector3(0, 0, 0.02), Vector3(0.05, 0.75, 0.05), nm)
+	for sx in [-1, 1]:
+		var hd := MeshInstance3D.new()
+		var bm := BoxMesh.new()
+		bm.size = Vector3(0.05, 0.32, 0.05)
+		hd.mesh = bm
+		hd.material_override = nm
+		hd.position = Vector3(sx * 0.1, 0.3, 0.02)
+		hd.rotation.z = sx * 0.75
+		h.add_child(hd)
+	_lhalo(h, Vector3(0, 0.1, 0.03), Vector2(0.6, 1.1), col, 0.35)
+	var t := Label3D.new()
+	t.text = label.to_upper() + " >>"
+	t.font = UI.font("title")
+	t.font_size = 90
+	t.pixel_size = 0.0035
+	t.modulate = Color(col.r * 1.5, col.g * 1.5, col.b * 1.5)
+	t.position = pos + Vector3(0, 0.6, 0.05)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	t.shaded = false
+	var tw := t.font.get_string_size(t.text, HORIZONTAL_ALIGNMENT_LEFT, -1, t.font_size).x * t.pixel_size
+	if tw > 1.6:
+		t.font_size = int(t.font_size * 1.6 / tw)
+	parent.add_child(t)
+
+
+## Seta pintada no chão da calçada apontando para a porta.
+func _floor_arrow(parent: Node3D, pos: Vector3, col: Color) -> void:
+	var m := _add_mat(col, 0.55)
+	for k in 3:
+		var d := Node3D.new()
+		d.position = pos + Vector3(0, 0, -k * 0.55)
+		parent.add_child(d)
+		for sx in [-1, 1]:
+			var mi := MeshInstance3D.new()
+			var q := QuadMesh.new()
+			q.size = Vector2(0.09, 0.42)
+			mi.mesh = q
+			mi.material_override = m
+			mi.rotation = Vector3(-PI / 2, 0, sx * 0.8)
+			mi.position = Vector3(sx * 0.13, 0.0, 0.0)
+			d.add_child(mi)
+
+
+## Outdoor físico: placa com arte gerada na proporção exata (tools/deploy/billboards.py), moldura,
+## estrutura presa na parede e holofotes. Recebe a luz e a névoa da cena (material com luz).
+func _billboard(art: String, face: Vector3, normal: Vector3, w: float, h: float, y: float, side := 0.0, spot := false) -> void:
+	var path := "res://assets/billboards/%s_%s.png" % [art, "en" if L.lang == "en" else "pt"]
+	if not ResourceLoader.exists(path):
+		return
+	var tex: Texture2D = load(path)
+	var holder := Node3D.new()
+	var right := Vector3(normal.z, 0, -normal.x)
+	holder.position = face + normal * 0.5 + right * side
+	holder.rotation.y = atan2(normal.x, normal.z)
+	add_child(holder)
+	var dark := _mat(Color("#0a0d18"))
+	_lbox(holder, Vector3(0, y, 0), Vector3(w + 0.3, h + 0.3, 0.18), dark)
+	for sx in [-w * 0.35, w * 0.35]:   # braços até a parede
+		_lbox(holder, Vector3(sx, y, -0.3), Vector3(0.1, 0.1, 0.5), _mat(Color("#14161e")))
+	var mi := MeshInstance3D.new()
+	var q := QuadMesh.new()
+	q.size = Vector2(w, h)
+	mi.mesh = q
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = tex
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	m.roughness = 0.9
+	m.emission_enabled = true
+	m.emission_texture = tex
+	m.emission_energy_multiplier = 0.32   # retroiluminado fraco; a luz da cena faz o resto
+	mi.material_override = m
+	mi.position = Vector3(0, y, 0.1)
+	holder.add_child(mi)
+	# holofotes em cima (corpo emissivo + feixe aditivo; luz real só nos maiores)
+	var n := maxi(2, int(w / 2.6))
+	for k in n:
+		var hx := -w / 2 + w * (k + 0.5) / n
+		_lbox(holder, Vector3(hx, y + h / 2 + 0.25, 0.6), Vector3(0.26, 0.16, 0.26), _mat(Color("#14161e")))
+		_lbox(holder, Vector3(hx, y + h / 2 + 0.17, 0.55), Vector3(0.18, 0.04, 0.18), _mat(Color(2.4, 2.0, 1.4), 0.0, true))
+		_lbox(holder, Vector3(hx, y + h / 2 + 0.1, 0.35), Vector3(0.04, 0.04, 0.5), _mat(Color("#14161e")))
+	_lhalo(holder, Vector3(0, y + h * 0.2, 0.2), Vector2(w * 1.05, h * 0.9), Color("#ffe0a8"), 0.07)
+	if spot and not _light:
+		var l := SpotLight3D.new()
+		l.position = Vector3(0, y + h / 2 + 1.2, 1.6)
+		l.rotation.x = -1.15
+		l.light_color = Color("#ffe0a8")
+		l.light_energy = 4.0
+		l.spot_range = h + 4.0
+		l.spot_angle = 42.0
+		l.distance_fade_enabled = true
+		l.distance_fade_begin = 40.0
+		l.distance_fade_length = 10.0
+		holder.add_child(l)
+
+
+func _build_billboards() -> void:
+	var zn := CROSS_Z + CROSS_HW + SIDE
+	var zs := CROSS_Z - CROSS_HW - SIDE
+	# vistos da entrada e de cada esquina, acima dos letreiros das lojas
+	_billboard("bb_nome", Vector3(FAC, 0, -13.5), Vector3(-1, 0, 0), 12.0, 3.0, 9.6, 0.0, true)
+	_billboard("bb_web", Vector3(-FAC, 0, -22.0), Vector3(1, 0, 0), 9.0, 3.0, 9.8)
+	_billboard("bb_game", Vector3(-FAC, 0, -55.0), Vector3(1, 0, 0), 9.0, 3.0, 9.4)
+	_billboard("bb_ai", Vector3(FAC, 0, -57.0), Vector3(-1, 0, 0), 9.0, 3.0, 9.4)
+	_billboard("bb_arch", Vector3(-31.0, 0, zn), Vector3(0, 0, -1), 9.0, 3.0, 9.2)
+	_billboard("bb_numeros", Vector3(31.0, 0, zs), Vector3(0, 0, 1), 8.0, 4.5, 9.6, 0.0, true)
+	_billboard("bb_contato", Vector3(-57.0, 0, PLAZA.end.y), Vector3(0, 0, -1), 7.5, 2.5, 8.0)
+	_billboard("bb_nome169", Vector3(14.0, 0, zn), Vector3(0, 0, -1), 7.2, 4.05, 9.4)
+	# totens de rua com a foto (ponto de ônibus / calçada), em pé no chão
+	for t in [[Vector3(-5.3, 0.2, 1.5), PI / 2], [Vector3(5.3, 0.2, CROSS_Z - 7.5), -PI / 2], [Vector3(-50.0, 0.2, -36.0), 0.0]]:
+		_totem("bb_ponto", t[0], t[1])
+
+
+## Totem de rua em pé (base no chão, painel retroiluminado dos dois lados).
+func _totem(art: String, p: Vector3, yaw: float) -> void:
+	var path := "res://assets/billboards/%s_%s.png" % [art, "en" if L.lang == "en" else "pt"]
+	if not ResourceLoader.exists(path):
+		return
+	var tex: Texture2D = load(path)
+	var h := Node3D.new()
+	h.position = p
+	h.rotation.y = yaw
+	add_child(h)
+	_lbox(h, Vector3(0, 0.08, 0), Vector3(1.4, 0.16, 0.6), _mat(Color("#20232c")))
+	_lbox(h, Vector3(0, 1.4, 0), Vector3(1.3, 2.4, 0.22), _mat(Color("#14161e")))
+	for side in [1, -1]:
+		var mi := MeshInstance3D.new()
+		var q := QuadMesh.new()
+		q.size = Vector2(1.13, 2.0)
+		mi.mesh = q
+		var m := StandardMaterial3D.new()
+		m.albedo_texture = tex
+		m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+		m.emission_enabled = true
+		m.emission_texture = tex
+		m.emission_energy_multiplier = 0.55
+		mi.material_override = m
+		mi.position = Vector3(0, 1.42, side * 0.115)
+		mi.rotation.y = 0.0 if side > 0 else PI
+		h.add_child(mi)
+
+
+## Placas de orientação FÍSICAS (regra do usuário): poste fincado com base, lâminas com borda clara,
+## texto nítido nos dois lados, cada uma apontando para o destino; placas de nome de rua; totem de mapa.
+func _sign_post(p: Vector3, dests: Array, street := "") -> void:
+	var h := Node3D.new()
+	h.position = p
+	add_child(h)
+	var steel := _mat(Color("#5a6070"), 0.0, false, 0.5)
+	_lbox(h, Vector3(0, 0.04, 0), Vector3(0.36, 0.08, 0.36), _mat(Color("#2a2d36")))
+	_lbox(h, Vector3(0, 1.75, 0), Vector3(0.09, 3.5, 0.09), steel)
+	_lbox(h, Vector3(0, 3.55, 0), Vector3(0.13, 0.1, 0.13), steel)
+	var y := 3.2
+	for dd in dests:
+		var target: Vector3 = dd[1]
+		var col: Color = dd[2]
+		var dirv := Vector3(target.x - p.x, 0, target.z - p.z)
+		var blade := Node3D.new()
+		blade.position = Vector3(0, y, 0)
+		blade.rotation.y = atan2(-dirv.z, dirv.x)   # lâmina estende para +x local = direção do destino
+		h.add_child(blade)
+		_lbox(blade, Vector3(0.78, 0, 0), Vector3(1.5, 0.3, 0.05), _mat(Color("#e8ecf8")))       # borda refletiva
+		_lbox(blade, Vector3(0.78, 0, 0), Vector3(1.44, 0.24, 0.06), _mat(Color("#121a36")))     # placa azul-noite
+		_lbox(blade, Vector3(1.47, 0, 0), Vector3(0.04, 0.24, 0.065), _mat(col, 1.2))             # ponta colorida
+		for side in [1, -1]:
+			var t := Label3D.new()
+			t.text = str(dd[0]).to_upper() + "  >"
+			t.font = UI.font("title")
+			t.font_size = 64
+			t.pixel_size = 0.0034
+			t.modulate = Color(1.0, 1.0, 1.0)
+			t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			var fs := t.font.get_string_size(t.text, HORIZONTAL_ALIGNMENT_LEFT, -1, t.font_size).x * t.pixel_size
+			if fs > 1.32:
+				t.font_size = int(t.font_size * 1.32 / fs)
+			t.position = Vector3(0.75, 0, side * 0.034)
+			t.rotation.y = 0.0 if side > 0 else PI
+			if side < 0:
+				t.text = "<  " + str(dd[0]).to_upper()
+			blade.add_child(t)
+		# parafusos
+		for bx in [0.12, 1.4]:
+			_lbox(blade, Vector3(bx, 0, 0.035), Vector3(0.03, 0.03, 0.02), _mat(Color("#9aa0ac")))
+		y -= 0.36
+	if street != "":
+		var st := Node3D.new()
+		st.position = Vector3(0, 3.7, 0)
+		h.add_child(st)
+		_lbox(st, Vector3(0, 0, 0), Vector3(1.2, 0.24, 0.04), _mat(Color("#1f6a3a")))
+		for side in [1, -1]:
+			var t2 := Label3D.new()
+			t2.text = street
+			t2.font = UI.font("title")
+			t2.font_size = 60
+			t2.pixel_size = 0.0034
+			t2.position = Vector3(0, 0, side * 0.024)
+			t2.rotation.y = 0.0 if side > 0 else PI
+			t2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			st.add_child(t2)
+
+
+func _place_pos(id: String) -> Vector3:
+	for k in kiosks:
+		if str(k["project"].get("id", "")) == id:
+			return k["pos"]
+	return Vector3.ZERO
+
+
+func _build_wayfinding() -> void:
+	var D := func(id: String, label: String, col: String) -> Array: return [label, _place_pos(id), Color(col)]
+	var lab := ["LAB · SOBRE MIM" if L.lang != "en" else "LAB · ABOUT ME", Vector3(0, 0, AVE_END), Color("#ffffff")]
+	var car := ["CARREIRA" if L.lang != "en" else "CAREER", _place_pos("carreira"), Color("#5bd0ff")]
+	var cont := ["CONTATO" if L.lang != "en" else "CONTACT", Vector3(PLAZA.position.x + 9, 0, -40.0), Color("#ff4fa3")]
+	# entrada
+	_sign_post(Vector3(-5.6, 0.2, 4.0), [D.call("rumor", "RUMOR", "#ffc83d"), D.call("formataai", "FormataAI", "#ff6fae"),
+		D.call("inaciocyber", "InacioCyber", "#39ff9b"), lab], "AV. NOIR")
+	# boca do beco
+	_sign_post(Vector3(5.6, 0.2, ALLEY_Z + 3.2), [D.call("inaciocyber", "InacioCyber", "#39ff9b"), D.call("labia", "Lábia", "#ff3d7f")], "BECO DO CÓDIGO")
+	# esquinas do cruzamento
+	_sign_post(Vector3(-5.6, 0.2, CROSS_Z + CROSS_HW + 0.9), [D.call("fortress", "Fortress Chaos", "#ff7a3d"), cont,
+		D.call("barbercore", "BarberCore", "#c9a227"), D.call("airmessage", "AirMessage", "#5bd0ff")], "R. DO NEON")
+	_sign_post(Vector3(5.6, 0.2, CROSS_Z + CROSS_HW + 0.9), [car, D.call("ankiana", "AnkiAna", "#5fd38a"), D.call("atende360", "Atende 360", "#00bcd4")], "R. DO NEON")
+	_sign_post(Vector3(-5.6, 0.2, CROSS_Z - CROSS_HW - 0.9), [lab, D.call("orbix", "OrbixHub", "#4e9bff"), D.call("buscavagas", "BuscaVagas", "#4e9bff")], "AV. NOIR")
+	_sign_post(Vector3(5.6, 0.2, CROSS_Z - CROSS_HW - 0.9), [lab, car, D.call("atende360", "Atende 360", "#00bcd4")])
+	# entrada da praça
+	_sign_post(Vector3(PLAZA.end.x + 1.0, 0.2, CROSS_Z + 3.0), [cont, D.call("fortress", "Fortress Chaos", "#ff7a3d")], "PRAÇA")
+	# totens "você está aqui" com o mapa do bairro (desenhado das ruas reais)
+	_map_totem(Vector3(4.6, 0.2, 2.5), -PI / 2)
+	_map_totem(Vector3(PLAZA.end.x - 2.0, 0.2, -38.0), PI / 2)
+
+
+func _map_totem(p: Vector3, yaw: float) -> void:
+	var img := Image.create(256, 384, false, Image.FORMAT_RGBA8)
+	img.fill(Color("#0b1022"))
+	var minx := -70.0
+	var maxx := 50.0
+	var minz := -76.0
+	var maxz := 10.0
+	var to_px := func(x: float, z: float) -> Vector2i:
+		return Vector2i(int(16 + (x - minx) / (maxx - minx) * 224), int(60 + (z - minz) / (maxz - minz) * 300))
+	for rr in map_rects:
+		var rc: Rect2 = rr
+		var a: Vector2i = to_px.call(rc.position.x, rc.position.y)
+		var b: Vector2i = to_px.call(rc.end.x, rc.end.y)
+		img.fill_rect(Rect2i(mini(a.x, b.x), mini(a.y, b.y), maxi(2, absi(b.x - a.x)), maxi(2, absi(b.y - a.y))), Color("#3a4a7a"))
+	for k in kiosks:
+		var kp: Vector3 = k["pos"]
+		var c: Vector2i = to_px.call(kp.x, kp.z)
+		img.fill_rect(Rect2i(c.x - 4, c.y - 4, 9, 9), k["neon"])
+	var me: Vector2i = to_px.call(p.x, p.z)
+	img.fill_rect(Rect2i(me.x - 6, me.y - 6, 13, 13), Color("#ffffff"))
+	img.fill_rect(Rect2i(me.x - 3, me.y - 3, 7, 7), Color("#e2384f"))
+	var tex := ImageTexture.create_from_image(img)
+	var h := Node3D.new()
+	h.position = p
+	h.rotation.y = yaw
+	add_child(h)
+	_lbox(h, Vector3(0, 0.08, 0), Vector3(1.3, 0.16, 0.5), _mat(Color("#20232c")))
+	_lbox(h, Vector3(0, 1.3, 0), Vector3(1.2, 2.2, 0.18), _mat(Color("#14161e")))
+	var mi := MeshInstance3D.new()
+	var q := QuadMesh.new()
+	q.size = Vector2(1.04, 1.56)
+	mi.mesh = q
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = tex
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	m.emission_enabled = true
+	m.emission_texture = tex
+	m.emission_energy_multiplier = 0.7
+	mi.material_override = m
+	mi.position = Vector3(0, 1.2, 0.095)
+	h.add_child(mi)
+	var t := Label3D.new()
+	t.text = "VOCÊ ESTÁ AQUI" if L.lang != "en" else "YOU ARE HERE"
+	t.font = UI.font("title")
+	t.font_size = 70
+	t.pixel_size = 0.0034
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	t.modulate = Color("#ffc83d")
+	t.position = Vector3(0, 2.2, 0.1)
+	t.shaded = false
+	h.add_child(t)
+
+
+## Mais vida ligada ao trabalho dele na rua: café "dev" (food truck), banca com revistas de tecnologia,
+## mural grafitado com stacks, portas de prédio e de serviço, caixas de entrega.
+func _build_extras() -> void:
+	# portas de prédio nos trechos livres de fachada e portas de serviço no beco
+	for d in [[Vector3(-FAC, 0, -11.5), Vector3(1, 0, 0)], [Vector3(-FAC, 0, -22.5), Vector3(1, 0, 0)],
+			[Vector3(FAC, 0, -13.5), Vector3(-1, 0, 0)], [Vector3(FAC, 0, -24.2), Vector3(-1, 0, 0)],
+			[Vector3(-FAC, 0, -60.0), Vector3(1, 0, 0)], [Vector3(FAC, 0, -64.0), Vector3(-1, 0, 0)]]:
+		var hd := Node3D.new()
+		hd.position = d[0] + d[1] * 0.16
+		hd.rotation.y = atan2(d[1].x, d[1].z)
+		add_child(hd)
+		_door(hd, Vector3.ZERO, "porta_predio")
+	for d in [[Vector3(12.0, 0, ALLEY_Z + 1.95), Vector3(0, 0, -1)], [Vector3(19.0, 0, ALLEY_Z - 1.95), Vector3(0, 0, 1)]]:
+		var hm := Node3D.new()
+		hm.position = d[0] + d[1] * 0.05
+		hm.rotation.y = atan2(d[1].x, d[1].z)
+		add_child(hm)
+		_door(hm, Vector3.ZERO, "porta_metal")
+	_food_truck(Vector3(-2.4, 0.0, -66.5), 0.15)
+	# caixas de entrega empilhadas nas portas
+	for p in [Vector3(-6.3, 0.2, -10.6), Vector3(6.3, 0.2, -12.6), Vector3(-6.2, 0.2, -59.0)]:
+		_prop("caixas_papelao", p, _rng.randf() * TAU, 0.7)
+	_mural(Vector3(ALLEY_END - 0.5, 0, ALLEY_Z + 1.9), Vector3(0, 0, -1), 5.0)
+
+
+## Food truck "CAFÉ DEV" parado no fim da avenida.
+func _food_truck(p: Vector3, yaw: float) -> void:
+	var h := Node3D.new()
+	h.position = p
+	h.rotation.y = yaw
+	add_child(h)
+	var body := _mat(Color("#c84a3a"), 0.0, false, 0.5)
+	_lbox(h, Vector3(0, 1.35, 0), Vector3(3.6, 2.2, 1.9), body)
+	_lbox(h, Vector3(0, 2.5, 0), Vector3(3.7, 0.12, 2.0), _mat(Color("#e8e0cc")))
+	_lbox(h, Vector3(0.2, 1.55, 0.96), Vector3(2.2, 0.9, 0.04), _mat(Color("#ffcf8a"), 1.0, true))  # janela de venda acesa
+	_lbox(h, Vector3(0.2, 1.08, 1.1), Vector3(2.3, 0.06, 0.3), _mat(Color("#8a8f9c")))           # balcão
+	_awning(h, 0.2, 2.5, 2.32, Color("#ffc83d"))
+	for x in [-1.2, 1.2]:
+		var w := MeshInstance3D.new()
+		var cm := CylinderMesh.new()
+		cm.top_radius = 0.34
+		cm.bottom_radius = 0.34
+		cm.height = 0.24
+		w.mesh = cm
+		w.material_override = _mat(Color("#121418"))
+		w.position = Vector3(x, 0.34, 0.95)
+		w.rotation.x = PI / 2
+		h.add_child(w)
+	var t := Label3D.new()
+	t.text = "CAFÉ DEV" if L.lang != "en" else "DEV CAFÉ"
+	t.font = UI.font("title")
+	t.font_size = 150
+	t.pixel_size = 0.0045
+	t.modulate = Color(1.8, 1.4, 0.4)
+	t.position = Vector3(0.2, 2.25, 0.97)
+	t.shaded = false
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	h.add_child(t)
+	var mn := Label3D.new()
+	mn.text = "cold brew · git push · deploy" if L.lang == "en" else "café · git push · deploy"
+	mn.font = UI.font("type")
+	mn.font_size = 60
+	mn.pixel_size = 0.0035
+	mn.position = Vector3(0.2, 0.75, 0.97)
+	mn.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	h.add_child(mn)
+
+
+## Mural grafitado no beco com os logos oficiais das tecnologias (atlas tech_icons).
+func _mural(face: Vector3, normal: Vector3, w: float) -> void:
+	if not ResourceLoader.exists("res://assets/tech_icons/atlas.png"):
+		return
+	var h := Node3D.new()
+	h.position = face + normal * 0.06
+	h.rotation.y = atan2(normal.x, normal.z)
+	add_child(h)
+	var ids := ["godot", "blender", "node", "vue", "react", "flutter", "typescript", "python", "docker", "postgres",
+		"claude", "ollama", "openai", "rust", "nuxt", "aws"]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 77
+	for i in ids.size():
+		var p := "res://assets/tech_icons/%s_256.png" % ids[i]
+		if not ResourceLoader.exists(p):
+			continue
+		var tex: Texture2D = load(p)
+		var mi := MeshInstance3D.new()
+		var q := QuadMesh.new()
+		var sz := rng.randf_range(0.55, 0.85)
+		q.size = Vector2(sz, sz)
+		mi.mesh = q
+		var m := StandardMaterial3D.new()
+		m.albedo_texture = tex
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+		m.emission_enabled = true
+		m.emission_texture = tex
+		m.emission_energy_multiplier = 0.45
+		mi.material_override = m
+		mi.position = Vector3(-w / 2 + (i % 8) * (w / 7.5) + 0.3, 1.0 + (i / 8) * 1.0 + rng.randf_range(-0.1, 0.1), i * 0.002)
+		mi.rotation.z = rng.randf_range(-0.2, 0.2)
+		h.add_child(mi)
+	var t := Label3D.new()
+	t.text = "STACK DO GABRIEL" if L.lang != "en" else "GABRIEL'S STACK"
+	t.font = UI.font("marker")
+	t.font_size = 140
+	t.pixel_size = 0.0045
+	t.modulate = Color(1.7, 0.6, 1.2)
+	t.position = Vector3(0, 3.3, 0.02)
+	t.rotation.z = -0.04
+	t.shaded = false
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	h.add_child(t)

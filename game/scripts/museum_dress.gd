@@ -655,7 +655,18 @@ static func _bar(m, stack: Array) -> void:
 	m.prop("sd_latas", Vector3(1.2, 0, 1.4))
 	m.prop("sd_garrafas_vazias", Vector3(-1.0, 0, 3.4), 2.0)
 	trash_bin(m, Vector3(W / 2 - 0.5, 0, D / 2 - 0.6))
-	neon(m, "LÁBIA", Vector3(0, m.H - 0.32, -D / 2 + 0.25), 0, Color("#ff4fa3"), 110)
+	var pid := str(m.project.get("id", ""))
+	var ttl := str(m.project.get("title", "LÁBIA")).to_upper()
+	var nc := Color(str(m.project.get("neon", "#ff4fa3")))
+	neon(m, ttl, Vector3(0, m.H - 0.32, -D / 2 + 0.25), 0, nc, 110)
+	if pid == "barbercore":
+		# barbearia: cadeiras clássicas com espelho iluminado nas laterais
+		for side in [-1, 1]:
+			for k in 2:
+				var z := -D / 4 + k * 2.2
+				m.prop("cadeira_barbeiro", Vector3(side * (W / 2 - 1.1), 0, z), -side * PI / 2, 1.0)
+				m.box(Vector3(side * (W / 2 - 0.12), 1.6, z), Vector3(0.04, 1.0, 0.8), m.flat(Color("#cfe8f0"), 0.35))
+				m.box(Vector3(side * (W / 2 - 0.1), 2.15, z), Vector3(0.05, 0.06, 0.9), m.flat(Color("#fff1c4"), 2.0))
 	neon(m, "FALE PARA JOGAR", Vector3(-W / 2 + 0.14, 2.8, 2.0), PI / 2, Color("#5bd0ff"), 54)
 	_switch(m, Vector3(1.05, 1.25, D / 2 - 0.12))
 

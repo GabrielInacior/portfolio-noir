@@ -74,7 +74,7 @@ func _process(_dt: float) -> void:
 		if _src_cam:
 			# o retrô não desenha os oclusores
 			_src_cam.cull_mask = _src_cam.cull_mask & ~OCC_LAYER
-	if _src_cam == null:
+	if _src_cam == null or get_tree().get_node_count_in_group("pf_modal") > 0:
 		rect.visible = false
 		return
 	rect.visible = true

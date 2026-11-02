@@ -182,6 +182,9 @@ func _build_signs() -> void:
 	signs.player = player
 	signs.world_vp = world_vp
 	add_child(signs)
+	# regra do usuário: nada flutuando; a orientação vem das placas físicas da rua (city.gd)
+	signs.visible = false
+	signs.set_process(false)
 
 
 # ───────────────────────────────── aviso de ação (tecla/ícone + verbo + nome)
@@ -470,7 +473,7 @@ func _sync_mode() -> void:
 	if minimap:
 		minimap.visible = not in_shop
 	if signs:
-		signs.visible = not in_shop and not _sheet_open
+		signs.visible = false  # placas físicas na rua (city.gd); nada flutuante
 	if _tour:
 		_tour.visible = in_shop
 		_update_tour_label()
@@ -665,6 +668,7 @@ func _open_map() -> void:
 
 func _modal_open() -> void:
 	_sheet_open = true
+	add_to_group("pf_modal")  # a passada nítida some atrás do modal (sem "fantasma")
 	_hide_prompt()
 	if signs:
 		signs.visible = false
@@ -675,6 +679,7 @@ func _modal_open() -> void:
 
 func _modal_closed() -> void:
 	_sheet_open = false
+	remove_from_group("pf_modal")
 	_sync_mode()
 	if not (UI.is_touch() or _ff == "phone"):
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED

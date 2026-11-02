@@ -75,6 +75,16 @@
       "source": "/jogo/",
       "destination": "/",
       "permanent": true
+    },
+    {
+      "source": "/projetos/sitembm",
+      "destination": "/projetos/atende360/",
+      "permanent": true
+    },
+    {
+      "source": "/projetos/sitembm/",
+      "destination": "/projetos/atende360/",
+      "permanent": true
     }
   ]
 }
