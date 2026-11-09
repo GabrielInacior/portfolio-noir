@@ -172,3 +172,18 @@ Ver `docs/PERFORMANCE.md` (seção "Rodada de carregamento e travadas"). Em orde
 3. **Meta de 12 MB antes do ENTRAR**: wasm de 9,5 MB comprimido; template customizado sem módulos não usados ou brotli 11 pré-comprimido.
 4. **Áudio**: a música ainda passa pelo mixer do Godot (engasga no web sem threads); tocar por Web Audio nativo a partir do pacote `music`.
 5. **SwiftShader**: 15,5 fps na cidade; falta cortar draw calls e vértices por software (alvo 20 fps).
+
+
+## Desempenho depois da rodada 2 (ver docs/PERFORMANCE.md)
+1. **Textos 3D em atlas** (maior lote de draws restante): letreiros e placas fixos (Label3D sem billboard) renderizados
+   uma vez numa textura (glifo e contorno em canais separados, cor HDR por vértice) e fundidos com a cidade.
+2. **Fundir mais por célula**: atlas das texturas pintadas e dos panfletos/anúncios para cair num material só por célula;
+   cuidado: o tamanho do pedaço fundido muda quais 8 luzes ele recebe (o visual depende disso, ver noir.gd).
+3. **Lojas no shader próprio**: descobrir por que o toon convertido fica escuro (comparar com `tools_dev/toon_ref.gdshader`
+   em `noir_test.tscn` com luz a 3 a 4 m); com isso cai o aquecimento de ~7 s da 1ª visita.
+4. **Montar a loja antes da porta** (em fatias quando o jogador chega perto) e só alternar visibilidade.
+5. **Música por Web Audio** (`<audio>`/AudioBufferSourceNode pelo JavaScriptBridge, com fade/ducking), arquivo
+   `game/assets/audio/music/bloodlines_ost.mp3` ("Portfolio Music Noir").
+6. **SwiftShader** (65 ms): menos draws ajudam aqui também; resolução interna menor no perfil sem placa.
+7. Template próprio: dá para cortar mais (build_profile com classes não usadas; text_server_fb no lugar do adv se o
+   texto ficar igual).

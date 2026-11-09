@@ -139,3 +139,62 @@ draw calls (522 + 337 da passada nítida) pelo WebGL do wasm. No SwiftShader o c
 - Cold: pronto para ENTRAR em 44,7 s (download do wasm e do principal concluído em 5,8 s; compilação de shader sem cache de driver
   responde por ~30 s); maior tarefa longa 7,4 s (antes uma de 44,6 s). Visita repetida: 9,6 s, maior tarefa 3,1 s.
 - Capturas: `docs/perf/loader_live.png` (loader com progresso) e `docs/perf/cidade_live.png` (cidade).
+
+
+## Rodada 2 (nov 2026): mundo noir, oclusores fundidos, template próprio, wasm brotli 11
+Mesma sonda (`tools/deploy/cdp_perf.js`, Chrome headless, RTX 4070 Ti SUPER, D3D11/ANGLE), medido no site no ar
+(inaciodev.online) depois de cada publicação. "Antes" = rodada 1 no ar.
+
+| Item | Antes (no ar) | Depois (no ar) |
+|---|---|---|
+| Pronto para ENTRAR, 1ª visita (perfil novo) | 44,7 s | 28,3 s (local: 26,6 s; sem aquecer as lojas: 19,6 s) |
+| Pronto para ENTRAR, visita repetida | 9,6 s | 6,9 s |
+| Maior tarefa longa na carga (a frio) | 7,4 s | 6,8 s |
+| wasm transferido | 9,55 MB (brotli da Vercel) | 5,83 MB (template próprio + brotli 11 pré-comprimido) |
+| CPU por quadro na cidade | ~19 ms (17 a 22 conforme a máquina) | 14 a 15 ms |
+| Draw calls passada nítida (avenida) | 335 | 226 |
+| Draw calls mundo (avenida) | 519 | 491 |
+| 1ª entrada numa loja (a frio) | 2,6 a 2,9 s congelado | 0,28 a 1,5 s |
+| Programas de shader na cidade (censo) | 41 (17 com luz, ~75 variantes) | 17 (1 com luz, ~19 variantes) |
+| SwiftShader, cidade | 64 ms (15,5 fps) | 65 ms (sem mudança: o noir fica desligado sem placa) |
+
+### O que entrou
+- **Censo** (`scripts/render/census.gd`, `?perf=1` ou `CENSUS=1`; `pfAB("census",true,"rotulo")`): programas distintos
+  (StandardMaterial3D por flags, ShaderMaterial por código, variantes de luz e de instância) e superfícies por categoria.
+  Antes: 41 programas, 472 materiais, fundidos 483, nítida 333 oclusores, textos 153, multimesh 46, carros 56, pessoas 26.
+- **Mundo noir** (`shaders/noir/`, `scripts/render/noir.gd`): todos os StandardMaterial3D da cidade viram 5 ShaderMaterial
+  `unshaded` (opaco, opaco dupla face, recorte, mistura, aditivo) com a luz calculada no shader, replicando a do Godot 4.7
+  (Burley + Schlick-GGX, atenuação omni/spot, energia x PI, a mesma cúbica de sRGB do motor; conferido pixel a pixel em
+  `tools_dev/noir_test.tscn`: diferença de 1 a 2 níveis). Luzes viram dados: textura RGBAF 4 x 121 atualizada 1 vez por
+  quadro (0,7 ms). As OmniLight/SpotLight seguem na árvore (o jogo mexe nelas) com `editor_only`, o motor não as desenha.
+  **Luz por objeto como no Compatibility**: cada objeto fixo leva no material as até 8 omni + 8 spot que o motor daria
+  (menor distância centro a centro / alcance x energia); sem isso as fachadas ficavam claras demais (o visual aprovado
+  depende desse limite). Faróis dos carros entram nas vagas livres. Neon pulsa no shader (sem CPU por quadro).
+  A fusão (`merge.gd`) grava cor, emissão, rugosidade, metal e "sem luz" no vértice (COLOR, CUSTOM0, CUSTOM1).
+  `?noir=0` / `NOIR=0` voltam ao caminho antigo para comparar.
+- **Passada nítida**: os oclusores da geometria fundida viram 13 malhas por célula de 32 m (antes um gêmeo por malha
+  fundida, ~200). Bug achado: `SurfaceTool.append_from` com malhas com e sem índice perde as sem índice; tudo é indexado.
+- **Template web próprio** (`tools/deploy/godot_template/`, receita em `custom.py`): Godot 4.7.1-stable, emsdk 4.0.11,
+  `optimize=size lto=full production=yes`, sem mono/csg/gridmap/navegação/xr/rede/theora/gltf/ruído/compressores de
+  textura/visual_shader. 33,9 MB cru (oficial 38,6). `deprecated=no` quebrou o jogo (`Image.create`), ficou ligado.
+- **wasm brotli 11** gravado no build (`build_site.sh`) e `Content-Encoding: br` no `vercel.json` só para
+  `index.<hash>.wasm`. Conferido no ar: a Vercel entrega os bytes como estão (5.827.090 bytes, idênticos ao arquivo),
+  sem recomprimir, e o Chrome decodifica. `serve_local.py` respeita arquivo pré-comprimido.
+- **Lojas**: continuam no caminho de luz do motor (ver "não funcionou"); as variantes com luz delas (toon, liso, textura,
+  vidro, luz por vértice, rosto) são aquecidas no carregador com luzes de teste reais.
+
+### O que não funcionou / ficou de fora
+- **Lojas no shader próprio**: a luz em faixas do `toon.gdshader` (light() com retícula) convertida para dados de luz
+  ficou escura e em manchas na comparação lado a lado com o motor; não achei a causa no tempo. As lojas usam o motor.
+- **Passada nítida exclusiva** (nítido só nela, até o fim da câmera): sem o retrô por baixo, letreiros distantes
+  apareciam por vidros e frestas e a CPU subiu (33 ms). Ficou desligada (`exclusive` em `sharp_pass.gd`).
+- **Eliminar a 2ª viewport**: o retrô é de baixa resolução e o nítido é de resolução cheia; num passe só, ou o texto
+  pixela (regra do usuário) ou o mundo perde o pixel do retrô. Não feito.
+- **Meta de draws (<= 150) e 60 fps estáveis**: não atingida. O custo restante é número de draws (491 + 226): textos 3D
+  (153 Label3D, ~130 visíveis), fundidos por célula/textura (~170 visíveis) e MultiMesh. Ver próximos passos.
+- **Aquecer as lojas custa ~7 s na 1ª visita**; sem isso a 1ª porta congela ~6 s. Escolhi o carregador (com barra).
+- **SwiftShader**: o fragmento próprio custa mais por pixel (76 ms contra 64); sem placa o noir fica desligado.
+- **Música por Web Audio**: não feito nesta rodada.
+
+Capturas: `docs/perf/loader_r2.png`, `docs/perf/avenida_antes_depois_noir.png` e `docs/perf/cidade_antes_depois_noir.png`
+(esquerda motor, direita noir, mesmo ponto), `docs/perf/loja_rumor_r2.png`.
