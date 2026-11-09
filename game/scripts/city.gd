@@ -125,6 +125,7 @@ func _ready() -> void:
 	_build_wayfinding()
 	_build_extras()
 	await _prog(0.60, "Gluing the city")
+	_build_door_markers()
 	_commit_batches()
 	_commit_multi()
 	await _prog(0.66, "Bringing it to life")
@@ -1102,16 +1103,17 @@ func _shop(face: Vector3, normal: Vector3, project: Dictionary, grand := false) 
 	# anel no chão que acende perto
 	var ring := MeshInstance3D.new()
 	var tm := TorusMesh.new()
-	tm.inner_radius = 0.95
-	tm.outer_radius = 1.15
+	# bem na frente da porta: centrado no vão, ~0,8 m da soleira, raio que não entra na parede
+	tm.inner_radius = 0.5
+	tm.outer_radius = 0.62
 	ring.mesh = tm
 	ring.material_override = _mat(neon, 3.0, true)
-	ring.position = Vector3(door_x + 0.6, 0.08, 1.6)
+	ring.position = Vector3(door_x, 0.23, 0.85)   # calçada tem 0,21 m
 	ring.visible = false
 	holder.add_child(ring)
 	var rp := holder.to_global(ring.position)
 	kiosks.append({"pos": rp, "project": project, "light": l, "ring": ring, "base_energy": l.light_energy,
-		"neon": neon, "visited": false})
+		"neon": neon, "visited": false, "marker": holder.to_global(Vector3(door_x, 2.95, 0.6)), "normal": holder.global_transform.basis.z})
 	map_labels.append({"p": Vector2(rp.x, rp.z), "t": str(project.get("title", "")), "c": neon})
 
 
@@ -1376,16 +1378,17 @@ func _phone_booth(p: Vector3) -> void:
 	holder.add_child(l)
 	var ring := MeshInstance3D.new()
 	var tm := TorusMesh.new()
-	tm.inner_radius = 0.95
-	tm.outer_radius = 1.15
+	tm.inner_radius = 0.5
+	tm.outer_radius = 0.62
 	ring.mesh = tm
 	ring.material_override = _mat(Color("#5fd38a"), 3.0, true)
-	ring.position = Vector3(0, 0.05, 1.6)
+	ring.position = Vector3(0, 0.23, 0.85)
 	ring.visible = false
 	holder.add_child(ring)
 	var rp := holder.to_global(ring.position)
 	var proj := {"id": "contato", "title": "CONTATO", "neon": "#5fd38a", "special": "contact"}
-	kiosks.append({"pos": rp, "project": proj, "light": l, "ring": ring, "base_energy": 2.0, "neon": Color("#5fd38a"), "visited": false})
+	kiosks.append({"pos": rp, "project": proj, "light": l, "ring": ring, "base_energy": 2.0, "neon": Color("#5fd38a"), "visited": false,
+		"marker": holder.to_global(Vector3(0, 3.2, 0.6)), "normal": holder.global_transform.basis.z})
 	map_labels.append({"p": Vector2(rp.x, rp.z), "t": L.t("CONTATO"), "c": Color("#5fd38a")})
 
 
@@ -1831,22 +1834,26 @@ func _mid() -> float:
 ## num quadradinho diante da câmera, poucos por quadro, com a cidade escondida; o carregador mostra a
 ## porcentagem real e a thread nunca fica parada mais que um programa.
 func _warm_up() -> void:
+	# um quadradinho por PROGRAMA (não por material): cópias do mesmo shader, ou StandardMaterial3D com as
+	# mesmas flags, compartilham o programa; antes eram ~425 materiais, agora ~20 programas
+	var Census := preload("res://scripts/render/census.gd")
 	var seen := {}
 	var items: Array = []
+	var add_item := func(m: Material, inst: bool) -> void:
+		if m == null:
+			return
+		var key := Census._mat_key(m) + ("|I" if inst else "")
+		if not seen.has(key):
+			seen[key] = true
+			items.append([m, inst])
 	for n in find_children("*", "GeometryInstance3D", true, false):
 		if n is MeshInstance3D and (n as MeshInstance3D).mesh != null:
 			var mi := n as MeshInstance3D
 			for i in mi.mesh.get_surface_count():
-				var m: Material = mi.material_override if mi.material_override else mi.get_active_material(i)
-				if m != null and not seen.has(m.get_instance_id()):
-					seen[m.get_instance_id()] = true
-					items.append([m, false])
+				add_item.call(mi.material_override if mi.material_override else mi.get_active_material(i), false)
 		elif n is MultiMeshInstance3D and (n as MultiMeshInstance3D).multimesh != null:
 			var mm := n as MultiMeshInstance3D
-			var m2: Material = mm.material_override if mm.material_override else mm.multimesh.mesh.surface_get_material(0)
-			if m2 != null and not seen.has(m2.get_instance_id()):
-				seen[m2.get_instance_id()] = true
-				items.append([m2, true])
+			add_item.call(mm.material_override if mm.material_override else mm.multimesh.mesh.surface_get_material(0), true)
 	# programas das LOJAS também (as lojas montam ao entrar; sem isto a 1ª porta congelava compilando)
 	for sp in ["code_scroll", "chart_screen", "led_panel", "matrix_rain", "arcade_attract", "face_atlas", "hover_outline", "outline"]:
 		var path := "res://shaders/%s.gdshader" % sp
@@ -1899,7 +1906,8 @@ func _warm_up() -> void:
 	# a 1ª volta, com luzes de teste, aquece só os sabores de material das lojas
 	var all_items := items
 	var lit_items: Array = []
-	if Noir.enabled():
+	# no celular a loja aquece quando o jogador entra (atrás do véu), não no carregador
+	if Noir.enabled() and not UI.is_mobile():
 		var plain := StandardMaterial3D.new()
 		plain.roughness = 0.9
 		var texd := StandardMaterial3D.new()
@@ -1928,7 +1936,7 @@ func _warm_up() -> void:
 	var rounds := 2 if (not Noir.enabled() or not lit_items.is_empty()) else 1
 	for rnd in rounds:
 		if Noir.enabled():
-			items = lit_items if rnd == 0 else all_items
+			items = lit_items if (rnd == 0 and rounds == 2) else all_items
 			total = items.size()
 		if rnd == 0 and rounds == 2:
 			var lo := OmniLight3D.new()
@@ -2043,6 +2051,9 @@ func mark_visited(project: Dictionary) -> void:
 	for k in kiosks:
 		if k["project"] == project and not k["visited"]:
 			k["visited"] = true
+			if _markers and k.has("marker_i"):
+				var c := _markers.multimesh.get_instance_color(int(k["marker_i"]))
+				_markers.multimesh.set_instance_color(int(k["marker_i"]), Color(c.r, c.g, c.b, 0.0))
 			visited_changed.emit(visited_count(), total_projects())
 
 
@@ -2145,7 +2156,8 @@ func _process(dt: float) -> void:
 			_door_hint(k)
 		var pulse := 0.5 + 0.5 * sin(_t * (5.0 if on else 2.4) + float(k["pos"].x))
 		var base := 0.35 if bool(k.get("visited", false)) else 1.0
-		(k["_rmat"] as StandardMaterial3D).emission_energy_multiplier = base * (2.0 + pulse * (5.0 if on else 2.2))
+		# anel discreto no chão (o marcador de cima é o que se vê de longe); mais forte só bem perto
+		(k["_rmat"] as StandardMaterial3D).emission_energy_multiplier = base * (1.0 + pulse * (3.0 if on else 0.8))
 		rg.scale = Vector3.ONE * (1.0 + pulse * (0.12 if on else 0.06))
 		if k.has("_hint"):
 			(k["_hint"] as Node3D).visible = not on
@@ -3156,7 +3168,7 @@ func _door_hint(k: Dictionary) -> void:
 	var col: Color = k.get("neon", Color("#ffc83d"))
 	var h := Node3D.new()
 	rg.get_parent().add_child(h)
-	h.position = rg.position + Vector3(0, 0.02, 0.0)
+	h.position = rg.position + Vector3(0, 0.02, 0.75)   # "ENTRAR" e as setas na frente do anel, apontando para a porta
 	var t := Label3D.new()
 	t.text = L.t("ENTRAR")
 	t.font = UI.font("title")
@@ -3178,3 +3190,67 @@ func _door_hint(k: Dictionary) -> void:
 		a.position = Vector3(0, 0.0, -0.25 - j * 0.32)
 		h.add_child(a)
 	k["_hint"] = h
+
+
+# ═════════════════════════════════════════════ marcador de entrada (rodada 3)
+## Seta de neon flutuando acima de cada porta que se pode entrar (estilo marcador de interior de jogo de
+## mundo aberto, desenho próprio): gira, balança e pulsa no shader (shaders/door_marker.gdshader), sem
+## névoa, cresce um pouco de longe para ler a 30 m ou mais. Todas as portas num MultiMesh: 1 draw.
+## Cor por tipo de lugar: projeto dourado, carreira/LAB azul, contato verde.
+const MARKER_COLORS := {"project": Color("#ffc83d"), "career": Color("#5bd0ff"), "about": Color("#5bd0ff"), "contact": Color("#5fd38a")}
+var _markers: MultiMeshInstance3D
+
+
+func _marker_mesh() -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	# ponta (prisma de cabeça para baixo) + haste + losango no topo; grosso para continuar legível de perfil ao girar
+	var head := PrismMesh.new()
+	head.size = Vector3(0.62, 0.42, 0.3)
+	var shaft := BoxMesh.new()
+	shaft.size = Vector3(0.26, 0.3, 0.26)
+	var gem := BoxMesh.new()
+	gem.size = Vector3(0.22, 0.22, 0.22)
+	# origem na PONTA (y = 0): o crescimento de longe sobe, nunca desce para a porta
+	var parts := [[head, Transform3D(Basis(Vector3.FORWARD, PI), Vector3(0, 0.21, 0))],
+		[shaft, Transform3D(Basis(), Vector3(0, 0.57, 0))],
+		[gem, Transform3D(Basis(Vector3.FORWARD, PI / 4), Vector3(0, 0.92, 0))]]
+	for pr in parts:
+		var am := ArrayMesh.new()
+		am.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, (pr[0] as PrimitiveMesh).get_mesh_arrays())
+		st.append_from(am, 0, pr[1])
+	return st.commit()
+
+
+func _build_door_markers() -> void:
+	var ks: Array = []
+	for k in kiosks:
+		if k.has("marker"):
+			ks.append(k)
+	if ks.is_empty():
+		return
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.use_colors = true
+	mm.mesh = _marker_mesh()
+	mm.instance_count = ks.size()
+	for i in ks.size():
+		var k: Dictionary = ks[i]
+		var kind := str(k["project"].get("special", "project"))
+		# ponta ~0,45 m acima do batente (2,5 m), colada na frente da porta (0,6 m da fachada)
+		mm.set_instance_transform(i, Transform3D(Basis().scaled(Vector3.ONE * 1.1), k["marker"]))
+		mm.set_instance_color(i, MARKER_COLORS.get(kind, MARKER_COLORS["project"]))
+		k["marker_i"] = i
+	_markers = MultiMeshInstance3D.new()
+	_markers.multimesh = mm
+	var sm := ShaderMaterial.new()
+	sm.shader = preload("res://shaders/door_marker.gdshader")
+	_markers.material_override = sm
+	_markers.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_markers.set_meta("_sharp_done", true)
+	# também na passada nítida (camada 20): senão o letreiro nítido, composto por cima do retrô, cobre o marcador
+	_markers.layers = 1 | (1 << 19)
+	_markers.set_meta("noir_skip", true)
+	# a caixa muda com o giro e o crescimento no shader: margem para o recorte de câmera não sumir com ele
+	_markers.extra_cull_margin = 1.5
+	add_child(_markers)
