@@ -17,11 +17,15 @@
       ]
     },
     {
-      "source": "/jogo/(.*)\\.wasm",
+      "source": "/jogo/(index\\.[0-9a-f]{10}\\.wasm)",
       "headers": [
         {
           "key": "Content-Type",
           "value": "application/wasm"
+        },
+        {
+          "key": "Content-Encoding",
+          "value": "br"
         }
       ]
     },

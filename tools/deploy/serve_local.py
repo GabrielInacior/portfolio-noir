@@ -55,7 +55,8 @@ class H(SimpleHTTPRequestHandler):
         ext = os.path.splitext(fs)[1].lower()
         data = None
         enc = None
-        if ext in COMP and "br" in self.headers.get("Accept-Encoding", ""):
+        pre = any(rx.match(url) and "Content-Encoding" in hs for rx, hs in RULES)  # já comprimido no build (vercel.json)
+        if not pre and ext in COMP and "br" in self.headers.get("Accept-Encoding", ""):
             st = os.stat(fs)
             key = hashlib.md5(f"{fs}{st.st_mtime_ns}{st.st_size}".encode()).hexdigest()
             cf = os.path.join(CACHE, key + ".br")

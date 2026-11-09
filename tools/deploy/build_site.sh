@@ -27,6 +27,16 @@ cd "$ROOT"
 python tools/deploy/pck_split.py site/jogo/index.pck site/jogo
 rm -f site/jogo/index.pck
 python tools/deploy/make_boot.py
+# wasm pré-comprimido com brotli 11 (a Vercel comprime em tempo real com nível menor: 9,5 MB contra ~6 MB);
+# o vercel.json manda Content-Encoding: br para index.<hash>.wasm e o navegador descomprime
+python - <<'PY'
+import brotli, glob
+for f in glob.glob("site/jogo/index.*.wasm"):
+    d = open(f, "rb").read()
+    if d[:4] == b"\x00asm":
+        open(f, "wb").write(brotli.compress(d, quality=11, lgwin=24))
+        print("wasm brotli 11:", f, len(d) // 1024, "KB ->", len(open(f, "rb").read()) // 1024, "KB")
+PY
 cp game/shell/cursor_*.png site/jogo/ 2>/dev/null || true
 test -f site/jogo/index.wasm && test -f site/jogo/index.pck
 du -sh site site/jogo
