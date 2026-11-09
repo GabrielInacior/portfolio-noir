@@ -131,3 +131,11 @@ draw calls (522 + 337 da passada nítida) pelo WebGL do wasm. No SwiftShader o c
   não testado em produção.
 - Meta de 12 MB antes do ENTRAR não atingida: o wasm sozinho tem 8 a 9,5 MB comprimido.
 - SwiftShader ficou em 15,5 fps na cidade (meta 20): o custo restante é draw call e vértice por software.
+
+### Validação no site no ar (inaciodev.online, Chrome próprio, perfil novo e reaproveitado)
+- Cabeçalhos: arquivos `index.<hash>.*` com `Cache-Control: public, max-age=31536000, immutable` e `Content-Encoding: br`; `boot.js` com 3600 s.
+  Tamanhos transferidos: wasm 9,55 MB, principal 8,70 MB, idioma 2,04 MB, música 3,79 MB, lojas 5,80 MB.
+- 1ª pintura do loader: 500 ms (3,4 s antes de os preloads passarem a `fetchpriority=low`).
+- Cold: pronto para ENTRAR em 44,7 s (download do wasm e do principal concluído em 5,8 s; compilação de shader sem cache de driver
+  responde por ~30 s); maior tarefa longa 7,4 s (antes uma de 44,6 s). Visita repetida: 9,6 s, maior tarefa 3,1 s.
+- Capturas: `docs/perf/loader_live.png` (loader com progresso) e `docs/perf/cidade_live.png` (cidade).
