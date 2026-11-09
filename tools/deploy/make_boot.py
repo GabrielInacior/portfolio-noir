@@ -67,6 +67,15 @@ cfg["mainPack"] = pk["main"]["url"]
 cfg["canvasResizePolicy"] = 2
 cfg["fileSizes"] = {"/jogo/" + newbase + ".wasm": os.path.getsize(os.path.join(JOGO, newbase + ".wasm")), pk["main"]["url"]: pk["main"]["size"]}
 cfg["pfPacks"] = {k: v for k, v in pk.items() if k in ("music", "shops")}
+# trilha tocada pelo NAVEGADOR (HTMLAudioElement + Web Audio), fora do mixer do Godot: no celular o mixer sem
+# threads ficava sem CPU e a música saía lenta e distorcida. O pacote "music" deixa de ser baixado no site.
+_mp3 = os.path.join(os.path.dirname(JOGO), "..", "game", "assets", "audio", "music", "bloodlines_ost.mp3")
+_mp3 = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "game", "assets", "audio", "music", "bloodlines_ost.mp3"))
+if os.path.exists(_mp3):
+    import shutil
+    _mn = "music.%s.mp3" % h10(_mp3)
+    shutil.copyfile(_mp3, os.path.join(JOGO, _mn))
+    cfg["pfMusic"] = "/jogo/" + _mn
 cfg["pfLang"] = {"pt": pk.get("lang_pt"), "en": pk.get("lang_en")}
 cfg.pop("args", None)
 cfg.pop("ensureCrossOriginIsolationHeaders", None)
@@ -287,7 +296,8 @@ JS = r"""(function () {
       var engine = new Engine(Object.assign({}, CFG, { canvas: canvas, args: args.length ? ['--'].concat(args) : [] }));
       window.__pfEngine = engine;
       // pacotes em segundo plano (música, lojas): baixam depois do principal e entram no sistema de arquivos do motor
-      var queue = ['lang', 'music', 'shops'];
+      var queue = ['lang', 'shops'];
+      window.pfMusicUrl = CFG.pfMusic || '';
       var PK = { lang: langPack, music: CFG.pfPacks.music, shops: CFG.pfPacks.shops };
       function whenEngine(fn) { if (engine.rtenv) fn(); else setTimeout(function () { whenEngine(fn); }, 100); }
       function nextPack() {

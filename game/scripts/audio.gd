@@ -64,8 +64,52 @@ func _ready() -> void:
 	_load_music()
 
 
+## No site a trilha toca pelo NAVEGADOR (<audio> + ganho do Web Audio), fora do mixer do Godot: no celular o
+## mixer sem threads ficava sem CPU e a música saía lenta e distorcida. O jogo só controla tocar, volume,
+## mudo e fade (window.pfMus, abaixo). Nativo/sem URL: segue o AudioStreamPlayer do pacote "music".
+var _web := false
+var _web_vol := -1.0
+const WEB_JS := """(function(){
+if (window.pfMus) return 1;
+var url = window.pfMusicUrl; if (!url) return 0;
+var a = new Audio(); a.src = url; a.loop = true; a.preload = 'auto'; a.crossOrigin = 'anonymous';
+var M = { a: a, ctx: null, g: null, vol: 0, started: false };
+M.start = function () {
+  try {
+    if (!M.ctx) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) { M.ctx = new AC(); var src = M.ctx.createMediaElementSource(a); M.g = M.ctx.createGain(); M.g.gain.value = M.vol; src.connect(M.g); M.g.connect(M.ctx.destination); }
+    }
+    if (M.ctx && M.ctx.state === 'suspended') M.ctx.resume();
+  } catch (e) { M.ctx = null; M.g = null; }
+  M.started = true;
+  var p = a.play(); if (p && p.catch) p.catch(function () {});
+};
+M.setVol = function (v) {
+  M.vol = v;
+  if (M.g) { M.g.gain.setTargetAtTime(v, M.ctx.currentTime, 0.08); } else { a.volume = Math.max(0, Math.min(1, v)); }
+  if (v <= 0.0005 && !a.paused && M.started && !M.g) a.pause();
+};
+M.setOn = function (on) { if (on) { if (M.started && a.paused) a.play().catch(function () {}); } else { a.pause(); } };
+M.state = function () { return JSON.stringify({ t: a.currentTime, paused: a.paused, rate: M.ctx ? M.ctx.sampleRate : 0, ctx: M.ctx ? M.ctx.state : 'none', vol: M.vol }); };
+// aba escondida: pausa; volta: continua (o Godot também pausa o áudio dele)
+document.addEventListener('visibilitychange', function () { if (!M.started) return; if (document.hidden) a.pause(); else if (M.vol > 0.0005) a.play().catch(function () {}); });
+window.pfMus = M; return 1;
+})()"""
+
+
+func _web_ok() -> bool:
+	if not OS.has_feature("web"):
+		return false
+	var r: Variant = JavaScriptBridge.eval(WEB_JS, true)
+	return r != null and int(r) == 1
+
+
 ## a trilha vem num pacote baixado em segundo plano (Packs); começa a tocar assim que chega
 func _load_music() -> void:
+	if _web_ok():
+		_web = true
+		return
 	await Packs.need("music")
 	var s := load("res://assets/audio/music/bloodlines_ost.mp3")
 	if s is AudioStream:
@@ -109,6 +153,12 @@ func _bus_fx(bus: String, idx: int) -> AudioEffect:
 # ───────────────────────────────────────────────────────────────── API ──
 func start() -> void:
 	_started = true
+	if _web:
+		_web_vol = _web_target()
+		JavaScriptBridge.eval("window.pfMus&&(window.pfMus.setVol(%f),window.pfMus.start())" % _web_vol, true)
+		_set_zone("rua")
+		_report.call_deferred()
+		return
 	# a música já entra audível (antes começava em -60 dB e subia por quadro; no navegador isso podia
 	# ficar mudo) e o modo de reprodução do web é "stream" (project.godot), para os barramentos e
 	# efeitos funcionarem como no desktop
@@ -121,6 +171,14 @@ func start() -> void:
 
 ## log do estado do áudio (aparece no console do navegador): confere se está tocando sem precisar ouvir
 func _report() -> void:
+	if _web:
+		await get_tree().create_timer(2.5).timeout
+		var t0 := Time.get_ticks_msec()
+		var a := str(JavaScriptBridge.eval("window.pfMus?window.pfMus.state():''", true))
+		await get_tree().create_timer(2.0).timeout
+		var b := str(JavaScriptBridge.eval("window.pfMus?window.pfMus.state():''", true))
+		print("AUDIO web (navegador): %s -> %s em %d ms de relógio" % [a, b, Time.get_ticks_msec() - t0])
+		return
 	await get_tree().create_timer(2.5).timeout
 	var a := _player.get_playback_position()
 	await get_tree().create_timer(1.0).timeout
@@ -132,7 +190,9 @@ func _report() -> void:
 func set_enabled(on: bool) -> void:
 	_on = on
 	AudioServer.set_bus_mute(0, not on)
-	if on and not _player.playing and _started:
+	if _web:
+		JavaScriptBridge.eval("window.pfMus&&window.pfMus.setOn(%s)" % ("true" if on else "false"), true)
+	elif on and not _player.playing and _started:
 		_player.play()
 	_save_prefs()
 
@@ -159,6 +219,13 @@ func _hot_entry() -> Dictionary:
 			if e is Dictionary and e.get("node") == _hot_node:
 				return e
 	return {}
+
+
+## volume alvo da trilha no navegador (mesma curva do player do Godot: -6 dB, -16 dB com painel aberto)
+func _web_target() -> float:
+	if not _on:
+		return 0.0
+	return db_to_linear((-16.0 if _duck else -6.0) + linear_to_db(maxf(_music_lin, 0.001)))
 
 
 func set_music_volume(v: float) -> void:
@@ -373,9 +440,17 @@ func _process(dt: float) -> void:
 	if _player == null:
 		return
 	var want := -60.0
-	if _on and _player.playing:
-		want = (-16.0 if _duck else -6.0) + linear_to_db(maxf(_music_lin, 0.001))
-	_player.volume_db = lerpf(_player.volume_db, want, clampf(dt * 3.0, 0, 1))
+	if _web:
+		# o fade roda no navegador (setTargetAtTime); aqui só manda o alvo quando muda
+		if _started:
+			var tv := _web_target()
+			if absf(tv - _web_vol) > 0.004:
+				_web_vol = tv
+				JavaScriptBridge.eval("window.pfMus&&window.pfMus.setVol(%f)" % tv, true)
+	else:
+		if _on and _player.playing:
+			want = (-16.0 if _duck else -6.0) + linear_to_db(maxf(_music_lin, 0.001))
+		_player.volume_db = lerpf(_player.volume_db, want, clampf(dt * 3.0, 0, 1))
 	var sfx_bus := AudioServer.get_bus_index("SFX")
 	var amb_bus := AudioServer.get_bus_index("Amb")
 	if sfx_bus >= 0:
