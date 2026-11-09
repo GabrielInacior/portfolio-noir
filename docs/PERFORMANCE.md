@@ -198,3 +198,44 @@ Mesma sonda (`tools/deploy/cdp_perf.js`, Chrome headless, RTX 4070 Ti SUPER, D3D
 
 Capturas: `docs/perf/loader_r2.png`, `docs/perf/avenida_antes_depois_noir.png` e `docs/perf/cidade_antes_depois_noir.png`
 (esquerda motor, direita noir, mesmo ponto), `docs/perf/loja_rumor_r2.png`.
+
+
+## Rodada 3 (nov 2026): marcador de entrada, música pelo navegador, entrada das lojas, perfil de celular
+Medido no ar (inaciodev.online) com `cdp_perf.js`; perfil de celular = `--mobile` (390x844, toque, UA Android, CPU 4x).
+
+| Item | Antes (rodada 2 no ar) | Depois (no ar) |
+|---|---|---|
+| Música no celular (4x a 6x CPU) | mixer do Godot sem threads: lenta/distorcida | navegador: 3,04 s de trilha em 3,04 s de relógio, 48 kHz |
+| Celular: download até ENTRAR (1ª visita) | 39,9 s | 32,9 s |
+| Celular: aquecimento de shaders | 17,1 s (425 materiais) | ~8 s (31 programas; lojas não aquecem no celular) |
+| PC: ENTRAR, visita repetida | 6,9 s | 7,7 s (variação de rede; mesmo motor) |
+| PC: CPU por quadro na cidade | 14 a 15 ms | 14 ms |
+| Draws cidade / passada nítida | 491 / 226 | 476 / 219 (+1 do marcador) |
+| Lojas: câmera ao entrar | olhando a porta (vão sem porta) | de costas para a porta, olhando o centro; porta de madeira por dentro |
+
+Etapas no perfil de celular (local, 4x): motor (wasm + início) 6,5 s; montar a cidade 14,3 s (otimizar geometria 6,8 s,
+lojas 2,6 s, anúncios 2,3 s); aquecer shaders 8,0 s; interface até o ENTRAR ~3 s.
+
+### Por loja (PC, draws mundo + nítida, CPU média dentro, 1ª entrada a frio)
+| Loja | Draws antes | Com fusão (`?shopmerge=1`) | CPU |
+|---|---|---|---|
+| rumor | 306 + 236 | 166 + 155 | 6,7 / 5,0 ms |
+| fortress | 269 + 208 | 178 + 156 | 5,7 / 4,6 ms |
+| formataai | 314 + 240 | 170 + 154 | 6,5 / 4,7 ms |
+| ankiana | 326 + 236 | 178 + 159 | 6,7 / 4,7 ms |
+| labia | 133 + 67 | 59 + 56 | 4,0 / 3,6 ms |
+| carreira | 229 + 167 | 156 + 132 | 5,4 / 4,5 ms |
+Censo das lojas (`--shopcensus`): 15 a 18 programas (6 a 8 com luz), 150 a 250 materiais únicos, 160 a 260 malhas soltas
+(causa dos draws), 17 a 81 Label3D. A fusão (mesmo visual: diferença média 0,1/255) fica DESLIGADA por padrão: a 1ª
+entrada a frio subiu para 4 a 6 s. Com a câmera olhando para dentro, a 1ª entrada compila tudo de uma vez atrás do véu
+(rumor 4,8 s a frio); antes isso acontecia aos poucos ao virar a câmera (as travadas ao olhar em volta).
+
+### Não feito nesta rodada
+- Troca de idioma ao vivo (hoje recarrega): o jogo monta os textos uma vez com `L.t()` em centenas de lugares e os anúncios
+  são atlas por língua; precisa de um sinal `L.changed` reaplicado por HUD/painéis e troca de atlas/letreiros na cidade.
+- Textos 3D em atlas (corte de 300 a 400 draws), loja pré-montada antes da porta (< 50 ms), lojas no shader próprio.
+  Achado: o "toon escuro" da rodada 2 era a referência errada (a captura de comparação tinha a textura de luz vazia,
+  que vira branca); o visual escuro das lojas é o de produção. Vale retestar a migração.
+- Meta do celular (8 s após o download): exige cidade pré-montada no build (.scn) e streaming por distância.
+
+Capturas: `docs/perf/marcador_entrada_r3.png`, `docs/perf/lojas_entrada_r3.png`.
