@@ -14,6 +14,10 @@ func _ready() -> void:
 		main.hud.visible = true
 		main._gate.queue_free()
 	await _wait(0.5)
+	if OS.get_environment("NOLIGHTS") != "":
+		for l in main.city.find_children("*", "Light3D", true, false):
+			if not (l is DirectionalLight3D):
+				(l as Light3D).visible = false
 	var p = main.city.player
 	var only := OS.get_environment("SHOTS")
 	var shots := [
@@ -42,6 +46,9 @@ func _ready() -> void:
 		p.head.rotation.x = s[2]
 		await _wait(0.6)
 		get_viewport().get_texture().get_image().save_png(dir.path_join(s[3] + ".png"))
+		if OS.get_environment("SHARPSHOT") != "":
+			main._sharp.vp.get_texture().get_image().save_png(dir.path_join(s[3] + "_sharp.png"))
+			main._world_vp.get_texture().get_image().save_png(dir.path_join(s[3] + "_retro.png"))
 		print("SHOT ", s[3])
 	if OS.get_environment("PERF") != "":
 		p.global_position = Vector3(0, 1.6, -30)

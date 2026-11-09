@@ -61,6 +61,7 @@ const CROSS_END := 48.0
 
 
 const Merge := preload("res://scripts/render/merge.gd")
+const Noir := preload("res://scripts/render/noir.gd")
 
 
 ## Montagem fatiada: com `sliced` ligado (o jogo real), a cidade se monta em fatias de ~12 ms por quadro (sem desenhar o 3D enquanto monta: o carregador cobre a tela)
@@ -172,8 +173,42 @@ func _ready() -> void:
 			dm.append(tv["mat"])
 		for bl in _blinkers:
 			dm.append(bl["m"])
+		# mundo noir: materiais viram o shader próprio ANTES da fusão (cor/emissão/rugosidade por vértice
+		# deixam a fusão juntar muito mais); os que o jogo anima seguem sincronizados por quadro
+		if Noir.enabled():
+			for k in kiosks:
+				(k["ring"] as Node).set_meta("noir_skip", true)
+			Noir.convert_tree(self)
+			var dmc: Array = []
+			for m in dm:
+				if m in _neon_mats:
+					# neon: o pulso roda no shader (sem mexer em material por quadro)
+					var nm: Material = Noir.conv(m)
+					if nm is ShaderMaterial:
+						Noir.set_p(nm, "pulse_seed", float(m.get_instance_id() % 7))
+						dmc.append(nm)
+						continue
+				Noir.track(m)
+				dmc.append(Noir.conv(m))
+			dm = dmc
 		var r: Dictionary = await Merge.merge(self, ex, _near(), _mid(), dm, _slice)
 		print("MERGE cidade: %d malhas -> %d" % [r["in"], r["out"]])
+	if Noir.enabled():
+		# luz por objeto como no Compatibility (ver noir.gd); o que anda leva as luzes mais perto da câmera
+		var moving: Array = []
+		for c in _cars:
+			moving.append(c["node"])
+		for w in _walkers:
+			moving.append(w["node"])
+		for b in _birds:
+			moving.append(b["node"])
+		for sw in _swing:
+			moving.append(sw["node"])
+		for sl in _searchlights:
+			moving.append(sl["n"])
+		moving.append_array(_fans)
+		moving.append_array(npcs)
+		Noir.assign_sets(self, moving)
 	print("PFT nodes: mesh=%d label=%d mm=%d light=%d part=%d" % [find_children("*", "MeshInstance3D", true, false).size(), find_children("*", "Label3D", true, false).size(), find_children("*", "MultiMeshInstance3D", true, false).size(), find_children("*", "Light3D", true, false).size(), find_children("*", "CPUParticles3D", true, false).size()])
 	await _warm_up()
 	is_built = true
@@ -1812,6 +1847,19 @@ func _warm_up() -> void:
 			if m2 != null and not seen.has(m2.get_instance_id()):
 				seen[m2.get_instance_id()] = true
 				items.append([m2, true])
+	# programas das LOJAS também (as lojas montam ao entrar; sem isto a 1ª porta congelava compilando)
+	for sp in ["toon", "code_scroll", "chart_screen", "led_panel", "matrix_rain", "arcade_attract", "face_atlas", "hover_outline", "outline"]:
+		var path := "res://shaders/%s.gdshader" % sp
+		if ResourceLoader.exists(path):
+			var wm := ShaderMaterial.new()
+			wm.shader = load(path)
+			items.append([Noir.conv(wm), false])
+	for kind in Noir.SHADERS:
+		var nm := ShaderMaterial.new()
+		nm.shader = Noir.SHADERS[kind]
+		nm.set_shader_parameter("noir_lights", Noir.lights_texture())
+		items.append([nm, false])
+		items.append([nm, true])
 	var vp := get_viewport() as SubViewport
 	if not sliced or vp == null or player == null or player.cam == null:
 		return
@@ -1846,8 +1894,10 @@ func _warm_up() -> void:
 	# duas voltas: 1) com luzes de teste por perto (variante de shader com luz omni, spot e direcional);
 	# 2) sem luz (variante dos objetos longe dos postes). A primeira cena real não compila mais nada.
 	var tl: Array = []
-	for rnd in 2:
-		if rnd == 0:
+	# mundo noir: nenhum material usa luz do motor, então não há variante com luz para aquecer
+	var rounds := 1 if Noir.enabled() else 2
+	for rnd in rounds:
+		if rnd == 0 and rounds == 2:
 			var lo := OmniLight3D.new()
 			lo.light_energy = 0.01
 			lo.omni_range = 6.0
@@ -1908,7 +1958,7 @@ func _warm_up() -> void:
 			for nd in nodes:
 				nd.queue_free()
 			if i / 8 != (i - batch) / 8 or i >= total:
-				await _prog(0.82 + 0.16 * float(rnd * total + i) / maxf(1.0, float(2 * total)), "Warming up shaders")
+				await _prog(0.82 + 0.16 * float(rnd * total + i) / maxf(1.0, float(rounds * total)), "Warming up shaders")
 	holder.queue_free()
 	var keys := prof.keys()
 	keys.sort_custom(func(x, y) -> bool: return prof[x][1] > prof[y][1])
@@ -1976,7 +2026,7 @@ func _tick_fx(dt: float) -> void:
 		if fmod(_t + float(f["seed"]), 4.5) < 0.25:
 			k = 0.35 if sin(_t * 42.0) > 0 else 1.0
 		(f["light"] as OmniLight3D).light_energy = float(f["base"]) * k
-	for m in _neon_mats:
+	for m in (_neon_mats if not Noir.enabled() else []):
 		var base: Color = (m as StandardMaterial3D).albedo_color
 		var pulse := 1.0 + sin(_t * 3.0 + float(m.get_instance_id() % 7)) * 0.08
 		(m as StandardMaterial3D).albedo_color = Color(base.r, base.g, base.b) * (pulse / maxf(0.0001, (m.get_meta("p", 1.0))))

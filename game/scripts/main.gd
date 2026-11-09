@@ -42,7 +42,12 @@ func _ready() -> void:
 		_sharp.auto_tag = true
 		_sharp.vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	_sharp.tag(city)
+	# personagens montam o material no próprio _ready (depois da conversão da cidade): converte de novo
+	preload("res://scripts/render/noir.gd").convert_tree(city)
+	_noir.auto_convert = true
 	_apply_quality()
+	if _census_on():
+		_census("cidade")
 	var layer := CanvasLayer.new()
 	add_child(layer)
 	hud = Hud.new()
@@ -113,6 +118,7 @@ const RETRO_H := {"forte": 360, "suave": 432}
 var _world_vp: SubViewport
 var _world_rect: TextureRect
 var _sharp
+var _noir
 var retro := "forte"
 var _potato_h := 300
 
@@ -135,6 +141,10 @@ func _build_world_view() -> void:
 	under.layer = -1
 	add_child(under)
 	under.add_child(_world_rect)
+	# mundo noir: luzes viram dados do shader próprio (scripts/render/noir.gd)
+	_noir = preload("res://scripts/render/noir.gd").new()
+	add_child(_noir)
+	_noir.setup(_world_vp)
 	# passada nítida por cima do retrô: textos, imagens e telas do 3D em resolução cheia
 	_sharp = preload("res://scripts/render/sharp_pass.gd").new()
 	add_child(_sharp)
@@ -242,8 +252,10 @@ func _fit_scale() -> void:
 ## de janelas/skyline ~58 ms e a malha fundida ~68 ms. Aqui só se corta o que for preciso: sem luz real (o
 ## neon é emissivo), 45% das instâncias de janelas e skyline, nada além de 55 m.
 func _apply_software() -> void:
-	for n in city.find_children("*", "Light3D", true, false):
-		(n as Light3D).visible = false
+	# com o mundo noir as luzes são dados do shader (poucas, ver noir.gd): continuam
+	if not preload("res://scripts/render/noir.gd").enabled():
+		for n in city.find_children("*", "Light3D", true, false):
+			(n as Light3D).visible = false
 	for n in city.find_children("*", "MultiMeshInstance3D", true, false):
 		var mm := (n as MultiMeshInstance3D).multimesh
 		if mm and mm.instance_count > 40:
@@ -328,6 +340,22 @@ func _scan_labels(n: Node) -> void:
 		elif c is CanvasItem and not (c as CanvasItem).visible:
 			continue
 		_scan_labels(c)
+
+
+## censo de programas de shader e draws por categoria (depuração: ?perf=1 ou CENSUS=1)
+func _census_on() -> bool:
+	if OS.get_environment("CENSUS") != "":
+		return true
+	return OS.has_feature("web") and str(JavaScriptBridge.eval("/[?&]perf=1/.test(location.search)?1:0", true)) == "1"
+
+
+func _census(label: String) -> void:
+	var cars: Array = []
+	for c in city._cars:
+		cars.append(c["node"])
+	var txt: String = preload("res://scripts/render/census.gd").run(_world_vp, label, cars)
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.__pfCensus=%s" % JSON.stringify(txt), true)
 
 
 # ───────────────────────────────── interruptores de teste A/B de desempenho (web, `window.pfAB(nome, ligado)`)
@@ -431,6 +459,10 @@ func _ab(args: Array) -> void:
 				hud.enter_museum(pj)
 			elif not on:
 				hud.exit_museum()
+		"noirfeed":
+			_noir.set_process(on)
+		"census":
+			_census(str(args[2]) if args.size() > 2 else "cena")
 		"sfxtick":
 			get_node("/root/Audio").set_process(on)
 		"cars":

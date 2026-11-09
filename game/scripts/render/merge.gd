@@ -10,6 +10,10 @@ extends RefCounted
 const FMT_MASK := Mesh.ARRAY_FORMAT_NORMAL | Mesh.ARRAY_FORMAT_TANGENT | Mesh.ARRAY_FORMAT_COLOR \
 	| Mesh.ARRAY_FORMAT_TEX_UV | Mesh.ARRAY_FORMAT_TEX_UV2
 const COLOR_PROPS := ["albedo_color"]
+const NoirLib := preload("res://scripts/render/noir.gd")
+const NOIR_FMT := Mesh.ARRAY_FORMAT_CUSTOM0 | Mesh.ARRAY_FORMAT_CUSTOM1 \
+	| (Mesh.ARRAY_CUSTOM_RGBA_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM0_SHIFT) | (Mesh.ARRAY_CUSTOM_RGBA_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM1_SHIFT)
+const NOIR_PER_VERTEX := ["albedo_color", "emission_c", "roughness", "metallic", "specular_amt", "unshaded", "vertex_lit", "spec_off", "use_custom", "use_vc", "noir_lights"]
 
 
 static func merge(root: Node3D, exclude: Array, near := 24.0, mid := 42.0, dyn_mats: Array = [], tick := Callable()) -> Dictionary:  # coroutine: `tick` cede o quadro quando passa do orçamento
@@ -85,6 +89,8 @@ static func merge(root: Node3D, exclude: Array, near := 24.0, mid := 42.0, dyn_m
 				break
 			if tint != null:
 				fmt |= Mesh.ARRAY_FORMAT_COLOR
+				if tint is Array:
+					fmt |= NOIR_FMT
 			var key := "%s|%d|%d|%d|%d|%d" % [ck, mat.get_instance_id(), fmt, mi.layers, int(mi.cast_shadow), cls]
 			parts.append([key, i, mat, tint])
 		if not ok_all or parts.is_empty():
@@ -96,7 +102,10 @@ static func merge(root: Node3D, exclude: Array, near := 24.0, mid := 42.0, dyn_m
 				groups[p[0]] = g
 			var src_mesh: Mesh = mi.mesh
 			var si: int = p[1]
-			if p[3] != null:
+			if p[3] is Array:
+				src_mesh = _noir_baked(mi.mesh, si, p[3])
+				si = 0
+			elif p[3] != null:
 				src_mesh = _tinted(mi.mesh, si, p[3])
 				si = 0
 			(g["st"] as SurfaceTool).append_from(src_mesh, si, xf)
@@ -129,6 +138,7 @@ static func merge(root: Node3D, exclude: Array, near := 24.0, mid := 42.0, dyn_m
 		made += 1
 	for mi in done:
 		(mi as MeshInstance3D).mesh = null
+		(mi as MeshInstance3D).material_override = null
 	if OS.get_environment("MERGE_DEBUG") != "":
 		var emis := 0
 		var tex := 0
@@ -149,6 +159,23 @@ static func merge(root: Node3D, exclude: Array, near := 24.0, mid := 42.0, dyn_m
 ## material canônico: StandardMaterial3D que só difere na cor vira um com cor de vértice (a cor
 ## original vai para os vértices). Retorna [material, tint ou null].
 static func _canon(m: Material, canon: Dictionary) -> Array:
+	if m is ShaderMaterial and m.has_meta("noir_kind"):
+		# mundo noir: cor, emissão, rugosidade, metal, "sem luz" e "luz por vértice" vão para o vértice
+		var sm0 := m as ShaderMaterial
+		var sgn := _noir_sig(sm0)
+		if not canon.has(sgn):
+			var cm0: ShaderMaterial = NoirLib.clone(sm0)
+			NoirLib.set_p(cm0, "albedo_color", Color(1, 1, 1, 1))
+			NoirLib.set_p(cm0, "use_vc", 1.0)
+			NoirLib.set_p(cm0, "use_custom", 1.0)
+			cm0.set_meta("noir_canon", true)
+			canon[sgn] = cm0
+		var acv: Variant = _sp(sm0, "albedo_color", Color.WHITE)
+		var ac: Color = Color(acv.x, acv.y, acv.z, acv.w) if acv is Vector4 else acv
+		var ec: Vector4 = _sp(sm0, "emission_c", Vector4.ZERO)
+		var c0 := Color(ec.x, ec.y, ec.z, -1.0 if float(_sp(sm0, "unshaded", 0.0)) > 0.5 else float(_sp(sm0, "roughness", 1.0)))
+		var c1 := Color(float(_sp(sm0, "metallic", 0.0)), float(_sp(sm0, "specular_amt", 0.5)), float(_sp(sm0, "vertex_lit", 0.0)), float(_sp(sm0, "spec_off", 0.0)))
+		return [canon[sgn], [ac, float(_sp(sm0, "use_vc", 0.0)) > 0.5, c0, c1]]
 	if m is StandardMaterial3D:
 		var sm := m as StandardMaterial3D
 		if not sm.vertex_color_use_as_albedo:
@@ -236,3 +263,60 @@ static func _excluded(n: Node, ex: Dictionary, root: Node) -> bool:
 			return true
 		q = q.get_parent()
 	return false
+
+
+static func _sp(m: ShaderMaterial, k: String, d: Variant) -> Variant:
+	var p: Dictionary = m.get_meta("noir_p", {})
+	var v: Variant = p.get(k, null) if p.has(k) else m.get_shader_parameter(k)
+	return d if v == null else v
+
+
+## assinatura do material noir sem o que vai por vértice (shader + textura + UV + flags que sobram)
+static func _noir_sig(m: ShaderMaterial) -> String:
+	var parts := PackedStringArray(["NOIR", str(m.shader.get_instance_id()), str(m.render_priority)])
+	for u in m.shader.get_shader_uniform_list():
+		var nm := str(u["name"])
+		if nm in NOIR_PER_VERTEX:
+			continue
+		var v: Variant = _sp(m, nm, null)
+		if v is Texture2D:
+			parts.append(nm + "=" + str((v as Texture2D).get_rid().get_id()))
+		else:
+			parts.append(nm + "=" + str(v))
+	if m.next_pass:
+		parts.append("np=" + str(m.next_pass.get_instance_id()))
+	return "|".join(parts)
+
+
+static func _rep4(c: Color, n: int) -> PackedFloat32Array:
+	var out := PackedFloat32Array([c.r, c.g, c.b, c.a])
+	var total := 4 * n
+	while out.size() < total:
+		out.append_array(out.slice(0, mini(out.size(), total - out.size())))
+	return out
+
+
+## cópia da superfície com os parâmetros do material noir gravados nos vértices:
+## COLOR = cor (x cor de vértice se o material usava), CUSTOM0 = emissão + rugosidade (-1 = sem luz),
+## CUSTOM1 = metal, especular, luz por vértice, especular desligado
+static func _noir_baked(m: Mesh, i: int, d: Array) -> ArrayMesh:
+	var arr := m.surface_get_arrays(i)
+	var vc: int = (arr[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()
+	var col: Color = d[0]
+	var cols := PackedColorArray()
+	cols.resize(vc)
+	var old: Variant = arr[Mesh.ARRAY_COLOR]
+	if bool(d[1]) and old is PackedColorArray and (old as PackedColorArray).size() == vc:
+		var oc := old as PackedColorArray
+		for k in vc:
+			cols[k] = oc[k] * col
+	else:
+		cols.fill(col)
+	arr[Mesh.ARRAY_COLOR] = cols
+	arr[Mesh.ARRAY_CUSTOM0] = _rep4(d[2], vc)
+	arr[Mesh.ARRAY_CUSTOM1] = _rep4(d[3], vc)
+	var am := ArrayMesh.new()
+	am.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr, [], {}, NOIR_FMT)
+	if OS.get_environment("MT_DEBUG") != "":
+		print("MT baked col=", col, " out=", (am.surface_get_arrays(0)[Mesh.ARRAY_COLOR] as PackedColorArray).slice(0, 1), " fmt=", am.surface_get_format(0))
+	return am

@@ -3,7 +3,9 @@ shader_type spatial;
 // curvatura e vinheta de CRT opcionais, brilho de tela e GLITCH em rajadas curtas (0,1 a 0,3 s a
 // cada 4 a 10 s, em tempo próprio por tela) + glitch na troca de anúncio. Tudo no fragment.
 // Iluminado pela cena e com a névoa do mundo (não é unshaded): o conteúdo continua legível.
-render_mode cull_back, diffuse_lambert, specular_disabled;
+render_mode cull_back, unshaded;
+// mundo noir: lambert sobre as luzes-dados (noir_core), igual ao diffuse_lambert do motor
+#include "res://shaders/noir/noir_core.gdshaderinc"
 
 uniform sampler2D tex : source_color, filter_linear_mipmap_anisotropic;
 uniform float emit = 0.9;
@@ -59,7 +61,11 @@ void fragment() {
 		col += crt * 0.04 * (hash(uv * 400.0 + floor(t * 30.0)) - 0.5);
 		if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) { col = vec3(0.0); }
 	}
-	ALBEDO = col * 0.35;
-	EMISSION = col * emit;
-	ROUGHNESS = 0.35;
+	vec3 al = n_cubic(col * 0.35);
+	vec3 P = (INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	vec3 N = normalize((INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).xyz);
+	vec3 dif = vec3(0.0);
+	vec3 spe = vec3(0.0);
+	n_lights(P, N, vec3(0.0, 0.0, 1.0), vec3(0.0), 1.0, 0.0, false, true, dif, spe);
+	ALBEDO = n_inv(dif * al + n_ambient() * al + n_cubic(col * emit));
 }
