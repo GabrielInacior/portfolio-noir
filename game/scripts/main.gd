@@ -41,10 +41,14 @@ func _ready() -> void:
 	else:
 		_sharp.auto_tag = true
 		_sharp.vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	var tt := Time.get_ticks_msec()
 	_sharp.tag(city)
+	print("PFT %5d ms  nítida marcada (%d ms)" % [Time.get_ticks_msec(), Time.get_ticks_msec() - tt])
+	tt = Time.get_ticks_msec()
 	# personagens montam o material no próprio _ready (depois da conversão da cidade): converte de novo
 	preload("res://scripts/render/noir.gd").convert_tree(city)
 	_noir.auto_convert = true
+	print("PFT %5d ms  reconversão noir (%d ms)" % [Time.get_ticks_msec(), Time.get_ticks_msec() - tt])
 	_apply_quality()
 	if _census_on():
 		_census("cidade")
@@ -346,7 +350,7 @@ func _scan_labels(n: Node) -> void:
 func _census_on() -> bool:
 	if OS.get_environment("CENSUS") != "":
 		return true
-	return OS.has_feature("web") and str(JavaScriptBridge.eval("/[?&]perf=1/.test(location.search)?1:0", true)) == "1"
+	return OS.has_feature("web") and str(JavaScriptBridge.eval("/[?&]census=1/.test(location.search)?1:0", true)) == "1"
 
 
 func _census(label: String) -> void:
@@ -459,6 +463,9 @@ func _ab(args: Array) -> void:
 				hud.enter_museum(pj)
 			elif not on:
 				hud.exit_museum()
+		"enter":
+			if _gate and is_instance_valid(_gate):
+				_gate.entered.emit()
 		"noirfeed":
 			_noir.set_process(on)
 		"census":

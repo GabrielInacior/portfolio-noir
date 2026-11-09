@@ -34,11 +34,21 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await new Promise(r => ws.onopen = r);
   let id = 0; const pend = {};
   const logs = []; const T00 = Date.now();
-  ws.onmessage = m => { const d = JSON.parse(m.data); if (d.method === 'Runtime.consoleAPICalled') { const t = d.params.args.map(a => a.value).join(' '); if (/PFT|pf\]|ERROR/.test(t)) logs.push(((Date.now() - T00) / 1000).toFixed(1) + 's ' + t); } if (d.id && pend[d.id]) { pend[d.id](d); delete pend[d.id]; } };
+  ws.onmessage = m => { const d = JSON.parse(m.data); if (d.method === 'Runtime.consoleAPICalled') { const t = d.params.args.map(a => a.value).join(' '); if (/PFT|pf\]|ERROR|AUDIO/.test(t)) logs.push(((Date.now() - T00) / 1000).toFixed(1) + 's ' + t); } if (d.id && pend[d.id]) { pend[d.id](d); delete pend[d.id]; } };
   const send = (method, params = {}) => new Promise(r => { const i = ++id; pend[i] = r; ws.send(JSON.stringify({ id: i, method, params })); });
   const ev = async (expr) => { const r = await send('Runtime.evaluate', { expression: expr, awaitPromise: true, returnByValue: true }); return r.result && r.result.result ? r.result.result.value : r; };
   await send('Page.enable'); await send('Runtime.enable');
-  await send('Emulation.setDeviceMetricsOverride', { width: W, height: H, deviceScaleFactor: 1, mobile: false });
+  // --mobile: celular médio (390x844, toque, UA Android) e --throttle N (CPU N vezes mais lenta; padrão 4 no --mobile)
+  const MOBILE = argv.includes('--mobile');
+  const THR = +opt('--throttle', MOBILE ? 4 : 1);
+  if (MOBILE) {
+    await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
+    await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
+    await send('Emulation.setUserAgentOverride', { userAgent: 'Mozilla/5.0 (Linux; Android 13; Pixel 6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Mobile Safari/537.36' });
+  } else {
+    await send('Emulation.setDeviceMetricsOverride', { width: W, height: H, deviceScaleFactor: 1, mobile: false });
+  }
+  if (THR > 1) await send('Emulation.setCPUThrottlingRate', { rate: THR });
   await send('Page.addScriptToEvaluateOnNewDocument', { source: 'window.__lt=[];try{new PerformanceObserver(function(l){l.getEntries().forEach(function(e){window.__lt.push([Math.round(e.startTime),Math.round(e.duration)])})}).observe({type:"longtask",buffered:true})}catch(e){}' });
   if (opt('--lang', '')) await send('Page.addScriptToEvaluateOnNewDocument', { source: 'try{localStorage.setItem("pf_lang","' + opt('--lang', '') + '")}catch(e){}' });
   const t0 = Date.now();
@@ -59,12 +69,21 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   if (ready && !OLD) {
     await sleep(1500);
     // ENTRAR
-    const x = Math.round(W * 0.157), y = Math.round(H * 0.62);
-    for (const t of ['mousePressed', 'mouseReleased']) await send('Input.dispatchMouseEvent', { type: t, x, y, button: 'left', clickCount: 1 });
+    if (MOBILE) {
+      await ev('pfAB("enter",true)');
+    } else {
+      const x = Math.round(W * 0.157), y = Math.round(H * 0.62);
+      for (const t of ['mousePressed', 'mouseReleased']) await send('Input.dispatchMouseEvent', { type: t, x, y, button: 'left', clickCount: 1 });
+    }
     await sleep(2500);
     await ev('pfFrameStats(true)');
     await sleep(SECS * 1000);
     out.city = await ev('JSON.stringify(pfFrameStats(true))');
+    // música pelo navegador: o tempo da trilha tem que andar junto com o relógio
+    const m1 = await ev('window.pfMus?window.pfMus.state():""'); const c1 = Date.now();
+    await sleep(3000);
+    const m2 = await ev('window.pfMus?window.pfMus.state():""'); const c2 = Date.now();
+    try { const a = JSON.parse(m1), b = JSON.parse(m2); out.music = 'trilha ' + (b.t - a.t).toFixed(2) + ' s em ' + ((c2 - c1) / 1000).toFixed(2) + ' s de relógio | ' + m2; } catch (e) { out.music = 'sem pfMus: ' + m1; }
     await ev('pfAB("info",true)'); await sleep(300);
     out.info = await ev('window.__pfInfo');
     const abl = opt('--ab', '');
