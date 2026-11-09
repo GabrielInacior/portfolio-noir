@@ -104,9 +104,11 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
       await ev('pfAB("shop",true,"' + shop + '")');
       await sleep(2500);
       const en = JSON.parse(await ev('JSON.stringify(pfFrameStats(true))'));
+      if (opt('--shopshots', '')) { const r = await send('Page.captureScreenshot', { format: 'png' }); fs.writeFileSync(path.join(opt('--shopshots', ''), shop + '.png'), Buffer.from(r.result.data, 'base64')); }
       await sleep(SECS * 1000);
       const st = JSON.parse(await ev('JSON.stringify(pfFrameStats(true))'));
       await ev('pfAB("info",true)'); await sleep(300);
+      if (argv.includes('--shopcensus')) { await ev('pfAB("census",true,"' + shop + '")'); await sleep(300); out['census_' + shop] = await ev('window.__pfCensus'); }
       out.shops[shop] = 'enter_max ' + en.cpu_max + ' ms | cpu avg ' + st.cpu_avg + ' p95 ' + st.cpu_p95 + ' max ' + st.cpu_max + ' | gap avg ' + st.gap_avg + ' max ' + st.gap_max + ' | ' + await ev('window.__pfInfo');
       await ev('pfAB("shop",false,"' + shop + '")'); await sleep(1500);
     }

@@ -1930,7 +1930,19 @@ func _warm_up() -> void:
 		face.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
 		var toon := ShaderMaterial.new()
 		toon.shader = load("res://shaders/toon.gdshader")
-		for m in [plain, texd, texm, glass, pv, pvt, face, toon]:
+		# a fusão das lojas troca a cor do material por cor de vértice: essas variantes também
+		var plain_vc := plain.duplicate() as StandardMaterial3D
+		plain_vc.vertex_color_use_as_albedo = true
+		plain_vc.vertex_color_is_srgb = true
+		var tex_vc := texd.duplicate() as StandardMaterial3D
+		tex_vc.vertex_color_use_as_albedo = true
+		tex_vc.vertex_color_is_srgb = true
+		var emis_vc := StandardMaterial3D.new()
+		emis_vc.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		emis_vc.emission_enabled = true
+		emis_vc.vertex_color_use_as_albedo = true
+		emis_vc.vertex_color_is_srgb = true
+		for m in [plain, texd, texm, glass, pv, pvt, face, toon, plain_vc, tex_vc, emis_vc]:
 			m.set_meta("noir_skip_conv", true)
 			lit_items.append([m, false])
 	var rounds := 2 if (not Noir.enabled() or not lit_items.is_empty()) else 1
