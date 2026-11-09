@@ -462,8 +462,24 @@ func setup(vp: Viewport) -> void:
 		max_lights = 6
 
 
+## as lojas ficam no caminho do motor (luz real): a luz em faixas do toon delas não bateu com a do
+## shader próprio na comparação lado a lado; a cidade é onde estava o custo de compilação e de draws
+static func in_shop(n: Node) -> bool:
+	var q := n
+	while q != null:
+		var sc: Script = q.get_script()
+		if sc and str(sc.resource_path).ends_with("museum.gd"):
+			return true
+		q = q.get_parent()
+	return false
+
+
 func _on_added(n: Node) -> void:
 	if not enabled():
+		return
+	if (n is Light3D or n is WorldEnvironment or n is GeometryInstance3D) and in_shop(n):
+		return
+	if n.has_meta("noir_keep"):
 		return
 	if n is DirectionalLight3D:
 		_moons.append(n)

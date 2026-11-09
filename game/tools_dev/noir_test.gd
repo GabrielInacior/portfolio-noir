@@ -113,6 +113,18 @@ func _ready() -> void:
 		q.position = Vector3((side * 2 - 1) * 1.3, 1.0, -3.75)
 		q.material_override = addm if side == 0 else Noir.conv(addm)
 		add_child(q)
+	# toon (lojas): original com light() do motor x versão noir, mesma cor, perto da luz da esquerda/direita
+	for side in 2:
+		var tm := ShaderMaterial.new()
+		tm.shader = load("res://tools_dev/toon_ref.gdshader") if side == 0 else load("res://shaders/toon.gdshader")
+		tm.set_shader_parameter("albedo", Color("#8a6040"))
+		var tq := MeshInstance3D.new()
+		var tp := PlaneMesh.new()
+		tp.size = Vector2(2.4, 2.4)
+		tq.mesh = tp
+		tq.position = Vector3((side * 2 - 1) * 3.9, 0, 0)
+		tq.material_override = tm if side == 0 else Noir.conv(tm)
+		add_child(tq)
 	for side in 2:
 		var l := OmniLight3D.new()
 		l.light_color = Color("#ffcf99")
@@ -132,6 +144,8 @@ func _ready() -> void:
 	for py in [0.25, 0.4, 0.55, 0.7, 0.85, 0.95]:
 		var a := img.get_pixel(int(w * 0.45), int(h * py))
 		var b := img.get_pixel(int(w * 0.55), int(h * py))
+		if py == 0.55:
+			print("NOIRTEST toon motor=%s noir=%s" % [img.get_pixel(int(w * 0.2), int(h * py)), img.get_pixel(int(w * 0.8), int(h * py))])
 		print("NOIRTEST y=%.1f  motor=%s  noir=%s" % [py, a, b])
 	var out := OS.get_environment("NOIR_TEST")
 	if out != "":

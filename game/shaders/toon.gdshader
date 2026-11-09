@@ -5,9 +5,7 @@ shader_type spatial;
 // porque as cenas são caixas e cilindros sem UV boa. A textura é um mapa de valor neutro (média 0.5):
 // a cor continua vindo de "albedo", a textura só traz pincelada, tom e estrutura.
 // Custo: sem textura = 1 amostra (pincelada); com textura = +3 amostras. Nenhum laço.
-render_mode cull_back, unshaded;
-// mundo noir: sem luz do motor; a mesma conta de faixas roda aqui sobre as luzes-dados (noir_core)
-#include "res://shaders/noir/noir_core.gdshaderinc"
+render_mode cull_back;
 uniform vec4 albedo : source_color = vec4(0.4, 0.5, 0.75, 1.0);
 uniform vec4 shadow_tint : source_color = vec4(0.05, 0.09, 0.22, 1.0);
 uniform float brush = 0.18;
@@ -40,19 +38,6 @@ void vertex() {
 	wnrm = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
 }
 
-// faixa de luz quebrada pela pincelada + retícula (era a função light() do motor)
-vec3 toon_light(vec3 N, vec3 L, vec3 LC, float A, vec3 al, vec2 fc, float bv, vec3 wp) {
-	float n = bv >= 0.0 ? (bv - 0.5) * 1.6 : vnoise(wp * vec3(4.0, 12.0, 4.0)) - 0.5;
-	float ndl = dot(N, L) * 0.5 + 0.5;
-	float v = clamp(ndl * A + n * brush, 0.0, 1.0);
-	float band = v < 0.42 ? 0.0 : (v < 0.62 ? 0.45 : (v < 0.86 ? 0.8 : 1.05));
-	vec2 p = mat2(vec2(0.707, -0.707), vec2(0.707, 0.707)) * (fc / 6.0);
-	float dotd = length(fract(p) - 0.5);
-	float ht = step(dotd, (1.0 - v) * 0.42) * halftone;
-	vec3 lit = al * LC / PI * band;
-	return lit * (1.0 - ht * 0.45);
-}
-
 void fragment() {
 	vec3 col = albedo.rgb;
 	vec3 an = abs(normalize(wnrm));
@@ -77,29 +62,22 @@ void fragment() {
 		vec3 t = tx * w.x + ty * w.y + tz * w.z;
 		col *= mix(vec3(1.0), t * 2.0, tex_strength);
 	}
-	vec3 al = n_cubic(col);
-	vec3 P = (INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).xyz;
-	vec3 N = normalize((INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).xyz);
-	vec3 dif = vec3(0.0);
-	vec3 L;
-	vec3 lc;
-	float att;
-	float sp;
-	if (n_moon(L, lc)) {
-		dif += toon_light(N, L, lc, 1.0, al, FRAGCOORD.xy, bn, wpos);
-	}
-	int cnt = n_total();
-	for (int k = 0; k < 24; k++) {
-		if (k >= cnt) {
-			break;
-		}
-		int row = n_row_of(k);
-		if (row >= 0 && n_row(row, P, L, lc, att, sp)) {
-			dif += toon_light(N, L, lc, att, al, FRAGCOORD.xy, bn, wpos);
-		}
-	}
-	// o motor multiplicava a luz difusa pelo albedo de novo (DIFFUSE_LIGHT * albedo): mantido
-	vec3 lin = dif * al + n_cubic(emission_color.rgb * emission_energy) + n_ambient() * al;
-	ALBEDO = n_inv(lin);
+	ALBEDO = col;
+	EMISSION = emission_color.rgb * emission_energy;
+	ROUGHNESS = 1.0;
+	SPECULAR = 0.0;
 }
 
+void light() {
+	// borda da faixa de luz quebrada pela mesma pincelada da superfície (ou ruído, no personagem)
+	float n = bn >= 0.0 ? (bn - 0.5) * 1.6 : vnoise(wpos * vec3(4.0, 12.0, 4.0)) - 0.5;
+	float ndl = dot(NORMAL, LIGHT) * 0.5 + 0.5;
+	float v = clamp(ndl * ATTENUATION + n * brush, 0.0, 1.0);
+	float band = v < 0.42 ? 0.0 : (v < 0.62 ? 0.45 : (v < 0.86 ? 0.8 : 1.05));
+	// retícula: pontos aparecem onde a luz é fraca
+	vec2 p = mat2(vec2(0.707, -0.707), vec2(0.707, 0.707)) * (FRAGCOORD.xy / 6.0);
+	float dotd = length(fract(p) - 0.5);
+	float ht = step(dotd, (1.0 - v) * 0.42) * halftone;
+	vec3 lit = ALBEDO * LIGHT_COLOR / PI * band;
+	DIFFUSE_LIGHT += lit * (1.0 - ht * 0.45);
+}

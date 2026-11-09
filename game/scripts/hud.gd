@@ -770,9 +770,7 @@ func enter_museum(project: Dictionary) -> void:
 	_museum = Museum.new()
 	_museum.setup(project if project.get("special", "") != "career" else {"id": "_carreira", "title": "CARREIRA", "special": "career"}, d, project.get("special", "") == "about")
 	city.get_parent().add_child(_museum)
-	preload("res://scripts/render/noir.gd").convert_tree(_museum)
-	preload("res://scripts/render/noir.gd").assign_sets(_museum)
-	if UI.software() and not preload("res://scripts/render/noir.gd").enabled():
+	if UI.software():
 		for l in _museum.find_children("*", "Light3D", true, false):
 			(l as Light3D).visible = false
 	player.get_parent().remove_child(player)

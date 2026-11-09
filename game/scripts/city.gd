@@ -1848,7 +1848,7 @@ func _warm_up() -> void:
 				seen[m2.get_instance_id()] = true
 				items.append([m2, true])
 	# programas das LOJAS também (as lojas montam ao entrar; sem isto a 1ª porta congelava compilando)
-	for sp in ["toon", "code_scroll", "chart_screen", "led_panel", "matrix_rain", "arcade_attract", "face_atlas", "hover_outline", "outline"]:
+	for sp in ["code_scroll", "chart_screen", "led_panel", "matrix_rain", "arcade_attract", "face_atlas", "hover_outline", "outline"]:
 		var path := "res://shaders/%s.gdshader" % sp
 		if ResourceLoader.exists(path):
 			var wm := ShaderMaterial.new()
@@ -1895,8 +1895,41 @@ func _warm_up() -> void:
 	# 2) sem luz (variante dos objetos longe dos postes). A primeira cena real não compila mais nada.
 	var tl: Array = []
 	# mundo noir: nenhum material usa luz do motor, então não há variante com luz para aquecer
-	var rounds := 1 if Noir.enabled() else 2
+	# mundo noir: a cidade não usa luz do motor, mas as LOJAS usam (toon, StandardMaterial com luz):
+	# a 1ª volta, com luzes de teste, aquece só os sabores de material das lojas
+	var all_items := items
+	var lit_items: Array = []
+	if Noir.enabled():
+		var plain := StandardMaterial3D.new()
+		plain.roughness = 0.9
+		var texd := StandardMaterial3D.new()
+		texd.albedo_texture = load("res://assets/tex/carpete.png")
+		texd.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+		var texm := texd.duplicate() as StandardMaterial3D
+		texm.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+		var glass := StandardMaterial3D.new()
+		glass.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		glass.albedo_color = Color(0.1, 0.1, 0.2, 0.3)
+		var pv := StandardMaterial3D.new()
+		pv.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
+		pv.vertex_color_use_as_albedo = true
+		pv.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		pv.specular_mode = BaseMaterial3D.SPECULAR_DISABLED
+		var pvt := pv.duplicate() as StandardMaterial3D
+		pvt.vertex_color_use_as_albedo = false
+		pvt.albedo_texture = texd.albedo_texture
+		var face := pvt.duplicate() as StandardMaterial3D
+		face.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+		var toon := ShaderMaterial.new()
+		toon.shader = load("res://shaders/toon.gdshader")
+		for m in [plain, texd, texm, glass, pv, pvt, face, toon]:
+			m.set_meta("noir_skip_conv", true)
+			lit_items.append([m, false])
+	var rounds := 2 if (not Noir.enabled() or not lit_items.is_empty()) else 1
 	for rnd in rounds:
+		if Noir.enabled():
+			items = lit_items if rnd == 0 else all_items
+			total = items.size()
 		if rnd == 0 and rounds == 2:
 			var lo := OmniLight3D.new()
 			lo.light_energy = 0.01
@@ -1908,6 +1941,7 @@ func _warm_up() -> void:
 			ld.light_energy = 0.01
 			ld.shadow_enabled = false
 			for l in [lo, ls, ld]:
+				l.set_meta("noir_keep", true)   # luz real de verdade (aquece as variantes com luz das lojas)
 				holder.add_child(l)
 				tl.append(l)
 		elif rnd == 1:
