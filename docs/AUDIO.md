@@ -6,7 +6,7 @@ Página de revisão (ouvir candidatos e escolhidos): `C:\Users\gabri\Downloads\P
 (gerar de novo com `noir_prod.py page`).
 
 ## O que existe
-- **Trilha**: `assets/audio/music/bloodlines_ost.mp3` (OST própria), única música.
+- **Trilha**: `assets/audio/music/bloodlines_ost.mp3` ("Portfolio Music Noir", trilha original de Gabriel Inácio, 213 s, 128 kbps), única música.
 - **Ambientes 2D em loop** (`assets/audio/amb/`): chuva na rua, chuva forte, chuva na janela (interiores),
   cidade à noite, bar, sala de servidores, escritório do detetive, fliperama, estúdio, laboratório.
 - **Loops 3D**: zumbido de neon (em cada fachada de loja), vapor (em cada bueiro).

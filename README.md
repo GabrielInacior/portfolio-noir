@@ -53,5 +53,5 @@ Ver [`docs/PROXIMOS_PASSOS.md`](docs/PROXIMOS_PASSOS.md): personagens bespoke ma
 com esquinas e interiores entráveis, GitHub ao vivo com READMEs em telas 3D, vitrines em colagem,
 cartão GitHub/terminal para projetos sem imagem, e conteúdo do currículo/LinkedIn.
 
-Feito por [Gabriel Inácio](https://github.com/GabrielInacior). Trilha "Bloodlines" original. Nenhum
+Feito por [Gabriel Inácio](https://github.com/GabrielInacior). Trilha "Portfolio Music Noir" (trilha original de Gabriel Inácio). Nenhum
 asset pronto de terceiros.
