@@ -25,6 +25,11 @@ var far_limit := 34.0
 ## main.gd liga de novo e marca tudo de uma vez ao fim
 var auto_tag := true
 var enabled := true
+## o nítido sai do mundo retrô (cada letreiro/quadro desenhado uma vez só, aqui) e esta passada vai até o
+## fim da câmera; os oclusores da geometria fundida viram poucas malhas por célula (muito menos draw calls)
+## (testado: com o nítido só nesta passada e sem limite de distância, letreiros distantes vazavam por vidros
+## e frestas que o mundo retrô cobre; fica desligado e o ganho vem dos oclusores fundidos por célula)
+var exclusive := false
 
 
 ## PC sem placa: sem segunda renderização; o conteúdo nítido fica no mundo (resolução baixa)
@@ -88,7 +93,7 @@ func _process(_dt: float) -> void:
 		if _src_cam:
 			# o retrô não desenha os oclusores
 			_src_cam.cull_mask = _src_cam.cull_mask & ~OCC_LAYER
-	if _src_cam == null or get_tree().get_node_count_in_group("pf_modal") > 0:
+	if _src_cam == null or (not exclusive and get_tree().get_node_count_in_group("pf_modal") > 0):
 		rect.visible = false
 		return
 	rect.visible = true
@@ -97,7 +102,7 @@ func _process(_dt: float) -> void:
 	cam.near = _src_cam.near
 	# além de ~34 m o texto já é pequeno: lá o retrô mostra a mesma peça, e a passada nítida não
 	# precisa desenhar (nem os oclusores). Corta pela metade o custo desta passada na avenida.
-	cam.far = minf(_src_cam.far, far_limit)
+	cam.far = _src_cam.far if exclusive else minf(_src_cam.far, far_limit)
 	cam.keep_aspect = _src_cam.keep_aspect
 	_sync_env()
 
@@ -131,8 +136,77 @@ func _sync_env() -> void:
 func tag(root: Node) -> void:
 	if root == null or not is_instance_valid(root):
 		return
+	var occ := {}   # célula|alcance -> SurfaceTool (só posição) com a geometria fundida opaca
+	if OS.get_environment("SHARP_DEBUG") != "":
+		var kinds := {}
+		for n in root.find_children("*", "MeshInstance3D", true, false):
+			if n.has_meta("merged"):
+				var mo: Material = (n as MeshInstance3D).material_override
+				var kk := "%s|done=%s|sharp=%s" % [mo.get_meta("noir_kind", mo.get_class()) if mo else "-", n.has_meta("_sharp_done"), _is_sharp(n)]
+				kinds[kk] = int(kinds.get(kk, 0)) + 1
+		print("SHARP tipos dos fundidos: ", kinds)
 	for n in root.find_children("*", "GeometryInstance3D", true, false):
-		_classify(n as GeometryInstance3D)
+		var g := n as GeometryInstance3D
+		if enabled and OS.get_environment("SHARP_TWINS") == "" and g is MeshInstance3D and g.has_meta("merged") and not g.has_meta("_sharp_done") 				and (g as MeshInstance3D).mesh != null and not _is_sharp(g):
+			g.set_meta("_sharp_done", true)
+			if _surface_kinds(g as MeshInstance3D).has(false):
+				var c := g.global_transform * g.get_aabb()
+				# sem corte por distância no oclusor (a passada nítida termina antes, em far_limit)
+				var rg := 0.0
+				var ck := "%d,%d" % [floori(c.get_center().x / 32.0), floori(c.get_center().z / 32.0)]
+				if not occ.has(ck):
+					var st := SurfaceTool.new()
+					st.begin(Mesh.PRIMITIVE_TRIANGLES)
+					occ[ck] = [st, g.visibility_range_end]
+				var am := (g as MeshInstance3D).mesh
+				if OS.get_environment("SHARP_DEBUG") != "" and g.get_aabb().size.length() > 40.0:
+					print("SHARP grande: aabb=", g.global_transform * g.get_aabb(), " key=", ck, " vtx=", (am.surface_get_arrays(0)[Mesh.ARRAY_VERTEX] as PackedVector3Array).size(), " idx=", am.surface_get_arrays(0)[Mesh.ARRAY_INDEX] != null)
+				for i in am.get_surface_count():
+					var arr := am.surface_get_arrays(i)
+					var only := []
+					only.resize(Mesh.ARRAY_MAX)
+					only[Mesh.ARRAY_VERTEX] = arr[Mesh.ARRAY_VERTEX]
+					# tudo indexado: SurfaceTool.append_from com malhas mistas (com e sem índice) perde as sem
+					# índice (o resultado vira indexado e os vértices antigos ficam sem triângulo)
+					var ix: Variant = arr[Mesh.ARRAY_INDEX]
+					if ix == null:
+						ix = PackedInt32Array(range((arr[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()))
+					only[Mesh.ARRAY_INDEX] = ix
+					var pm := ArrayMesh.new()
+					pm.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, only)
+					(occ[ck][0] as SurfaceTool).append_from(pm, 0, g.global_transform)
+			continue
+		_classify(g)
+	for ck in occ:
+		var mi := MeshInstance3D.new()
+		mi.mesh = (occ[ck][0] as SurfaceTool).commit()
+		if OS.get_environment("SHARP_DEBUG") != "":
+			print("SHARP oclusor ", ck, " vtx=", (mi.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX] as PackedVector3Array).size() if mi.mesh and mi.mesh.get_surface_count() > 0 else -1, " aabb=", mi.mesh.get_aabb() if mi.mesh else null)
+		mi.material_override = _occ_mat
+		mi.layers = OCC_LAYER
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.set_meta("_sharp_done", true)
+		if float(occ[ck][1]) > 0.0:
+			mi.visibility_range_end = float(occ[ck][1])
+			mi.visibility_range_end_margin = 4.0
+		root.add_child(mi)
+		mi.global_transform = Transform3D.IDENTITY
+	if not occ.is_empty():
+		var nm := 0
+		var ns := 0
+		var nt := 0
+		for n in root.find_children("*", "MeshInstance3D", true, false):
+			if n.has_meta("merged"):
+				nm += 1
+				if (n as GeometryInstance3D).layers & SHARP_LAYER:
+					ns += 1
+					if ns < 12 and OS.get_environment("SHARP_DEBUG") != "":
+						var mm0: Material = (n as MeshInstance3D).material_override
+						var tx: Variant = (mm0 as ShaderMaterial).get_shader_parameter("albedo_tex") if mm0 is ShaderMaterial else null
+						print("SHARP nítido fundido: ", mm0.get_meta("noir_kind", "?") if mm0 else "-", " tex=", tx.resource_path if tx is Texture2D else str(tx), " w=", tx.get_width() if tx is Texture2D else 0, " aabb=", (n as GeometryInstance3D).get_aabb().size)
+				elif not _surface_kinds(n as MeshInstance3D).has(false):
+					nt += 1
+		print("SHARP oclusores fundidos: %d malhas (fundidos %d, nítidos %d, transparentes %d)" % [occ.size(), nm, ns, nt])
 
 
 func _on_node_added(n: Node) -> void:
@@ -164,7 +238,7 @@ func _classify(g: GeometryInstance3D) -> void:
 		return
 	g.set_meta("_sharp_done", true)
 	if _is_sharp(g):
-		g.layers = g.layers | SHARP_LAYER
+		g.layers = SHARP_LAYER if exclusive else g.layers | SHARP_LAYER
 		return
 	# oclusor: TUDO que o mundo desenha com volume (cenário, carros, pedestres com esqueleto, props,
 	# MultiMesh). Superfícies transparentes (vidro, halos) ficam de fora por superfície, não a malha
@@ -230,7 +304,9 @@ func _surface_kinds(mi: MeshInstance3D) -> Array:
 	for i in mi.mesh.get_surface_count():
 		var m: Material = mi.material_override if mi.material_override else mi.get_active_material(i)
 		var see := false
-		if m is BaseMaterial3D:
+		if m is ShaderMaterial and m.has_meta("noir_kind"):
+			see = str(m.get_meta("noir_kind")) in ["blend", "add"]
+		elif m is BaseMaterial3D:
 			var bm := m as BaseMaterial3D
 			see = bm.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED and bm.transparency != BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR \
 				or bm.blend_mode != BaseMaterial3D.BLEND_MODE_MIX
@@ -240,6 +316,8 @@ func _surface_kinds(mi: MeshInstance3D) -> Array:
 
 func _all_see_through_mm(mm: MultiMeshInstance3D) -> bool:
 	var m := mm.material_override
+	if m is ShaderMaterial and m.has_meta("noir_kind"):
+		return str(m.get_meta("noir_kind")) in ["blend", "add"]
 	if m is BaseMaterial3D:
 		var bm := m as BaseMaterial3D
 		return bm.transparency == BaseMaterial3D.TRANSPARENCY_ALPHA or bm.blend_mode != BaseMaterial3D.BLEND_MODE_MIX
@@ -292,8 +370,12 @@ func _is_sharp(g: GeometryInstance3D) -> bool:
 			for s in SHARP_SHADERS:
 				if sp.find(s) >= 0:
 					return true
-		if m is StandardMaterial3D:
-			var t: Texture2D = (m as StandardMaterial3D).albedo_texture
+		var t: Texture2D = null
+		if m is ShaderMaterial and m.has_meta("noir_kind"):
+			t = (m as ShaderMaterial).get_shader_parameter("albedo_tex")
+		elif m is StandardMaterial3D:
+			t = (m as StandardMaterial3D).albedo_texture
+		if m is StandardMaterial3D or m.has_meta("noir_kind"):
 			if t == null:
 				continue
 			if t is ViewportTexture:
