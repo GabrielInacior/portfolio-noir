@@ -1,6 +1,6 @@
 // Gerado por tools/deploy/make_boot.py
 (function () {
-  var CFG = {"canvasResizePolicy": 2, "emscriptenPoolSize": 8, "executable": "/jogo/index.4654e8f792", "experimentalVK": false, "fileSizes": {"/jogo/index.4654e8f792.wasm": 34731138, "/jogo/index.a845464485.pck": 9607212}, "focusCanvas": true, "gdextensionLibs": [], "godotPoolSize": 4, "mainPack": "/jogo/index.a845464485.pck", "pfPacks": {"music": {"url": "/jogo/index.89c6c488c5.pck", "size": 3502220}, "shops": {"url": "/jogo/index.7fe448b697.pck", "size": 5941520}}, "pfLang": {"pt": {"url": "/jogo/index.c8c3ce34a6.pck", "size": 2070888}, "en": {"url": "/jogo/index.587be347c1.pck", "size": 2059144}}}, JSURL = "/jogo/index.ffcdec5055.js";
+  var CFG = {"canvasResizePolicy": 2, "emscriptenPoolSize": 8, "executable": "/jogo/index.4654e8f792", "experimentalVK": false, "fileSizes": {"/jogo/index.4654e8f792.wasm": 34731138, "/jogo/index.3db016e4fc.pck": 9614096}, "focusCanvas": true, "gdextensionLibs": [], "godotPoolSize": 4, "mainPack": "/jogo/index.3db016e4fc.pck", "pfPacks": {"music": {"url": "/jogo/index.89c6c488c5.pck", "size": 3502220}, "shops": {"url": "/jogo/index.7fe448b697.pck", "size": 5941520}}, "pfMusic": "/jogo/music.7b04e9643b.mp3", "pfLang": {"pt": {"url": "/jogo/index.c8c3ce34a6.pck", "size": 2070888}, "en": {"url": "/jogo/index.587be347c1.pck", "size": 2059144}}}, JSURL = "/jogo/index.ffcdec5055.js";
   var T0 = 0, TM = {};  // marcas em ms desde o início da navegação
   window.__pf = { t: TM };
   function mark(k) { if (!(k in TM)) { TM[k] = Math.round(performance.now() - T0); try { console.log('[pf] ' + k + ' ' + TM[k] + ' ms'); } catch (e) {} } }
@@ -214,7 +214,8 @@
       var engine = new Engine(Object.assign({}, CFG, { canvas: canvas, args: args.length ? ['--'].concat(args) : [] }));
       window.__pfEngine = engine;
       // pacotes em segundo plano (música, lojas): baixam depois do principal e entram no sistema de arquivos do motor
-      var queue = ['lang', 'music', 'shops'];
+      var queue = ['lang', 'shops'];
+      window.pfMusicUrl = CFG.pfMusic || '';
       var PK = { lang: langPack, music: CFG.pfPacks.music, shops: CFG.pfPacks.shops };
       function whenEngine(fn) { if (engine.rtenv) fn(); else setTimeout(function () { whenEngine(fn); }, 100); }
       function nextPack() {
