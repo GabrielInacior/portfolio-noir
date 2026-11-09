@@ -74,7 +74,7 @@ cfg.pop("ensureCrossOriginIsolationHeaders", None)
 # ---- 2. carregador
 JS = r"""(function () {
   var CFG = __CFG__, JSURL = "__JS__";
-  var T0 = performance.now(), TM = {};
+  var T0 = 0, TM = {};  // marcas em ms desde o início da navegação
   window.__pf = { t: TM };
   function mark(k) { if (!(k in TM)) { TM[k] = Math.round(performance.now() - T0); try { console.log('[pf] ' + k + ' ' + TM[k] + ' ms'); } catch (e) {} } }
   var path = location.pathname;
@@ -327,10 +327,10 @@ open(os.path.join(JOGO, "boot.js"), "w", encoding="utf8").write("// Gerado por t
 # ---- 3. páginas: preload do wasm/pck/js + carregador inline
 PRE = (
     '<link rel="preload" href="/jogo/%s" as="script">'
-    '<link rel="preload" href="/jogo/%s.wasm" as="fetch" type="application/wasm" crossorigin>'
-    '<link rel="preload" href="%s" as="fetch" crossorigin>'
+    '<link rel="preload" href="/jogo/%s.wasm" as="fetch" type="application/wasm" crossorigin fetchpriority="low">'
+    '<link rel="preload" href="%s" as="fetch" crossorigin fetchpriority="low">'
     '<script>(function(){var s="";try{s=localStorage.getItem("pf_lang")||""}catch(e){}var en=s?s.indexOf("pt")!==0:true;'
-    'var l=document.createElement("link");l.rel="preload";l.as="fetch";l.crossOrigin="anonymous";'
+    'var l=document.createElement("link");l.rel="preload";l.as="fetch";l.crossOrigin="anonymous";l.setAttribute("fetchpriority","low");'
     'l.href=en?"%s":"%s";document.head.appendChild(l)})()</script>'
 ) % (newjs, newbase, pk["main"]["url"], pk["lang_en"]["url"], pk["lang_pt"]["url"])
 tag = '<script defer src="/jogo/boot.js"></script>'

@@ -1,7 +1,7 @@
 // Gerado por tools/deploy/make_boot.py
 (function () {
   var CFG = {"canvasResizePolicy": 2, "emscriptenPoolSize": 8, "executable": "/jogo/index.35116f6854", "experimentalVK": false, "fileSizes": {"/jogo/index.35116f6854.wasm": 39513091, "/jogo/index.109b2beb54.pck": 9559392}, "focusCanvas": true, "gdextensionLibs": [], "godotPoolSize": 4, "mainPack": "/jogo/index.109b2beb54.pck", "pfPacks": {"music": {"url": "/jogo/index.b496b3e6c7.pck", "size": 3803580}, "shops": {"url": "/jogo/index.7fe448b697.pck", "size": 5941520}}, "pfLang": {"pt": {"url": "/jogo/index.c8c3ce34a6.pck", "size": 2070888}, "en": {"url": "/jogo/index.587be347c1.pck", "size": 2059144}}}, JSURL = "/jogo/index.68586d6daa.js";
-  var T0 = performance.now(), TM = {};
+  var T0 = 0, TM = {};  // marcas em ms desde o início da navegação
   window.__pf = { t: TM };
   function mark(k) { if (!(k in TM)) { TM[k] = Math.round(performance.now() - T0); try { console.log('[pf] ' + k + ' ' + TM[k] + ' ms'); } catch (e) {} } }
   var path = location.pathname;
