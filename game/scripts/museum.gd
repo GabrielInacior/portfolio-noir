@@ -95,7 +95,7 @@ func _build_env(look: Dictionary) -> void:
 	e.adjustment_enabled = true
 	e.adjustment_saturation = 1.18
 	e.adjustment_contrast = 1.1
-	if not UI.is_mobile():
+	if not UI.is_mobile() and not UI.software():
 		e.glow_enabled = true
 		e.glow_intensity = 0.7
 		e.glow_bloom = 0.08

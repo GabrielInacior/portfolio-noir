@@ -706,13 +706,60 @@ func _modal_closed() -> void:
 
 
 # ───────────────────────────────── entrar e sair da loja-museu
+var _veil: ColorRect
+var _entering := false
+
+
+## véu preto: esconde o trabalho pesado de montar a sala (antes a tela congelava por 100 a 500 ms ao abrir a porta)
+func _veil_in() -> void:
+	if _veil == null:
+		_veil = ColorRect.new()
+		_veil.color = Color(0.02, 0.02, 0.05, 0.0)
+		_veil.mouse_filter = Control.MOUSE_FILTER_STOP
+		add_child(UI.full(_veil))
+		var vl := Label.new()
+		vl.text = "ENTERING..." if L.lang == "en" else "ENTRANDO..."
+		vl.add_theme_font_size_override("font_size", 22)
+		vl.add_theme_color_override("font_color", Color(1, 0.78, 0.24))
+		vl.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+		vl.grow_horizontal = Control.GROW_DIRECTION_BOTH
+		_veil.add_child(vl)
+	move_child(_veil, get_child_count() - 1)
+	_veil.visible = true
+	var tw := create_tween()
+	tw.tween_property(_veil, "color:a", 1.0, 0.16)
+	await tw.finished
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+
+func _veil_out() -> void:
+	# quadros extras com a sala já montada por baixo do véu: os shaders novos compilam escondidos
+	for _i in 3:
+		await get_tree().process_frame
+	var tw := create_tween()
+	tw.tween_property(_veil, "color:a", 0.0, 0.3)
+	await tw.finished
+	_veil.visible = false
+
+
 func enter_museum(project: Dictionary) -> void:
+	if _entering:
+		return
+	if not Packs.ready_pack("shops"):
+		# as lojas chegam em segundo plano; em rede lenta o jogador espera aqui
+		if prompt_label:
+			prompt.visible = true
+			prompt_label.text = "Loading the shop..." if L.lang == "en" else "Carregando a loja..."
+		await Packs.need("shops")
 	var id := "_lab" if project.get("special", "") == "about" else ("_carreira" if project.get("special", "") == "career" else str(project.get("id", "")))
 	var path := "res://assets/museum/_items/%s.json" % id
 	if not FileAccess.file_exists(path):
 		open_dossier(project)
 		return
 	var d: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
+	_entering = true
+	await _veil_in()
 	if city:
 		city.mark_visited(project)
 	_set_npc_hot(null)
@@ -723,6 +770,9 @@ func enter_museum(project: Dictionary) -> void:
 	_museum = Museum.new()
 	_museum.setup(project if project.get("special", "") != "career" else {"id": "_carreira", "title": "CARREIRA", "special": "career"}, d, project.get("special", "") == "about")
 	city.get_parent().add_child(_museum)
+	if UI.software():
+		for l in _museum.find_children("*", "Light3D", true, false):
+			(l as Light3D).visible = false
 	player.get_parent().remove_child(player)
 	_museum.add_child(player)
 	player.global_position = _museum.spawn_pos()
@@ -740,6 +790,8 @@ func enter_museum(project: Dictionary) -> void:
 	_hide_prompt()
 	_sync_mode()
 	UI.toast(self, L.t("Use as setas da barra para o tour guiado"), _museum._accent)
+	await _veil_out()
+	_entering = false
 
 
 func exit_museum() -> void:

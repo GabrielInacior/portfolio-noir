@@ -160,3 +160,15 @@ Pendentes desta rodada (pedidos do usuário que chegaram no meio):
 - Falta: .pck 26,6 MB (meta 15): reduzir atlas/áudio/GLB; VRAM 290 MB (meta 250/120): VRAM comprimida só para atlas
   da língua ativa (carregar um .pck por língua ou ETC2 apenas) e cortar buffers de pós no batata;
   OccluderInstance3D e visibility_range por quarteirão; pausar telões/tráfego fora da vista; medir em celular real.
+
+
+## Desempenho (nov 2026): o que falta
+Ver `docs/PERFORMANCE.md` (seção "Rodada de carregamento e travadas"). Em ordem de ganho esperado:
+1. **Compilação de shader na 1ª visita (Windows)**: reduzir as variantes de StandardMaterial3D/ShaderMaterial (textura, emissão,
+   filtro, triplanar, transparência) nos helpers de `city.gd` e `museum*.gd`, ou template de exportação customizado do Godot 4.7.1 com
+   `KHR_parallel_shader_compile`. Medir com `WARM_PROFILE=1` e `cdp_perf.js --logs`.
+2. **Draw calls da avenida (522 + 337 da passada nítida)**: a CPU do quadro (~19 ms) é submissão de draw calls no WebGL do wasm.
+   Trocar a passada nítida (2ª viewport) por materiais nítidos no próprio mundo e fundir mais por quarteirão (`merge.gd`).
+3. **Meta de 12 MB antes do ENTRAR**: wasm de 9,5 MB comprimido; template customizado sem módulos não usados ou brotli 11 pré-comprimido.
+4. **Áudio**: a música ainda passa pelo mixer do Godot (engasga no web sem threads); tocar por Web Audio nativo a partir do pacote `music`.
+5. **SwiftShader**: 15,5 fps na cidade; falta cortar draw calls e vértices por software (alvo 20 fps).

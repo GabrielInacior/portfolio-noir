@@ -12,10 +12,16 @@ var _gate: Control
 
 func _ready() -> void:
 	_setup_input()
+	if UI.software():
+		# sem placa de vídeo: 30 quadros por segundo dão fôlego à CPU, e o 3D desenha em 240 px de altura
+		Engine.max_fps = 30
+		_potato_h = 240
 	# tela lógica por orientação: celular em pé 720x1280; deitado baixo (celular) 960x540; PC 1280x720
 	get_window().size_changed.connect(_fit_scale)
 	_fit_scale()
 	_build_world_view()
+	# os anúncios e outdoors do idioma vêm num pacote pequeno que baixa em paralelo com o principal
+	await Packs.need("lang")
 	city = City.new()
 	# na web (ou com PFSLICE=1) a cidade monta em fatias, com progresso para o carregador da página
 	city.sliced = OS.has_feature("web") or OS.get_environment("PFSLICE") != ""
@@ -29,9 +35,12 @@ func _ready() -> void:
 	_world_vp.add_child(city)
 	if not city.is_built:
 		await city.built
-	_sharp.auto_tag = true
 	_world_vp.render_target_update_mode = draw_mode
-	_sharp.vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	if UI.software():
+		_sharp.disable()
+	else:
+		_sharp.auto_tag = true
+		_sharp.vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	_sharp.tag(city)
 	_apply_quality()
 	var layer := CanvasLayer.new()
@@ -229,16 +238,30 @@ func _fit_scale() -> void:
 
 
 ## perfil de qualidade aplicado ao que não é montagem: distância da passada nítida, câmera, névoa, brilho
+## PC sem placa (SwiftShader/llvmpipe): medido no SwiftShader, luzes reais custam ~45 ms por quadro, MultiMesh
+## de janelas/skyline ~58 ms e a malha fundida ~68 ms. Aqui só se corta o que for preciso: sem luz real (o
+## neon é emissivo), 45% das instâncias de janelas e skyline, nada além de 55 m.
+func _apply_software() -> void:
+	for n in city.find_children("*", "Light3D", true, false):
+		(n as Light3D).visible = false
+	for n in city.find_children("*", "MultiMeshInstance3D", true, false):
+		var mm := (n as MultiMeshInstance3D).multimesh
+		if mm and mm.instance_count > 40:
+			mm.visible_instance_count = int(mm.instance_count * 0.45)
+
+
 func _apply_quality() -> void:
+	if UI.software() and city:
+		_apply_software()
 	var q := UI.quality()
 	_sharp.far_limit = [16.0, 34.0, 40.0][q]
 	if city and city.player and city.player.cam:
-		city.player.cam.far = [70.0, 140.0, 160.0][q]
+		city.player.cam.far = 38.0 if UI.software() else [70.0, 140.0, 160.0][q]
 	for n in city.find_children("*", "WorldEnvironment", true, false) if city else []:
 		var e: Environment = (n as WorldEnvironment).environment
 		if e and q == 0:
 			e.glow_enabled = false
-			e.fog_depth_end = 62.0
+			e.fog_depth_end = 34.0 if UI.software() else 62.0
 	_fit_world()
 
 
@@ -390,7 +413,24 @@ func _ab(args: Array) -> void:
 			var ob := RenderingServer.viewport_get_render_info(rid, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE, RenderingServer.VIEWPORT_RENDER_INFO_OBJECTS_IN_FRAME)
 			var pr := RenderingServer.viewport_get_render_info(rid, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE, RenderingServer.VIEWPORT_RENDER_INFO_PRIMITIVES_IN_FRAME)
 			var dc2 := RenderingServer.viewport_get_render_info(rid2, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE, RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME)
+			var txt := "dc=%d obj=%d prim=%d sharp_dc=%d vram=%dMB" % [dc, ob, pr, dc2, RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_VIDEO_MEM_USED) / 1048576]
+			JavaScriptBridge.eval("window.__pfInfo=%s" % JSON.stringify(txt), true)
 			print("PFINFO dc=%d obj=%d prim=%d sharp_dc=%d vram=%dMB tex=%dMB buf=%dMB" % [dc, ob, pr, dc2, RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_VIDEO_MEM_USED) / 1048576, RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TEXTURE_MEM_USED) / 1048576, RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_BUFFER_MEM_USED) / 1048576])
+		"shop":
+			var sid := str(args[2]) if args.size() > 2 else ""
+			var pj := {}
+			if sid == "sobre":
+				pj = {"id": "sobre", "title": "LAB", "special": "about"}
+			elif sid == "carreira":
+				pj = {"id": "carreira", "title": "CARREIRA", "special": "career"}
+			else:
+				for p in Data.projects:
+					if str(p.get("id", "")) == sid:
+						pj = p
+			if on and not pj.is_empty():
+				hud.enter_museum(pj)
+			elif not on:
+				hud.exit_museum()
 		"sfxtick":
 			get_node("/root/Audio").set_process(on)
 		"cars":

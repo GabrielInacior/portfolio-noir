@@ -24,6 +24,8 @@ fi
 "$GODOT" --headless --audio-driver Dummy --path . --export-release "Web" ../site/jogo/index.html 2>&1 | grep -E "ERROR|error" | grep -v "^$" | head -20 || true
 cd "$ROOT"
 # boot.js: o jogo abre por cima de todas as páginas (home, /en/, projetos)
+python tools/deploy/pck_split.py site/jogo/index.pck site/jogo
+rm -f site/jogo/index.pck
 python tools/deploy/make_boot.py
 cp game/shell/cursor_*.png site/jogo/ 2>/dev/null || true
 test -f site/jogo/index.wasm && test -f site/jogo/index.pck

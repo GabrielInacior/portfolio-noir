@@ -24,6 +24,16 @@ var far_limit := 34.0
 ## desligado durante a montagem fatiada da cidade (os gêmeos oclusores entrariam na fusão de malhas);
 ## main.gd liga de novo e marca tudo de uma vez ao fim
 var auto_tag := true
+var enabled := true
+
+
+## PC sem placa: sem segunda renderização; o conteúdo nítido fica no mundo (resolução baixa)
+func disable() -> void:
+	enabled = false
+	auto_tag = false
+	set_process(false)
+	vp.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	rect.visible = false
 
 
 func setup(p_world_vp: SubViewport, under_layer: CanvasLayer) -> void:
@@ -148,6 +158,8 @@ func _tag_one_later(n: Node) -> void:
 
 
 func _classify(g: GeometryInstance3D) -> void:
+	if not enabled:
+		return
 	if g == null or not is_instance_valid(g) or g.has_meta("_sharp_done"):
 		return
 	g.set_meta("_sharp_done", true)

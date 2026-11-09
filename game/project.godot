@@ -16,6 +16,7 @@ boot_splash/show_image=false
 L="*res://scripts/i18n.gd"
 Data="*res://scripts/data.gd"
 UI="*res://scripts/ui.gd"
+Packs="*res://scripts/packs.gd"
 Audio="*res://scripts/audio.gd"
 GithubLive="*res://scripts/data/github_live.gd"
 

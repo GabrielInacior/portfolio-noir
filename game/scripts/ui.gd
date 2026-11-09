@@ -476,9 +476,27 @@ static func set_look_sens(v: float) -> void:
 static var _quality := -1
 
 
+static var _soft := -1
+
+
+## PC sem placa de vídeo: o navegador desenha o WebGL na CPU (SwiftShader, llvmpipe, Basic Render Driver).
+## O carregador da página detecta e passa `sw=1`; `PF_SOFT=1` força em testes. Aí o gargalo é pixel, não
+## draw call: perfil mais leve (ver main.gd e sharp_pass.gd).
+static func software() -> bool:
+	if _soft < 0:
+		_soft = 1 if OS.get_environment("PF_SOFT") != "" or "sw=1" in OS.get_cmdline_user_args() or "--sw=1" in OS.get_cmdline_user_args() else 0
+		if OS.has_feature("web") and _soft == 0:
+			var v: Variant = JavaScriptBridge.eval("(function(){try{var q=new URLSearchParams(location.search).get('q');return q==='sw'||(window.pfGPU&&window.pfGPU.soft)?1:0}catch(e){return 0}})()", true)
+			_soft = 1 if int(v if v != null else 0) == 1 else 0
+	return _soft == 1
+
+
 static func quality() -> int:
 	if _quality >= 0:
 		return _quality
+	if software():
+		_quality = 0
+		return 0
 	var force := OS.get_environment("PF_QUALITY")
 	if OS.has_feature("web") and force == "":
 		var v: Variant = JavaScriptBridge.eval("(function(){try{var q=new URLSearchParams(location.search).get('q');return q||localStorage.getItem('pf_q')||''}catch(e){return ''}})()", true)

@@ -3,7 +3,7 @@ dobrava o pck, então ficou de fora; mipmaps só onde a imagem é vista de longe
 Os .import não são versionados, então o build reaplica isto antes de importar."""
 import glob, os, re
 root = os.path.join(os.path.dirname(__file__), '..', '..', 'game', 'assets')
-pats = ['ads/*.png', 'billboards/*.png', 'covers/*.png', 'museum/**/*.png', 'museum/**/*.jpg',
+pats = ['ads/*.png', 'billboards/*.png', 'covers/*.png', 'covers/*.jpg', 'museum/**/*.png', 'museum/**/*.jpg',
         'data/collages/*.png', 'flyers/*.jpg', 'sky_night.png', 'foto_gabriel.png']
 n = 0
 for p in pats:

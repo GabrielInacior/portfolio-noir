@@ -134,7 +134,7 @@ func _ready() -> void:
 	await _prog(0.78, "Optimizing the geometry")
 	# teto de segmentos nas primitivas e partículas sem sombra (ver lowpoly.gd)
 	await LowPoly.node(self, _slice)
-	await LowPoly.cull_by_size(self, 18.0 if _light else 24.0, 32.0 if _light else 42.0, _slice)
+	await LowPoly.cull_by_size(self, _near(), _mid(), _slice)
 	# fusão das malhas estáticas por célula+material (de ~3.700 nós para algumas centenas de draw calls)
 	if OS.get_environment("NOMERGE") == "":
 		var ex: Array = []
@@ -172,10 +172,10 @@ func _ready() -> void:
 			dm.append(tv["mat"])
 		for bl in _blinkers:
 			dm.append(bl["m"])
-		var r: Dictionary = await Merge.merge(self, ex, 18.0 if _light else 24.0, 32.0 if _light else 42.0, dm, _slice)
+		var r: Dictionary = await Merge.merge(self, ex, _near(), _mid(), dm, _slice)
 		print("MERGE cidade: %d malhas -> %d" % [r["in"], r["out"]])
 	print("PFT nodes: mesh=%d label=%d mm=%d light=%d part=%d" % [find_children("*", "MeshInstance3D", true, false).size(), find_children("*", "Label3D", true, false).size(), find_children("*", "MultiMeshInstance3D", true, false).size(), find_children("*", "Light3D", true, false).size(), find_children("*", "CPUParticles3D", true, false).size()])
-	await _prog(0.82, "Warming up shaders")
+	await _warm_up()
 	is_built = true
 	built.emit()
 
@@ -1782,6 +1782,145 @@ var _splash_node: CPUParticles3D
 
 
 # ═════════════════════════════════════════════ jogador
+## alcance de desenho por classe de tamanho (peças pequenas somem cedo); sem placa de vídeo é ainda menor
+func _near() -> float:
+	return 9.0 if UI.software() else (18.0 if _light else 24.0)
+
+
+func _mid() -> float:
+	return 16.0 if UI.software() else (32.0 if _light else 42.0)
+
+
+## Aquecimento de shaders: no primeiro desenho o driver compila um programa por material (sem cache de
+## shader, na primeira visita, isso era um único congelamento de 30 s). Aqui cada material único aparece
+## num quadradinho diante da câmera, poucos por quadro, com a cidade escondida; o carregador mostra a
+## porcentagem real e a thread nunca fica parada mais que um programa.
+func _warm_up() -> void:
+	var seen := {}
+	var items: Array = []
+	for n in find_children("*", "GeometryInstance3D", true, false):
+		if n is MeshInstance3D and (n as MeshInstance3D).mesh != null:
+			var mi := n as MeshInstance3D
+			for i in mi.mesh.get_surface_count():
+				var m: Material = mi.material_override if mi.material_override else mi.get_active_material(i)
+				if m != null and not seen.has(m.get_instance_id()):
+					seen[m.get_instance_id()] = true
+					items.append([m, false])
+		elif n is MultiMeshInstance3D and (n as MultiMeshInstance3D).multimesh != null:
+			var mm := n as MultiMeshInstance3D
+			var m2: Material = mm.material_override if mm.material_override else mm.multimesh.mesh.surface_get_material(0)
+			if m2 != null and not seen.has(m2.get_instance_id()):
+				seen[m2.get_instance_id()] = true
+				items.append([m2, true])
+	var vp := get_viewport() as SubViewport
+	if not sliced or vp == null or player == null or player.cam == null:
+		return
+	# visita repetida: o driver já guarda os programas compilados (cache de disco do navegador) e a mesma
+	# versão do jogo na mesma placa de vídeo não precisa do aquecimento
+	var warm_key := ""
+	if OS.has_feature("web"):
+		warm_key = str(JavaScriptBridge.eval("(function(){try{return window.pfBuild||''}catch(e){return ''}})()", true))
+		var done_key: Variant = JavaScriptBridge.eval("(function(){try{return localStorage.getItem('pf_warm')||''}catch(e){return ''}})()", true)
+		if warm_key != "" and str(done_key) == warm_key:
+			print("PFT warm-up dispensado (visita repetida)")
+			return
+	var old_mode := vp.render_target_update_mode
+	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	visible = false
+	var holder := Node3D.new()
+	get_parent().add_child(holder)
+	var cam := player.cam
+	var fwd := -cam.global_transform.basis.z
+	holder.global_position = cam.global_position + fwd * 1.5
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.05, 0.05)
+	var mmq := MultiMesh.new()
+	mmq.transform_format = MultiMesh.TRANSFORM_3D
+	mmq.mesh = quad
+	mmq.instance_count = 1
+	var total := items.size()
+	var slow := 0
+	var take_n := 6
+	var prof := {}
+	var t_all := Time.get_ticks_usec()
+	# duas voltas: 1) com luzes de teste por perto (variante de shader com luz omni, spot e direcional);
+	# 2) sem luz (variante dos objetos longe dos postes). A primeira cena real não compila mais nada.
+	var tl: Array = []
+	for rnd in 2:
+		if rnd == 0:
+			var lo := OmniLight3D.new()
+			lo.light_energy = 0.01
+			lo.omni_range = 6.0
+			var ls := SpotLight3D.new()
+			ls.light_energy = 0.01
+			ls.spot_range = 6.0
+			var ld := DirectionalLight3D.new()
+			ld.light_energy = 0.01
+			ld.shadow_enabled = false
+			for l in [lo, ls, ld]:
+				holder.add_child(l)
+				tl.append(l)
+		elif rnd == 1:
+			for l in tl:
+				l.queue_free()
+		var i := 0
+		while i < total:
+			var t0 := Time.get_ticks_usec()
+			var batch := 0
+			var nodes: Array = []
+			# poucos por quadro enquanto os shaders forem lentos; mais quando já estão em cache
+			var take := clampi(take_n, 1, 64)
+			while batch < take and i < total:
+				var it: Array = items[i]
+				i += 1
+				batch += 1
+				var node: GeometryInstance3D
+				if it[1]:
+					var mmi := MultiMeshInstance3D.new()
+					mmi.multimesh = mmq
+					node = mmi
+				else:
+					node = MeshInstance3D.new()
+					(node as MeshInstance3D).mesh = quad
+				node.material_override = it[0]
+				node.position = Vector3(randf_range(-0.3, 0.3), randf_range(-0.2, 0.2), 0)
+				holder.add_child(node)
+				nodes.append(node)
+			await get_tree().process_frame
+			var dt := (Time.get_ticks_usec() - t0) / 1000
+			slow = 1 if dt > 90 else 0
+			# programas em cache (visita repetida): lotes crescem; compilando: um por quadro
+			take_n = 1 if dt > 90 else (take_n * 2 if dt < 40 else take_n)
+			if OS.get_environment("WARM_PROFILE") != "":
+				var mt: Material = (nodes[0] as GeometryInstance3D).material_override
+				var desc := mt.get_class()
+				if mt is ShaderMaterial and (mt as ShaderMaterial).shader:
+					desc += " " + (mt as ShaderMaterial).shader.resource_path.get_file()
+				elif mt is StandardMaterial3D:
+					var sm := mt as StandardMaterial3D
+					desc += " shade=%d tr=%d emis=%s tex=%s vc=%s cull=%d" % [sm.shading_mode, sm.transparency, sm.emission_enabled, sm.albedo_texture != null, sm.vertex_color_use_as_albedo, sm.cull_mode]
+				if nodes[0] is MultiMeshInstance3D:
+					desc += " MM"
+				var e: Array = prof.get(desc, [0, 0])
+				e[0] += batch
+				e[1] += dt
+				prof[desc] = e
+			for nd in nodes:
+				nd.queue_free()
+			if i / 8 != (i - batch) / 8 or i >= total:
+				await _prog(0.82 + 0.16 * float(rnd * total + i) / maxf(1.0, float(2 * total)), "Warming up shaders")
+	holder.queue_free()
+	var keys := prof.keys()
+	keys.sort_custom(func(x, y) -> bool: return prof[x][1] > prof[y][1])
+	for k in keys.slice(0, 14):
+		print("PFTPROF %5d ms  x%-3d %s" % [prof[k][1], prof[k][0], k])
+	print("PFT warm-up: %d materiais, %d ms" % [total, (Time.get_ticks_usec() - t_all) / 1000])
+	visible = true
+	vp.render_target_update_mode = old_mode
+	if warm_key != "":
+		JavaScriptBridge.eval("try{localStorage.setItem('pf_warm',%s)}catch(e){}" % JSON.stringify(warm_key), true)
+
+
 func _spawn_player() -> void:
 	player = Player.new()
 	add_child(player)

@@ -57,15 +57,24 @@ var _toggle_y := {}
 func _ready() -> void:
 	_setup_buses()
 	_player = AudioStreamPlayer.new()
+	_player.volume_db = -60.0
+	_player.bus = "Music"
+	add_child(_player)
+	_load_prefs()
+	_load_music()
+
+
+## a trilha vem num pacote baixado em segundo plano (Packs); começa a tocar assim que chega
+func _load_music() -> void:
+	await Packs.need("music")
 	var s := load("res://assets/audio/music/bloodlines_ost.mp3")
 	if s is AudioStream:
 		if s is AudioStreamMP3:
 			(s as AudioStreamMP3).loop = true
 		_player.stream = s
-	_player.volume_db = -60.0
-	_player.bus = "Music"
-	add_child(_player)
-	_load_prefs()
+		if _started and not _player.playing:
+			_player.volume_db = -10.0 + linear_to_db(maxf(_music_lin, 0.001)) if _on else -60.0
+			_player.play()
 
 
 # ─────────────────────────────────────────────────────────── barramentos ──

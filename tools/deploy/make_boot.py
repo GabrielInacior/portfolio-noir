@@ -39,9 +39,20 @@ for suffix in [".wasm", ".audio.worklet.js", ".audio.position.worklet.js"]:
         dst = os.path.join(JOGO, newbase + suffix)
         os.replace(src, dst)
         sizes[suffix] = os.path.getsize(dst)
-hp = h10(os.path.join(JOGO, pck_name))
-newpck = "%s.%s.pck" % (base_name, hp)
-os.replace(os.path.join(JOGO, pck_name), os.path.join(JOGO, newpck))
+# pacotes (tools/deploy/pck_split.py): um principal por idioma e extras em segundo plano
+pk = {}
+for name in ["main", "lang_pt", "lang_en", "music", "shops"]:
+    src = os.path.join(JOGO, name + ".pck")
+    if not os.path.exists(src):
+        continue
+    fn = "%s.%s.pck" % (base_name, h10(src))
+    os.replace(src, os.path.join(JOGO, fn))
+    pk[name] = {"url": "/jogo/" + fn, "size": os.path.getsize(os.path.join(JOGO, fn))}
+if not pk:  # export sem divisão (teste direto): um pck só
+    hp = h10(os.path.join(JOGO, pck_name))
+    fn = "%s.%s.pck" % (base_name, hp)
+    os.replace(os.path.join(JOGO, pck_name), os.path.join(JOGO, fn))
+    pk["main"] = {"url": "/jogo/" + fn, "size": os.path.getsize(os.path.join(JOGO, fn))}
 hj = h10(os.path.join(JOGO, base_name + ".js"))
 newjs = "%s.%s.js" % (base_name, hj)
 os.replace(os.path.join(JOGO, base_name + ".js"), os.path.join(JOGO, newjs))
@@ -52,12 +63,11 @@ for junk in ["index.html", "index.png", "index.icon.png", "index.apple-touch-ico
         os.remove(p)
 
 cfg["executable"] = "/jogo/" + newbase
-cfg["mainPack"] = "/jogo/" + newpck
+cfg["mainPack"] = pk["main"]["url"]
 cfg["canvasResizePolicy"] = 2
-cfg["fileSizes"] = {
-    "/jogo/" + newbase + ".wasm": os.path.getsize(os.path.join(JOGO, newbase + ".wasm")),
-    "/jogo/" + newpck: os.path.getsize(os.path.join(JOGO, newpck)),
-}
+cfg["fileSizes"] = {"/jogo/" + newbase + ".wasm": os.path.getsize(os.path.join(JOGO, newbase + ".wasm")), pk["main"]["url"]: pk["main"]["size"]}
+cfg["pfPacks"] = {k: v for k, v in pk.items() if k in ("music", "shops")}
+cfg["pfLang"] = {"pt": pk.get("lang_pt"), "en": pk.get("lang_en")}
 cfg.pop("args", None)
 cfg.pop("ensureCrossOriginIsolationHeaders", None)
 
@@ -131,6 +141,12 @@ JS = r"""(function () {
       } catch (e) {}
     }
     window.pfGPU = { renderer: renderer, soft: soft };
+    window.pfBuild = CFG.mainPack + '|' + renderer;
+    if (soft) {
+      // sem placa de vídeo, o custo vira pixel: o canvas desenha em metade da resolução e o navegador amplia (CSS)
+      var sc = Math.min(window.devicePixelRatio || 1, 1) * (Math.max(innerWidth, innerHeight) > 900 ? 0.5 : 0.75);
+      try { Object.defineProperty(window, 'devicePixelRatio', { configurable: true, get: function () { return sc; } }); } catch (e) {}
+    }
     try { var lose = gl.getExtension('WEBGL_lose_context'); if (lose) lose.loseContext(); } catch (e) {}
     document.body.classList.add('pf-on');
     var css = document.createElement('style');
@@ -245,6 +261,11 @@ JS = r"""(function () {
       mark('erro');
     }
     window.addEventListener('unhandledrejection', function (e) { if (!hidden && curStep < 2) fail(e.reason); });
+    CFG.fileSizes[CFG.mainPack] = CFG.fileSizes[CFG.mainPack];
+    var langPack = CFG.pfLang[en ? 'en' : 'pt'];
+    CFG.fileSizes[langPack.url] = langPack.size;
+    var packState = {};
+    window.pfPackPath = function (id) { return packState[id] || ''; };
     var args = [];
     if (en) args.push('lang=en');
     if (loja) args.push('loja=' + loja);
@@ -265,6 +286,30 @@ JS = r"""(function () {
       }
       var engine = new Engine(Object.assign({}, CFG, { canvas: canvas, args: args.length ? ['--'].concat(args) : [] }));
       window.__pfEngine = engine;
+      // pacotes em segundo plano (música, lojas): baixam depois do principal e entram no sistema de arquivos do motor
+      var queue = ['lang', 'music', 'shops'];
+      var PK = { lang: langPack, music: CFG.pfPacks.music, shops: CFG.pfPacks.shops };
+      function whenEngine(fn) { if (engine.rtenv) fn(); else setTimeout(function () { whenEngine(fn); }, 100); }
+      function nextPack() {
+        var id = queue.shift();
+        if (!id) return;
+        if (id !== 'lang' && !dlDone) { queue.unshift(id); setTimeout(nextPack, 200); return; }
+        fetch(PK[id].url, { credentials: 'same-origin', priority: 'low' }).then(function (r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.arrayBuffer();
+        }).then(function (buf) {
+          whenEngine(function () {
+            var p = '/pfpacks/' + id + '.pck';
+            engine.copyToFS(p, buf);
+            packState[id] = p;
+            mark('pacote_' + id);
+            nextPack();
+          });
+        }).catch(function () { setTimeout(nextPack, 3000); queue.unshift(id); });
+      }
+      // o pacote de idioma baixa em paralelo com o principal (a cidade precisa dele para abrir); o resto depois
+      nextPack();
+      window.__pfStartPacks = nextPack;
       engine.startGame({ onProgress: onProgress }).then(function () {
         mark('jogo_iniciado');
         setTimeout(hide, 40000); // garantia, caso o aviso do jogo não chegue
@@ -283,8 +328,11 @@ open(os.path.join(JOGO, "boot.js"), "w", encoding="utf8").write("// Gerado por t
 PRE = (
     '<link rel="preload" href="/jogo/%s" as="script">'
     '<link rel="preload" href="/jogo/%s.wasm" as="fetch" type="application/wasm" crossorigin>'
-    '<link rel="preload" href="/jogo/%s" as="fetch" crossorigin>'
-) % (newjs, newbase, newpck)
+    '<link rel="preload" href="%s" as="fetch" crossorigin>'
+    '<script>(function(){var s="";try{s=localStorage.getItem("pf_lang")||""}catch(e){}var en=s?s.indexOf("pt")!==0:true;'
+    'var l=document.createElement("link");l.rel="preload";l.as="fetch";l.crossOrigin="anonymous";'
+    'l.href=en?"%s":"%s";document.head.appendChild(l)})()</script>'
+) % (newjs, newbase, pk["main"]["url"], pk["lang_en"]["url"], pk["lang_pt"]["url"])
 tag = '<script defer src="/jogo/boot.js"></script>'
 n = 0
 for dp, _, fs in os.walk(SITE):
@@ -297,4 +345,4 @@ for dp, _, fs in os.walk(SITE):
             t = t.replace(tag, PRE + "<script>" + JS + "</script>")
             open(p, "w", encoding="utf8").write(t)
             n += 1
-print("ok", newbase, newpck, newjs, "paginas:", n)
+print("ok", newbase, {k: v["url"] for k, v in pk.items()}, newjs, "paginas:", n)
