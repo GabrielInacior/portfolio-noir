@@ -8,15 +8,20 @@
   "trailingSlash": true,
   "headers": [
     {
+      "source": "/jogo/(index\\.[0-9a-f]{10}\\..*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
       "source": "/jogo/(.*)\\.wasm",
       "headers": [
         {
           "key": "Content-Type",
           "value": "application/wasm"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=3600, must-revalidate"
         }
       ]
     },
@@ -26,15 +31,11 @@
         {
           "key": "Content-Type",
           "value": "application/octet-stream"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=3600, must-revalidate"
         }
       ]
     },
     {
-      "source": "/jogo/(.*)\\.js",
+      "source": "/jogo/(boot\\.js|cursor_.*)",
       "headers": [
         {
           "key": "Cache-Control",

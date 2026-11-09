@@ -17,6 +17,10 @@ cd game
 "$GODOT" --headless --audio-driver Dummy --path . --import >/dev/null 2>&1 || true
 python ../tools/deploy/compress_imports.py
 "$GODOT" --headless --audio-driver Dummy --path . --import >/dev/null 2>&1 || true
+# erro de script não pode ir para produção: roda o jogo sem tela por alguns quadros e falha se houver erro de parse
+if "$GODOT" --headless --audio-driver Dummy --path . --quit-after 120 2>&1 | grep -E "SCRIPT ERROR|Parse Error"; then
+  echo "ERRO: scripts com erro, build abortado"; exit 1
+fi
 "$GODOT" --headless --audio-driver Dummy --path . --export-release "Web" ../site/jogo/index.html 2>&1 | grep -E "ERROR|error" | grep -v "^$" | head -20 || true
 cd "$ROOT"
 # boot.js: o jogo abre por cima de todas as páginas (home, /en/, projetos)

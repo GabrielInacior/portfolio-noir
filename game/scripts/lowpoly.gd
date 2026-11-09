@@ -29,8 +29,12 @@ static func cap_mesh(m: Mesh, small := false) -> void:
 		t.ring_segments = mini(t.ring_segments, 6)
 
 
-static func node(root: Node) -> void:
+static func node(root: Node, tick := Callable()) -> void:  # coroutine
+	var i := 0
 	for n in root.find_children("*", "MeshInstance3D", true, false):
+		i += 1
+		if tick.is_valid() and i % 64 == 0:
+			await tick.call()
 		cap_mesh((n as MeshInstance3D).mesh)
 	for n in root.find_children("*", "MultiMeshInstance3D", true, false):
 		var mm := (n as MultiMeshInstance3D).multimesh
@@ -46,8 +50,12 @@ static func node(root: Node) -> void:
 ## Distância de visibilidade por tamanho: peça pequena some de longe (com fade), letreiro de texto
 ## pequeno também. A geometria fundida dos quarteirões fica sempre (é ela que dá a silhueta).
 ## Na avenida isso tirou centenas de draw calls de objetos que nem se distinguiam a 40 m.
-static func cull_by_size(root: Node, near := 22.0, mid := 38.0) -> void:
+static func cull_by_size(root: Node, near := 22.0, mid := 38.0, tick := Callable()) -> void:  # coroutine
+	var i := 0
 	for n in root.find_children("*", "GeometryInstance3D", true, false):
+		i += 1
+		if tick.is_valid() and i % 96 == 0:
+			await tick.call()
 		var g := n as GeometryInstance3D
 		if g is CPUParticles3D or g.visibility_range_end > 0.0:
 			continue

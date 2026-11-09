@@ -17,7 +17,21 @@ func _ready() -> void:
 	_fit_scale()
 	_build_world_view()
 	city = City.new()
+	# na web (ou com PFSLICE=1) a cidade monta em fatias, com progresso para o carregador da página
+	city.sliced = OS.has_feature("web") or OS.get_environment("PFSLICE") != ""
+	_sharp.auto_tag = false
+	# enquanto a cidade monta, o 3D não é desenhado (o carregador da página cobre a tela): cada quadro
+	# custaria dezenas de ms com a cidade pela metade e o tempo de montagem quadruplicava
+	var draw_mode := _world_vp.render_target_update_mode
+	if city.sliced:
+		_world_vp.render_target_update_mode = SubViewport.UPDATE_DISABLED
+		_sharp.vp.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	_world_vp.add_child(city)
+	if not city.is_built:
+		await city.built
+	_sharp.auto_tag = true
+	_world_vp.render_target_update_mode = draw_mode
+	_sharp.vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	_sharp.tag(city)
 	_apply_quality()
 	var layer := CanvasLayer.new()
@@ -34,6 +48,8 @@ func _ready() -> void:
 		await get_tree().process_frame
 	if OS.has_feature("web"):
 		JavaScriptBridge.eval("window.pfReady&&window.pfReady()", true)
+	print("PFT %5d ms  pronto (ENTRAR)" % Time.get_ticks_msec())
+	_setup_ab()
 
 
 ## argumentos vindos da página (boot.js): lang=en (página /en/) e loja=<projeto> (páginas de projeto
@@ -289,3 +305,102 @@ func _scan_labels(n: Node) -> void:
 		elif c is CanvasItem and not (c as CanvasItem).visible:
 			continue
 		_scan_labels(c)
+
+
+# ───────────────────────────────── interruptores de teste A/B de desempenho (web, `window.pfAB(nome, ligado)`)
+## Liga/desliga um sistema por vez para medir o custo de cada um (ver docs/PERFORMANCE.md). Inofensivo no uso normal.
+var _ab_cb
+
+
+func _setup_ab() -> void:
+	if not OS.has_feature("web"):
+		return
+	_ab_cb = JavaScriptBridge.create_callback(_ab)
+	JavaScriptBridge.get_interface("window").pfAB = _ab_cb
+
+
+var _ab_saved := {}
+
+
+## desliga/religa preservando o estado original (alguns nós já nascem escondidos por desenho)
+func _ab_vis(n: Node3D, on: bool) -> void:
+	var id := n.get_instance_id()
+	if not on:
+		if not _ab_saved.has(id):
+			_ab_saved[id] = n.visible
+		n.visible = false
+	elif _ab_saved.has(id):
+		n.visible = bool(_ab_saved[id])
+
+
+func _ab(args: Array) -> void:
+	var name := str(args[0])
+	var on := bool(args[1])
+	match name:
+		"world":
+			city.visible = on
+		"sharp":
+			_sharp.vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS if on else SubViewport.UPDATE_DISABLED
+			_sharp.rect.visible = on
+		"retro":
+			_world_rect.material = null if not on else _world_rect.material
+			if on:
+				_fit_world()
+			else:
+				_world_rect.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		"lights":
+			for n in city.find_children("*", "Light3D", true, false):
+				_ab_vis(n, on)
+		"labels":
+			for n in city.find_children("*", "Label3D", true, false):
+				_ab_vis(n, on)
+		"rain":
+			for n in [city._rain_node, city._splash_node]:
+				if n:
+					_ab_vis(n, on)
+		"glow":
+			for n in city.find_children("*", "WorldEnvironment", true, false):
+				var e: Environment = (n as WorldEnvironment).environment
+				if not _ab_saved.has("glow"):
+					_ab_saved["glow"] = e.glow_enabled
+				e.glow_enabled = bool(_ab_saved["glow"]) if on else false
+		"fog":
+			for n in city.find_children("*", "WorldEnvironment", true, false):
+				(n as WorldEnvironment).environment.fog_enabled = on
+		"hud":
+			hud.visible = on
+		"audio":
+			var au := get_node("/root/Audio")
+			au._player.stream_paused = not on
+			for b in au._beds.values():
+				(b as AudioStreamPlayer).stream_paused = not on
+		"merged", "mm", "lbl", "part", "mesh", "light":
+			var cls: String = {"merged": "MeshInstance3D", "mm": "MultiMeshInstance3D", "lbl": "Label3D", "part": "CPUParticles3D", "mesh": "MeshInstance3D", "light": "Light3D"}[name]
+			for n in city.find_children("*", cls, true, false):
+				var is_merged: bool = n.has_meta("merged")
+				if name == "merged" and not is_merged:
+					continue
+				if name == "mesh" and is_merged:
+					continue
+				_ab_vis(n, on)
+		"info":
+			var rid: RID = _world_vp.get_viewport_rid()
+			var rid2: RID = _sharp.vp.get_viewport_rid()
+			var dc := RenderingServer.viewport_get_render_info(rid, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE, RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME)
+			var ob := RenderingServer.viewport_get_render_info(rid, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE, RenderingServer.VIEWPORT_RENDER_INFO_OBJECTS_IN_FRAME)
+			var pr := RenderingServer.viewport_get_render_info(rid, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE, RenderingServer.VIEWPORT_RENDER_INFO_PRIMITIVES_IN_FRAME)
+			var dc2 := RenderingServer.viewport_get_render_info(rid2, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE, RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME)
+			print("PFINFO dc=%d obj=%d prim=%d sharp_dc=%d vram=%dMB tex=%dMB buf=%dMB" % [dc, ob, pr, dc2, RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_VIDEO_MEM_USED) / 1048576, RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TEXTURE_MEM_USED) / 1048576, RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_BUFFER_MEM_USED) / 1048576])
+		"sfxtick":
+			get_node("/root/Audio").set_process(on)
+		"cars":
+			for c in city._cars:
+				_ab_vis(c["node"], on)
+		"walkers":
+			for w in city._walkers:
+				_ab_vis(w["node"], on)
+		"fx", "traffic", "ads", "proc":
+			if on:
+				city.ab.erase("no" + name)
+			else:
+				city.ab["no" + name] = true

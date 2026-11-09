@@ -1,55 +1,167 @@
-"""Gera site/jogo/boot.js: o jogo abre em tela cheia por cima de QUALQUER página (home, /en/, projetos),
-para todo visitante com JavaScript e WebGL, com a mesma resposta HTTP para todos (sem detectar robô).
-O conteúdo semântico da página continua no documento (sr-only). Sem WebGL, fica o cartão noir.
-Lê a configuração que o Godot gravou em site/jogo/index.html e troca os caminhos para absolutos.
+"""Pós-processa o export web do Godot em site/jogo/ e gera o carregador:
+  1. renomeia os arquivos pesados com hash de conteúdo (index.<hash>.wasm/.pck/.js): cache imutável de 1 ano,
+     um arquivo só é baixado de novo quando o conteúdo dele muda;
+  2. gera o carregador (boot) com progresso real em todas as etapas e o INLINE em todas as páginas do site
+     (sem requisição extra, primeira pintura imediata), junto com <link rel=preload> do wasm, do pck e do JS
+     do motor: o download começa no <head>, em paralelo com o parse da página;
+  3. mantém /jogo/boot.js (cache curto) só para HTML antigo que ainda esteja em cache.
+O jogo abre por cima de QUALQUER página (home, /en/, projetos) para todo visitante com WebGL 2, com a mesma
+resposta HTTP para todos (sem detectar robô). O conteúdo semântico continua no documento (sr-only).
 Uso: python tools/deploy/make_boot.py"""
+import hashlib
 import json
 import os
 import re
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-SHELL = os.path.join(ROOT, "site", "jogo", "index.html")
-OUT = os.path.join(ROOT, "site", "jogo", "boot.js")
+SITE = os.path.join(ROOT, "site")
+JOGO = os.path.join(SITE, "jogo")
+SHELL = os.path.join(JOGO, "index.html")
+
+
+def h10(path):
+    return hashlib.sha256(open(path, "rb").read()).hexdigest()[:10]
+
 
 html = open(SHELL, encoding="utf8").read()
 m = re.search(r"const GODOT_CONFIG = (\{.*?\});", html, re.S)
 cfg = json.loads(m.group(1))
-cfg["executable"] = "/jogo/" + cfg.get("executable", "index").split("/")[-1]
-cfg["mainPack"] = "/jogo/" + cfg.get("mainPack", "index.pck").split("/")[-1]
-cfg["canvasResizePolicy"] = 2
-cfg.pop("args", None)
+base_name = cfg.get("executable", "index").split("/")[-1]  # "index"
+pck_name = cfg.get("mainPack", base_name + ".pck").split("/")[-1]
 
-JS = r"""// Gerado por tools/deploy/make_boot.py. Abre a cidade noir por cima da página.
-(function () {
-  var CFG = __CFG__;
+# ---- 1. nomes com hash. O motor monta os nomes do wasm e dos worklets a partir de `executable`.
+hw = h10(os.path.join(JOGO, base_name + ".wasm"))
+newbase = "%s.%s" % (base_name, hw)
+sizes = {}
+for suffix in [".wasm", ".audio.worklet.js", ".audio.position.worklet.js"]:
+    src = os.path.join(JOGO, base_name + suffix)
+    if os.path.exists(src):
+        dst = os.path.join(JOGO, newbase + suffix)
+        os.replace(src, dst)
+        sizes[suffix] = os.path.getsize(dst)
+hp = h10(os.path.join(JOGO, pck_name))
+newpck = "%s.%s.pck" % (base_name, hp)
+os.replace(os.path.join(JOGO, pck_name), os.path.join(JOGO, newpck))
+hj = h10(os.path.join(JOGO, base_name + ".js"))
+newjs = "%s.%s.js" % (base_name, hj)
+os.replace(os.path.join(JOGO, base_name + ".js"), os.path.join(JOGO, newjs))
+# o html do export só serve para teste direto e os ícones dele não são usados pelo site
+for junk in ["index.html", "index.png", "index.icon.png", "index.apple-touch-icon.png"]:
+    p = os.path.join(JOGO, junk)
+    if os.path.exists(p):
+        os.remove(p)
+
+cfg["executable"] = "/jogo/" + newbase
+cfg["mainPack"] = "/jogo/" + newpck
+cfg["canvasResizePolicy"] = 2
+cfg["fileSizes"] = {
+    "/jogo/" + newbase + ".wasm": os.path.getsize(os.path.join(JOGO, newbase + ".wasm")),
+    "/jogo/" + newpck: os.path.getsize(os.path.join(JOGO, newpck)),
+}
+cfg.pop("args", None)
+cfg.pop("ensureCrossOriginIsolationHeaders", None)
+
+# ---- 2. carregador
+JS = r"""(function () {
+  var CFG = __CFG__, JSURL = "__JS__";
+  var T0 = performance.now(), TM = {};
+  window.__pf = { t: TM };
+  function mark(k) { if (!(k in TM)) { TM[k] = Math.round(performance.now() - T0); try { console.log('[pf] ' + k + ' ' + TM[k] + ' ms'); } catch (e) {} } }
   var path = location.pathname;
-  // carregador abre em INGLÊS por padrão (pedido do usuário); a escolha salva no seletor do jogo
-  // (localStorage pf_lang) passa a valer; o HTML oculto da home continua em português para o Google
+  // ?perf=1: mede quanto a thread principal fica ocupada em cada quadro (JS + Godot + WebGL), sem depender do vsync
+  if (/[?&]perf=1/.test(location.search)) {
+    var PF = window.__pfFrames = { n: 0, sum: 0, max: 0, a: [] }, raf = window.requestAnimationFrame.bind(window), last = 0;
+    window.requestAnimationFrame = function (cb) {
+      return raf(function (t) {
+        var a = performance.now();
+        cb(t);
+        var d = performance.now() - a;
+        PF.n++; PF.sum += d; if (d > PF.max) PF.max = d; PF.a.push(d, t - last); last = t;
+        if (PF.a.length > 4000) PF.a.splice(0, 2000);
+      });
+    };
+    window.pfFrameStats = function (reset) {
+      var cpu = [], gap = [];
+      for (var i = 0; i < PF.a.length; i += 2) { cpu.push(PF.a[i]); gap.push(PF.a[i + 1]); }
+      cpu.sort(function (x, y) { return x - y; }); gap.sort(function (x, y) { return x - y; });
+      var q = function (a, p) { return a.length ? +a[Math.min(a.length - 1, Math.floor(a.length * p))].toFixed(2) : 0; };
+      var r = { n: cpu.length, cpu_avg: cpu.length ? +(cpu.reduce(function (x, y) { return x + y; }, 0) / cpu.length).toFixed(2) : 0,
+        cpu_p95: q(cpu, 0.95), cpu_max: q(cpu, 1), gap_avg: gap.length ? +(gap.reduce(function (x, y) { return x + y; }, 0) / gap.length).toFixed(1) : 0, gap_p95: q(gap, 0.95), gap_max: q(gap, 1) };
+      if (reset) PF.a = [];
+      return r;
+    };
+  }
+  // o carregador abre em INGLES por padrao; a escolha salva no seletor do jogo (localStorage pf_lang) vale depois
   var saved = '';
   try { saved = localStorage.getItem('pf_lang') || ''; } catch (e) {}
   var en = saved ? saved.indexOf('pt') !== 0 : true;
   var loja = (path.match(/^\/projetos\/([^\/]+)/) || [])[1] || new URLSearchParams(location.search).get('loja') || '';
+  var TX = en ? {
+    over: 'PORTFOLIO', sub: 'software engineering · games · AI', dl: 'Downloading', eng: 'Starting engine',
+    wait: 'Almost there', slow: 'First visit is the slowest. Next time it opens instantly.', err: 'Could not open the city: ',
+    retry: 'Try again', steps: ['Download', 'Engine', 'City', 'Shaders'], mb: 'MB', mbs: 'MB/s', cache: 'Loading from cache', aria: 'Noir city in 3D'
+  } : {
+    over: 'PORTFÓLIO', sub: 'engenharia de software · games · IA', dl: 'Baixando', eng: 'Ligando o motor',
+    wait: 'Quase lá', slow: 'A primeira visita é a mais lenta. Da próxima abre na hora.', err: 'Não foi possível abrir a cidade: ',
+    retry: 'Tentar de novo', steps: ['Download', 'Motor', 'Cidade', 'Shaders'], mb: 'MB', mbs: 'MB/s', cache: 'Carregando do cache', aria: 'Cidade noir em 3D'
+  };
+  var STAGE_PT = {
+    'Lighting the neon': 'Acendendo os neons', 'Raising the skyline': 'Erguendo o horizonte', 'Paving the streets': 'Asfaltando as ruas',
+    'Building the blocks': 'Construindo os quarteirões', 'Opening the shops': 'Abrindo as lojas', 'Laying the plaza': 'Montando a praça',
+    'Placing street props': 'Pondo os detalhes da rua', 'Hanging billboards': 'Pendurando os outdoors', 'Wiring the signs': 'Ligando os letreiros',
+    'Gluing the city': 'Colando a cidade', 'Bringing it to life': 'Dando vida aos moradores', 'Starting the rain': 'Chamando a chuva',
+    'Optimizing the geometry': 'Otimizando a geometria', 'Warming up shaders': 'Aquecendo os shaders'
+  };
   function start() {
     var probe = document.createElement('canvas');
-    var gl = probe.getContext('webgl2');
+    var gl = null;
+    try { gl = probe.getContext('webgl2'); } catch (e) {}
     if (!gl) return; // sem WebGL 2: fica o cartão noir com os links
+    // renderização por software (PC sem placa de vídeo): SwiftShader, llvmpipe, Basic Render Driver
+    var renderer = '';
+    try {
+      var ext = gl.getExtension('WEBGL_debug_renderer_info');
+      renderer = String(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER));
+    } catch (e) {}
+    var soft = /swiftshader|llvmpipe|software|basic render|microsoft basic|softpipe/i.test(renderer);
+    if (!soft) {
+      try {
+        var p2 = document.createElement('canvas');
+        if (!p2.getContext('webgl2', { failIfMajorPerformanceCaveat: true })) soft = true;
+      } catch (e) {}
+    }
+    window.pfGPU = { renderer: renderer, soft: soft };
+    try { var lose = gl.getExtension('WEBGL_lose_context'); if (lose) lose.loseContext(); } catch (e) {}
     document.body.classList.add('pf-on');
     var css = document.createElement('style');
+    // animações só com transform/opacity: rodam no compositor e seguem mesmo com a thread principal ocupada
     css.textContent =
       '#pfg{position:fixed;inset:0;z-index:9999;background:#05060c}' +
       '#pfg canvas{display:block;width:100vw;height:100vh;outline:none;touch-action:none}' +
-      '#pfl{position:fixed;inset:0;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+      '#pfl{position:fixed;inset:0;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;' +
       'background:radial-gradient(ellipse at 50% 72%,#1a0f2e 0%,#05060c 66%);color:#e8e2d0;transition:opacity .7s}' +
-      '#pfl .o{font:600 13px/1 "Courier New",monospace;letter-spacing:.42em;color:#ff4fa3;margin:0 0 .5em}' +
-      '#pfl .n{font:400 clamp(42px,9.5vw,94px)/1 "Bebas Neue",Impact,sans-serif;letter-spacing:.07em;color:#f3ead8;margin:0;' +
-      'text-shadow:0 0 18px #ff4fa3aa,0 0 42px #5aaadc66}' +
-      '#pfl .s{font:clamp(13px,2.6vw,17px) "Courier New",monospace;color:#ffb23d;margin:.7em 0 2em}' +
-      '#pfl .b{width:min(320px,70vw);height:4px;background:#1b1a28;border-radius:2px;overflow:hidden}' +
-      '#pfl .f{height:100%;width:0;background:linear-gradient(90deg,#ff4fa3,#ffc83d);box-shadow:0 0 12px #ff4fa3;transition:width .3s}' +
-      '#pfl .m{margin-top:14px;font:12px "Courier New",monospace;color:#8a86a8;min-height:1em}' +
-      '#pfl .r{position:absolute;inset:0;pointer-events:none;opacity:.22;' +
+      '#pfl .o{font:600 13px/1 "Courier New",monospace;letter-spacing:.42em;color:#ff4fa3;margin:0 0 .5em;position:relative}' +
+      '#pfl .n{font:400 clamp(42px,9.5vw,94px)/1 "Bebas Neue",Impact,sans-serif;letter-spacing:.07em;color:#f3ead8;margin:0;position:relative;' +
+      'text-shadow:0 0 18px #ff4fa3aa,0 0 42px #5aaadc66;animation:pfn 3.2s ease-in-out infinite}' +
+      '#pfl .s{font:clamp(13px,2.6vw,17px) "Courier New",monospace;color:#ffb23d;margin:.7em 0 2em;position:relative;text-align:center}' +
+      '#pfl .b{position:relative;width:min(340px,72vw);height:5px;background:#1b1a28;border-radius:3px;overflow:hidden}' +
+      '#pfl .f{position:absolute;inset:0;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,#ff4fa3,#ffc83d);' +
+      'box-shadow:0 0 12px #ff4fa3;transition:transform .5s ease-out;will-change:transform}' +
+      '#pfl .w{position:absolute;top:0;left:0;width:40%;height:100%;background:linear-gradient(90deg,transparent,#ffffff77,transparent);' +
+      'animation:pfw 1.5s linear infinite;will-change:transform}' +
+      '#pfl .m{position:relative;margin-top:16px;font:14px "Courier New",monospace;color:#e8e2d0;min-height:1.2em;text-align:center;padding:0 16px}' +
+      '#pfl .d{position:relative;margin-top:6px;font:12px "Courier New",monospace;color:#8a86a8;min-height:1.1em;text-align:center}' +
+      '#pfl .k{position:relative;margin-top:14px;display:flex;gap:14px;font:11px "Courier New",monospace;color:#4d4a68}' +
+      '#pfl .k i{font-style:normal;transition:color .3s}#pfl .k i.on{color:#ff4fa3}#pfl .k i.ok{color:#8a86a8}' +
+      '#pfl .h{position:relative;margin-top:18px;font:12px "Courier New",monospace;color:#ffb23d;opacity:0;transition:opacity .6s;text-align:center;padding:0 16px}' +
+      '#pfl .h.v{opacity:1}' +
+      '#pfl .e{position:relative;margin-top:14px;padding:9px 18px;font:13px "Courier New",monospace;color:#05060c;background:#ffc83d;border:0;border-radius:3px;cursor:pointer;display:none}' +
+      '#pfl .r{position:absolute;left:-10%;top:-30%;width:120%;height:160%;pointer-events:none;opacity:.22;will-change:transform;' +
       'background:repeating-linear-gradient(100deg,transparent 0 22px,#9fb3ff22 22px 23px);animation:pfr .6s linear infinite}' +
-      '@keyframes pfr{from{background-position:0 0}to{background-position:-40px 160px}}' +
+      '@keyframes pfr{from{transform:translate3d(0,0,0)}to{transform:translate3d(-40px,160px,0)}}' +
+      '@keyframes pfw{from{transform:translate3d(-100%,0,0)}to{transform:translate3d(250%,0,0)}}' +
+      '@keyframes pfn{0%,100%{opacity:1}46%{opacity:1}50%{opacity:.82}54%{opacity:1}}' +
+      '@media (prefers-reduced-motion:reduce){#pfl .r,#pfl .w,#pfl .n{animation:none}}' +
       'html.pf-lock,html.pf-lock body{overflow:hidden!important}' +
       '#pfl,#pfg{cursor:url(/jogo/cursor_arrow.png) 3 2,auto}#pfl.busy{cursor:url(/jogo/cursor_busy.png) 16 16,progress}';
     document.head.appendChild(css);
@@ -59,43 +171,104 @@ JS = r"""// Gerado por tools/deploy/make_boot.py. Abre a cidade noir por cima da
     var canvas = document.createElement('canvas');
     canvas.id = 'canvas';
     canvas.tabIndex = 0;
-    canvas.setAttribute('aria-label', en ? 'Noir city in 3D' : 'Cidade noir em 3D');
+    canvas.setAttribute('aria-label', TX.aria);
     wrap.appendChild(canvas);
     var load = document.createElement('div');
     load.id = 'pfl';
-    load.innerHTML = '<div class="r"></div><p class="o">' + (en ? 'PORTFOLIO' : 'PORTFÓLIO') + '</p><p class="n">GABRIEL INÁCIO</p>' +
-      '<p class="s">' + (en ? 'software engineering · games · AI' : 'engenharia de software · games · IA') + '</p>' +
-      '<div class="b"><div class="f"></div></div><div class="m">' + (en ? 'turning on the neon...' : 'acendendo os neons...') + '</div>';
+    load.className = 'busy';
+    load.setAttribute('role', 'progressbar');
+    load.setAttribute('aria-live', 'polite');
+    load.innerHTML = '<div class="r"></div><p class="o">' + TX.over + '</p><p class="n">GABRIEL INÁCIO</p><p class="s">' + TX.sub + '</p>' +
+      '<div class="b"><div class="f"></div><div class="w"></div></div><div class="m"></div><div class="d"></div>' +
+      '<div class="k"><i>' + TX.steps.join('</i><i>') + '</i></div><div class="h">' + TX.slow + '</div><button class="e" type="button">' + TX.retry + '</button>';
     document.body.appendChild(wrap);
     document.body.appendChild(load);
-    var fill = load.querySelector('.f'), msg = load.querySelector('.m');
+    var fill = load.querySelector('.f'), msg = load.querySelector('.m'), det = load.querySelector('.d');
+    var hint = load.querySelector('.h'), steps = load.querySelectorAll('.k i'), btn = load.querySelector('.e');
+    btn.onclick = function () { location.reload(); };
+    var cur = 0, curStep = 0;
+    function setBar(p) { p = Math.max(cur, Math.min(100, p)); cur = p; fill.style.transform = 'scaleX(' + (p / 100).toFixed(3) + ')'; load.setAttribute('aria-valuenow', Math.round(p)); }
+    function setStep(i) {
+      curStep = i;
+      for (var k = 0; k < steps.length; k++) steps[k].className = k < i ? 'ok' : (k === i ? 'on' : '');
+    }
+    function say(a, b) { if (a != null) msg.textContent = a; if (b != null) det.textContent = b; }
+    // etapas: download 0-50%, motor 50-58%, cidade 58-97%, shaders 97-100%
+    setStep(0);
+    say(TX.dl + '...', '');
+    mark('loader_pintado');
+    requestAnimationFrame(function () { requestAnimationFrame(function () { mark('primeira_pintura_loader'); }); });
     var hidden = false;
     function hide() {
       if (hidden) return;
       hidden = true;
+      mark('pronto_para_entrar');
+      setBar(100);
       load.style.opacity = '0';
       setTimeout(function () { load.remove(); }, 800);
     }
-    // o jogo avisa quando a tela de entrada está pronta (cidade montada e desenhada)
     window.pfReady = hide;
+    // o jogo manda o progresso real da montagem da cidade
+    window.pfProgress = function (pct, stage) {
+      mark('cidade_iniciada');
+      var name = en ? stage : (STAGE_PT[stage] || stage);
+      var shaders = /shader/i.test(stage);
+      setStep(shaders ? 3 : 2);
+      say(name + ' ' + pct + '%', '');
+      setBar(58 + pct * 0.39);
+    };
+    var tStart = performance.now(), lastB = 0, lastT = tStart, speed = 0, dlDone = false, tmo = setTimeout(function () { hint.className = 'h v'; }, 10000);
+    function onProgress(c, t) {
+      if (!(t > 0)) return;
+      var now = performance.now();
+      if (now - lastT > 400) {
+        var inst = (c - lastB) / (now - lastT) * 1000;
+        speed = speed ? speed * 0.6 + inst * 0.4 : inst;
+        lastB = c; lastT = now;
+      }
+      var mb = c / 1048576, tm = t / 1048576;
+      if (c >= t) {
+        if (!dlDone) { dlDone = true; clearTimeout(tmo); hint.className = 'h'; mark('download_concluido'); setStep(1); setBar(50); say(TX.eng + '...', ''); }
+        return;
+      }
+      setBar(c / t * 50);
+      var fast = (now - tStart) < 700 && c >= t * 0.6; // vindo do cache
+      say(fast ? TX.cache + '...' : TX.dl + ' ' + mb.toFixed(1) + ' / ' + tm.toFixed(1) + ' ' + TX.mb,
+        speed > 1000 ? (speed / 1048576).toFixed(1) + ' ' + TX.mbs : '');
+    }
+    function fail(err) {
+      var t = String((err && err.message) || err);
+      say(TX.err + t, '');
+      load.className = '';
+      btn.style.display = 'inline-block';
+      fill.style.background = '#ff4040';
+      mark('erro');
+    }
+    window.addEventListener('unhandledrejection', function (e) { if (!hidden && curStep < 2) fail(e.reason); });
     var args = [];
     if (en) args.push('lang=en');
     if (loja) args.push('loja=' + loja);
+    if (soft) args.push('sw=1');
     var s = document.createElement('script');
-    s.src = '/jogo/index.js';
+    s.src = JSURL;
+    s.onerror = function () { fail('network'); };
     s.onload = function () {
+      mark('motor_js_carregado');
+      var missing = Engine.getMissingFeatures({ threads: false });
+      if (missing.length) { fail(missing.join(', ')); return; }
+      // ?cold=N: URL do wasm diferente a cada N, para medir a partida a frio (sem cache de código compilado)
+      var cm = location.search.match(/[?&]cold=(\d+)/);
+      if (cm) {
+        var fs0 = CFG.fileSizes, nf = {};
+        for (var kk in fs0) nf[kk.replace(/(index\.[0-9a-f]{10})\.wasm$/, '$1c' + cm[1] + '.wasm')] = fs0[kk];
+        CFG = Object.assign({}, CFG, { executable: CFG.executable + 'c' + cm[1], fileSizes: nf });
+      }
       var engine = new Engine(Object.assign({}, CFG, { canvas: canvas, args: args.length ? ['--'].concat(args) : [] }));
-      engine.startGame({
-        onProgress: function (cur, total) {
-          if (total > 0) fill.style.width = Math.min(92, Math.round(cur / total * 92)) + '%';
-          if (total > 0 && cur >= total) msg.textContent = en ? 'building the city...' : 'montando a cidade...';
-        },
-      }).then(function () {
-        fill.style.width = '100%';
-        setTimeout(hide, 25000); // garantia, caso o aviso do jogo não chegue
-      }, function (err) {
-        msg.textContent = (en ? 'Could not open the city: ' : 'Não foi possível abrir a cidade: ') + err;
-      });
+      window.__pfEngine = engine;
+      engine.startGame({ onProgress: onProgress }).then(function () {
+        mark('jogo_iniciado');
+        setTimeout(hide, 40000); // garantia, caso o aviso do jogo não chegue
+      }, fail);
     };
     document.body.appendChild(s);
   }
@@ -103,5 +276,25 @@ JS = r"""// Gerado por tools/deploy/make_boot.py. Abre a cidade noir por cima da
   else start();
 })();
 """
-open(OUT, "w", encoding="utf8").write(JS.replace("__CFG__", json.dumps(cfg, ensure_ascii=False)))
-print("ok", OUT, cfg["executable"], cfg["mainPack"])
+JS = JS.replace("__CFG__", json.dumps(cfg, ensure_ascii=False)).replace("__JS__", "/jogo/" + newjs)
+open(os.path.join(JOGO, "boot.js"), "w", encoding="utf8").write("// Gerado por tools/deploy/make_boot.py\n" + JS)
+
+# ---- 3. páginas: preload do wasm/pck/js + carregador inline
+PRE = (
+    '<link rel="preload" href="/jogo/%s" as="script">'
+    '<link rel="preload" href="/jogo/%s.wasm" as="fetch" type="application/wasm" crossorigin>'
+    '<link rel="preload" href="/jogo/%s" as="fetch" crossorigin>'
+) % (newjs, newbase, newpck)
+tag = '<script defer src="/jogo/boot.js"></script>'
+n = 0
+for dp, _, fs in os.walk(SITE):
+    for fn in fs:
+        if not fn.endswith(".html"):
+            continue
+        p = os.path.join(dp, fn)
+        t = open(p, encoding="utf8").read()
+        if tag in t:
+            t = t.replace(tag, PRE + "<script>" + JS + "</script>")
+            open(p, "w", encoding="utf8").write(t)
+            n += 1
+print("ok", newbase, newpck, newjs, "paginas:", n)

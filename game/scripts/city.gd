@@ -63,33 +63,78 @@ const CROSS_END := 48.0
 const Merge := preload("res://scripts/render/merge.gd")
 
 
+## Montagem fatiada: com `sliced` ligado (o jogo real), a cidade se monta em fatias de ~12 ms por quadro (sem desenhar o 3D enquanto monta: o carregador cobre a tela)
+## e avisa o progresso à página; sem ele (sondas de desenvolvimento) tudo roda no mesmo quadro.
+signal built
+var sliced := false
+var is_built := false
+var _t_slice := 0
+var _pct := 0.0
+var _t_texload := 0
+
+
+func _slice() -> void:
+	if not sliced:
+		return
+	if Time.get_ticks_usec() - _t_slice > 12000:
+		await get_tree().process_frame
+		_t_slice = Time.get_ticks_usec()
+
+
+## progresso 0..1 e etapa legível; a página (boot.js) desenha a barra e o texto
+func _prog(p: float, stage: String) -> void:
+	_pct = p
+	if OS.has_feature("web") and sliced:
+		JavaScriptBridge.eval("window.pfProgress&&window.pfProgress(%d,%s)" % [int(p * 100.0), JSON.stringify(stage)], true)
+	if sliced:
+		print("PFT %5d ms  %3d%%  %s" % [Time.get_ticks_msec(), int(p * 100.0), stage])
+		await get_tree().process_frame
+		_t_slice = Time.get_ticks_usec()
+
+
 func _ready() -> void:
 	_rng.seed = 20260501
+	_t_slice = Time.get_ticks_usec()
 	# modo leve: celular, GPU fraca ou perfil "batata" (ver UI.quality); corta luzes reais, metade dos
 	# anúncios de prédio, menos carros/pedestres, chuva menor e distâncias de desenho menores
 	_light = UI.is_mobile() or UI.quality() == 0
+	await _prog(0.01, "Lighting the neon")
 	_build_env()
+	await _prog(0.04, "Raising the skyline")
 	_build_skyline()
+	await _prog(0.07, "Paving the streets")
 	_build_ground()
+	await _prog(0.10, "Building the blocks")
 	_build_blocks()
-	_place_shops()
+	await _prog(0.16, "Opening the shops")
+	await _place_shops()
+	print("PFT shops: tex load = %d ms" % (_t_texload / 1000))
+	await _prog(0.34, "Laying the plaza")
 	_build_plaza()
 	_build_landmark()
+	await _prog(0.40, "Placing street props")
 	_street_props()
 	_dress_alley()
+	await _prog(0.46, "Hanging billboards")
 	_build_billboards()
 	if OS.get_environment("NOADS") == "":
+		await _slice()
 		_build_ads()
+	await _prog(0.54, "Wiring the signs")
 	_build_wayfinding()
 	_build_extras()
+	await _prog(0.60, "Gluing the city")
 	_commit_batches()
 	_commit_multi()
+	await _prog(0.66, "Bringing it to life")
 	_build_life()
+	await _prog(0.74, "Starting the rain")
 	_rain()
 	_spawn_player()
+	await _prog(0.78, "Optimizing the geometry")
 	# teto de segmentos nas primitivas e partículas sem sombra (ver lowpoly.gd)
-	LowPoly.node(self)
-	LowPoly.cull_by_size(self, 18.0 if _light else 24.0, 32.0 if _light else 42.0)
+	await LowPoly.node(self, _slice)
+	await LowPoly.cull_by_size(self, 18.0 if _light else 24.0, 32.0 if _light else 42.0, _slice)
 	# fusão das malhas estáticas por célula+material (de ~3.700 nós para algumas centenas de draw calls)
 	if OS.get_environment("NOMERGE") == "":
 		var ex: Array = []
@@ -127,8 +172,12 @@ func _ready() -> void:
 			dm.append(tv["mat"])
 		for bl in _blinkers:
 			dm.append(bl["m"])
-		var r := Merge.merge(self, ex, 18.0 if _light else 24.0, 32.0 if _light else 42.0, dm)
+		var r: Dictionary = await Merge.merge(self, ex, 18.0 if _light else 24.0, 32.0 if _light else 42.0, dm, _slice)
 		print("MERGE cidade: %d malhas -> %d" % [r["in"], r["out"]])
+	print("PFT nodes: mesh=%d label=%d mm=%d light=%d part=%d" % [find_children("*", "MeshInstance3D", true, false).size(), find_children("*", "Label3D", true, false).size(), find_children("*", "MultiMeshInstance3D", true, false).size(), find_children("*", "Light3D", true, false).size(), find_children("*", "CPUParticles3D", true, false).size()])
+	await _prog(0.82, "Warming up shaders")
+	is_built = true
+	built.emit()
 
 
 # ═════════════════════════════════════════════ ambiente, céu, pós
@@ -825,7 +874,7 @@ func _live_window(p: Vector3, normal: Vector3, col: Color, cell := 0) -> void:
 
 
 # ═════════════════════════════════════════════ lojas dos projetos
-func _place_shops() -> void:
+func _place_shops() -> void:  # coroutine (fatiada)
 	var by_id := {}
 	for p in Data.projects:
 		by_id[str(p.get("id", ""))] = p
@@ -847,6 +896,7 @@ func _place_shops() -> void:
 	for s in spots:
 		if by_id.has(s[0]):
 			_shop(s[1], s[2], by_id[s[0]])
+			await _slice()
 	for g in [["rumor", Vector3(-5.6, 0.2, -9.0), PI / 2], ["fortress", Vector3(-25.0, 0.2, CROSS_Z + 4.6), PI],
 			["inaciocyber", Vector3(23.0, 0.06, ALLEY_Z + 1.2), -PI / 2]]:
 		if by_id.has(g[0]):
@@ -883,7 +933,9 @@ func _shop(face: Vector3, normal: Vector3, project: Dictionary, grand := false) 
 	var id := str(project.get("id", ""))
 	for path in ["res://assets/data/collages/%s.png" % id, "res://assets/covers/%s" % str(project.get("cover", ""))]:
 		if path.ends_with(".png") and ResourceLoader.exists(path):
+			var tl0 := Time.get_ticks_usec()
 			tex = load(path)
+			_t_texload += Time.get_ticks_usec() - tl0
 			break
 	var disp := MeshInstance3D.new()
 	var dq := QuadMesh.new()
@@ -1772,8 +1824,11 @@ func mark_visited(project: Dictionary) -> void:
 
 
 # ═════════════════════════════════════════════ animação de tudo
-func _process(dt: float) -> void:
-	_t += dt
+## interruptores de teste A/B (window.pfAB no navegador): nofx, notraffic, noads, nowalkers, noproc
+var ab := {}
+
+
+func _tick_fx(dt: float) -> void:
 	for f in _flicker:
 		if f.has("blink"):
 			(f["node"] as Node3D).visible = fmod(_t + float(f["seed"]), 1.6) < 0.9
@@ -1808,9 +1863,21 @@ func _process(dt: float) -> void:
 		n.rotation.z = sin(_t * 1.3 + float(s["seed"])) * float(s["amp"])
 	for f in _fans:
 		(f as Node3D).rotate_object_local(Vector3.UP, dt * 9.0)
-	traffic.step(dt, player.global_position if player else null)
-	_tick_ads(dt)
-	for w in _walkers:
+
+
+func _process(dt: float) -> void:
+	if not is_built:
+		return
+	_t += dt
+	if ab.has("noproc"):
+		return
+	if not ab.has("nofx"):
+		_tick_fx(dt)
+	if not ab.has("notraffic"):
+		traffic.step(dt, player.global_position if player else null)
+	if not ab.has("noads"):
+		_tick_ads(dt)
+	for w in (_walkers if not ab.has("nowalkers") else []):
 		var a: Vector3 = w["a"]
 		var b: Vector3 = w["b"]
 		w["t"] = float(w["t"]) + dt * float(w["speed"])

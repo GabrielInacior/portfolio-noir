@@ -383,8 +383,14 @@ def main():
             os.path.join(col_dst, fn[:-4] + ".webp"), "WEBP", quality=82, method=6)
     foto = os.path.join(ROOT, "game", "assets", "foto_gabriel.png")
     if os.path.exists(foto):
-        shutil.copy2(foto, os.path.join(WEB, "assets", "foto.jpg"))
-        shutil.copy2(foto, os.path.join(WEB, "assets", "favicon.png"))
+        # foto real em JPEG de 800 px (antes era o PNG de 1,6 MB renomeado) e favicon de 64 px (antes 1,6 MB
+        # baixados a cada visita só para o ícone da aba)
+        ph = _Img.open(foto).convert("RGB")
+        ph.thumbnail((800, 800))
+        ph.save(os.path.join(WEB, "assets", "foto.jpg"), "JPEG", quality=84, optimize=True, progressive=True)
+        side = min(ph.size)
+        fav = ph.crop(((ph.width - side) // 2, 0, (ph.width + side) // 2, side)).resize((64, 64), _Img.LANCZOS)
+        fav.save(os.path.join(WEB, "assets", "favicon.png"), "PNG", optimize=True)
     # a imagem de prévia vem de uma captura real do jogo (tools/deploy/og_image.py), não é gerada aqui
     # sitemap
     urls = [SITE + "/", SITE + "/en/"] + ["%s/projetos/%s/" % (SITE, p["id"]) for p in projects]

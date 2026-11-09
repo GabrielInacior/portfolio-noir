@@ -21,6 +21,9 @@ var rect: TextureRect
 var _occ_mat: ShaderMaterial
 var _src_cam: Camera3D
 var far_limit := 34.0
+## desligado durante a montagem fatiada da cidade (os gêmeos oclusores entrariam na fusão de malhas);
+## main.gd liga de novo e marca tudo de uma vez ao fim
+var auto_tag := true
 
 
 func setup(p_world_vp: SubViewport, under_layer: CanvasLayer) -> void:
@@ -123,6 +126,8 @@ func tag(root: Node) -> void:
 
 
 func _on_node_added(n: Node) -> void:
+	if not auto_tag:
+		return
 	# lojas são montadas depois (ao entrar); marca quando terminam de montar
 	if n is Node3D and n.get_script() and str(n.get_script().resource_path).ends_with("museum.gd"):
 		_tag_later.call_deferred(n)

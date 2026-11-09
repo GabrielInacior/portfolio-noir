@@ -12,7 +12,7 @@ const FMT_MASK := Mesh.ARRAY_FORMAT_NORMAL | Mesh.ARRAY_FORMAT_TANGENT | Mesh.AR
 const COLOR_PROPS := ["albedo_color"]
 
 
-static func merge(root: Node3D, exclude: Array, near := 24.0, mid := 42.0, dyn_mats: Array = []) -> Dictionary:
+static func merge(root: Node3D, exclude: Array, near := 24.0, mid := 42.0, dyn_mats: Array = [], tick := Callable()) -> Dictionary:  # coroutine: `tick` cede o quadro quando passa do orçamento
 	var dyn := {}
 	for m in dyn_mats:
 		if m is Material:
@@ -27,7 +27,13 @@ static func merge(root: Node3D, exclude: Array, near := 24.0, mid := 42.0, dyn_m
 	var groups := {}
 	var done := []
 	var count := 0
+	var idx := 0
 	for n in root.find_children("*", "MeshInstance3D", true, false):
+		idx += 1
+		if tick.is_valid() and idx % 24 == 0:
+			await tick.call()
+		if not is_instance_valid(n):
+			continue
 		var mi := n as MeshInstance3D
 		if mi.mesh == null or not mi.visible or mi.has_meta("no_merge"):
 			continue
@@ -101,7 +107,11 @@ static func merge(root: Node3D, exclude: Array, near := 24.0, mid := 42.0, dyn_m
 	var holder := Node3D.new()
 	holder.name = "Fundidos"
 	root.add_child(holder)
+	var gi := 0
 	for k in groups:
+		gi += 1
+		if tick.is_valid() and gi % 4 == 0:
+			await tick.call()
 		var g: Dictionary = groups[k]
 		var am := (g["st"] as SurfaceTool).commit()
 		if am == null or am.get_surface_count() == 0:
