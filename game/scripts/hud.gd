@@ -776,8 +776,9 @@ func enter_museum(project: Dictionary) -> void:
 	player.get_parent().remove_child(player)
 	_museum.add_child(player)
 	player.global_position = _museum.spawn_pos()
-	player._yaw = PI
-	player.rotation.y = PI
+	# de costas para a porta, olhando o centro da sala, câmera nivelada
+	player._yaw = 0.0
+	player.rotation.y = 0.0
 	player._pitch = 0.0
 	player.sync_look()
 	player.set_meta("walk", player.walk_rects)

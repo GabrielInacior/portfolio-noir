@@ -401,6 +401,7 @@ static func ceiling_fan(m, pos: Vector3) -> void:
 	m.add_child(h)
 	m.box(Vector3(0, 0.2, 0), Vector3(0.04, 0.4, 0.04), m.flat(Color("#2a2420")), h)
 	var rot := Node3D.new()
+	rot.set_meta("no_merge", true)   # gira (ticker): fica fora da fusão de malhas da loja
 	h.add_child(rot)
 	m.box(Vector3(0, 0, 0), Vector3(0.18, 0.08, 0.18), m.flat(Color("#3a3028")), rot)
 	for i in 4:

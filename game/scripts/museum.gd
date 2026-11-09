@@ -71,7 +71,30 @@ func _ready() -> void:
 	_place_items(style)
 	Dress.dress(self, style)
 	preload("res://scripts/lowpoly.gd").node(self)
+	_fuse()
 	examined.emit(0, items.size())
+
+
+## Fusão de malhas da loja (como na cidade): casca, móveis e decoração viram poucas malhas por material.
+## Ficam de fora os objetos examináveis (contorno ao mirar, ações), o que gira (_spin, ventilador) e os NPCs.
+## Antes: 130 a 330 draw calls por loja, quase todas de caixas soltas com material próprio.
+func _fuse() -> void:
+	# desligada por padrão: corta 35 a 55% dos draws da loja, mas a 1ª entrada a frio subiu para 4 a 6 s
+	# (as variantes com cor de vértice ainda não são aquecidas); ligar com PF_SHOPMERGE=1 ou ?shopmerge=1
+	var on := OS.get_environment("PF_SHOPMERGE") != ""
+	if OS.has_feature("web") and not on:
+		on = str(JavaScriptBridge.eval("/[?&]shopmerge=1/.test(location.search)?1:0", true)).begins_with("1")
+	if not on or OS.get_environment("NOMERGE") != "":
+		return
+	var ex: Array = []
+	for e in items:
+		if e.get("node") is Node:
+			ex.append(e["node"])
+	ex.append_array(_spin)
+	# sem `tick` a fusão não cede quadro: roda inteira aqui, dentro do véu de entrada
+	var r: Variant = await preload("res://scripts/render/merge.gd").merge(self, ex, 0.0, 0.0)
+	if r is Dictionary:
+		print("MERGE loja %s: %d malhas -> %d" % [str(data.get("id", "")), r["in"], r["out"]])
 
 
 # ───────────────────────────────── ambiente fechado
@@ -200,6 +223,21 @@ func _build_shell(look: Dictionary) -> void:
 		box(Vector3(0, 1.12, -D / 2 + 0.15), Vector3(W - 0.2, 0.05, 0.08), base_mat)
 		for x in [-W / 2 + 0.15, W / 2 - 0.15]:
 			box(Vector3(x, 1.12, 0), Vector3(0.08, 0.05, D - 0.2), base_mat)
+	# porta de verdade fechando o vão (vista por dentro): folha de madeira com textura, almofadas em relevo,
+	# visor de vidro com a luz da rua, chapa de chute e barra de empurrar; o batente de neon e o SAIR em volta
+	var leaf := painted("madeira", Color(look.get("door_tint", "#6a4630")), 0.9)
+	box(Vector3(0, 1.4, fz - 0.02), Vector3(1.8, 2.8, 0.08), leaf)
+	var trim := painted("madeira", Color(look.get("door_tint", "#6a4630")).darkened(0.35), 0.9)
+	box(Vector3(0, 0.75, fz - 0.07), Vector3(1.3, 0.62, 0.03), trim)
+	box(Vector3(0, 1.85, fz - 0.065), Vector3(1.0, 0.75, 0.02), flat(Color("#ffcf8a"), 1.4))   # visor com a luz da rua
+	for vx in [-0.53, 0.53]:
+		box(Vector3(vx, 1.85, fz - 0.075), Vector3(0.06, 0.85, 0.03), trim)
+	for vy in [1.45, 2.25]:
+		box(Vector3(0, vy, fz - 0.075), Vector3(1.12, 0.06, 0.03), trim)
+	box(Vector3(0, 0.18, fz - 0.07), Vector3(1.5, 0.3, 0.02), flat(Color("#8a7a5a")))         # chapa de chute
+	box(Vector3(0, 1.1, fz - 0.14), Vector3(1.1, 0.06, 0.06), flat(Color("#c8a050")))         # barra de empurrar
+	for bx in [-0.5, 0.5]:
+		box(Vector3(bx, 1.1, fz - 0.1), Vector3(0.05, 0.05, 0.1), flat(Color("#c8a050")))
 	# porta de saída com batente de neon e SAIR
 	for ox in [-0.92, 0.92]:
 		box(Vector3(ox, 1.4, fz - 0.03), Vector3(0.07, 2.8, 0.07), flat(_accent, 3.0))
@@ -477,6 +515,8 @@ func _process(dt: float) -> void:
 		# só o objeto mirado acende uma luz real (no Compatibility cada luz é um passe extra por malha)
 		var target: float = 2.2 if e.get("_hot", false) else 0.0
 		l.light_energy = lerpf(l.light_energy, target, clampf(dt * 6.0, 0, 1))
+		# (testado deixar sempre visível com energia 0: a 1ª entrada a frio subiu de 1,5 para 4,8 s, mais
+		# combinações de luz por malha para compilar; fica como antes, acende só o objeto mirado)
 		l.visible = l.light_energy > 0.03
 	for n in _spin:
 		if is_instance_valid(n):
