@@ -301,13 +301,31 @@ JS = r"""(function () {
       window.pfMusicUrl = CFG.pfMusic || '';
       var PK = { lang: langPack, lang_pt: CFG.pfLang.pt, lang_en: CFG.pfLang.en, music: CFG.pfPacks.music, shops: CFG.pfPacks.shops };
       function whenEngine(fn) { if (engine.rtenv) fn(); else setTimeout(function () { whenEngine(fn); }, 100); }
+      // progresso por pacote (o véu da loja mostra a porcentagem e as falhas) e nova tentativa sob pedido do jogo
+      var PI = {}, busy = false;
+      window.pfPackInfo = function (id) { return PI[id] || { loaded: 0, total: 0, fails: 0 }; };
+      window.pfPackFirst = function (id) { var i = queue.indexOf(id); if (i > 0) { queue.splice(i, 1); queue.unshift(id); } };
+      window.pfPackRetry = function (id) { delete packState[id]; var p = PI[id] || (PI[id] = { loaded: 0, total: 0, fails: 0 }); p.fails++; p.loaded = 0; if (queue.indexOf(id) < 0) queue.unshift(id); if (!busy) nextPack(); };
+      function readAll(r, id) {
+        var p = PI[id] || (PI[id] = { loaded: 0, total: 0, fails: 0 });
+        p.total = +(r.headers.get('content-length') || 0) || (PK[id].size || 0); p.loaded = 0;
+        if (!r.body || !r.body.getReader) return r.arrayBuffer();
+        var rd = r.body.getReader(), parts = [];
+        return (function pump() {
+          return rd.read().then(function (x) {
+            if (x.done) { var n = 0; parts.forEach(function (c) { n += c.length; }); var out = new Uint8Array(n), o = 0; parts.forEach(function (c) { out.set(c, o); o += c.length; }); return out.buffer; }
+            parts.push(x.value); p.loaded += x.value.length; return pump();
+          });
+        })();
+      }
       function nextPack() {
         var id = queue.shift();
-        if (!id) return;
+        if (!id) { busy = false; return; }
+        busy = true;
         if (id !== 'lang' && !dlDone) { queue.unshift(id); setTimeout(nextPack, 200); return; }
         fetch(PK[id].url, { credentials: 'same-origin', priority: 'low' }).then(function (r) {
           if (!r.ok) throw new Error('HTTP ' + r.status);
-          return r.arrayBuffer();
+          return readAll(r, id);
         }).then(function (buf) {
           whenEngine(function () {
             var p = '/pfpacks/' + id + '.pck';
@@ -317,7 +335,7 @@ JS = r"""(function () {
             mark('pacote_' + id);
             nextPack();
           });
-        }).catch(function () { setTimeout(nextPack, 3000); queue.unshift(id); });
+        }).catch(function () { var p = PI[id] || (PI[id] = { loaded: 0, total: 0, fails: 0 }); p.fails++; queue.unshift(id); setTimeout(nextPack, 3000); });
       }
       // o pacote de idioma baixa em paralelo com o principal (a cidade precisa dele para abrir); o resto depois
       nextPack();

@@ -161,7 +161,8 @@ func _fuse() -> void:
 	var tick := Callable()
 	if sliced:
 		tick = func() -> void:
-			if Time.get_ticks_usec() - _slice_t > 8000:
+			# sliced pode desligar no meio (o jogador abriu a porta): aí termina sem ceder quadro
+			if sliced and Time.get_ticks_usec() - _slice_t > 8000:
 				await get_tree().process_frame
 				_slice_t = Time.get_ticks_usec()
 	_slice_t = Time.get_ticks_usec()

@@ -743,6 +743,14 @@ var _entering := false
 
 
 ## véu preto: esconde o trabalho pesado de montar a sala (antes a tela congelava por 100 a 500 ms ao abrir a porta)
+var _veil_lbl: Label
+
+
+func _veil_text(t: String) -> void:
+	if _veil_lbl:
+		_veil_lbl.text = t
+
+
 func _veil_in() -> void:
 	if _veil == null:
 		_veil = ColorRect.new()
@@ -750,12 +758,16 @@ func _veil_in() -> void:
 		_veil.mouse_filter = Control.MOUSE_FILTER_STOP
 		add_child(UI.full(_veil))
 		var vl := Label.new()
-		vl.text = "ENTERING..." if L.lang == "en" else "ENTRANDO..."
-		vl.add_theme_font_size_override("font_size", 22)
+		_veil_lbl = vl
+		vl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		vl.add_theme_font_override("font", UI.font("bold"))   # sem fonte explícita o texto saía em quadradinhos
+		vl.add_theme_font_size_override("font_size", 24)
 		vl.add_theme_color_override("font_color", Color(1, 0.78, 0.24))
 		vl.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 		vl.grow_horizontal = Control.GROW_DIRECTION_BOTH
+		vl.grow_vertical = Control.GROW_DIRECTION_BOTH
 		_veil.add_child(vl)
+	_veil_text("ENTERING..." if L.lang == "en" else "ENTRANDO...")
 	move_child(_veil, get_child_count() - 1)
 	_veil.visible = true
 	var tw := create_tween()
@@ -776,49 +788,70 @@ func _veil_out() -> void:
 
 
 func enter_museum(project: Dictionary) -> void:
-	if _entering:
+	if _entering or _museum != null:
 		return
-	if not Packs.ready_pack("shops"):
-		# as lojas chegam em segundo plano; em rede lenta o jogador espera aqui
-		if prompt_label:
-			prompt.visible = true
-			prompt_label.text = "Loading the shop..." if L.lang == "en" else "Carregando a loja..."
-		await Packs.need("shops")
 	var id := _shop_id(project)
-	var d := _shop_data(id)
-	if d.is_empty():
-		open_dossier(project)
-		return
 	_entering = true
 	var t_door := Time.get_ticks_usec()
+	# o véu entra primeiro e só sai com a loja COMPLETA (regra: nunca mostrar loja pela metade)
 	await _veil_in()
+	# as lojas chegam num pacote em segundo plano: espera com o progresso no véu (e tenta de novo se falhar)
+	if not Packs.ready_pack("shops"):
+		Packs.prioritize("shops")
+		while not Packs.ready_pack("shops"):
+			var inf: Dictionary = Packs.info("shops")
+			var en := L.lang == "en"
+			var txt := "ENTERING..." if en else "ENTRANDO..."
+			var tot := int(inf.get("total", 0))
+			var got := int(inf.get("loaded", 0))
+			if tot > 0 and got > 0:
+				txt += "\n" + ("Loading the shop %d%%" if en else "Carregando a loja %d%%") % int(100.0 * float(got) / float(tot))
+			elif int(inf.get("fails", 0)) > 0:
+				txt += "\n" + ("Connection failed. Trying again..." if en else "A conexão falhou. Tentando de novo...")
+			else:
+				txt += "\n" + ("Loading the shop..." if en else "Carregando a loja...")
+			_veil_text(txt)
+			await get_tree().create_timer(0.15).timeout
+		_veil_text("ENTERING..." if L.lang == "en" else "ENTRANDO...")
+	var d := _shop_data(id)
+	if d.is_empty():
+		await _veil_out()
+		_entering = false
+		open_dossier(project)
+		return
 	if city:
 		city.mark_visited(project)
 	_set_npc_hot(null)
 	_entry_xform = player.global_transform
+	var cached: bool = _shop_cache.has(id) and is_instance_valid(_shop_cache[id])
+	var m = _shop_cache[id] if cached else null
+	if m == null:
+		m = _new_museum(project, d)
+		_shop_cache[id] = m
+		city.get_parent().add_child(m)
+	_trim_cache(id)
+	# loja em pré-montagem: termina agora, com prioridade (o véu cobre o quadro longo)
+	if not m.is_built:
+		m.sliced = false
+		await m.built
+	# 1º desenho fora da vista em andamento (a loja está 500 m abaixo): espera ele devolver a loja ao lugar
+	if _warming == m:
+		_warm_abort = true
+		while _warming == m:
+			await get_tree().process_frame
+	_museum = m
 	city.visible = false
 	city.set_process(false)
 	city.set_physics_process(false)
-	var cached: bool = _shop_cache.has(id)
-	if cached:
-		_museum = _shop_cache[id]
-		_trim_cache(id)
-		if not _museum.is_built:
-			_museum.sliced = false   # termina de uma vez, atrás do véu
-			await _museum.built
-	else:
-		_museum = _new_museum(project, d)
-		city.get_parent().add_child(_museum)
-		_shop_cache[id] = _museum
-		_trim_cache(id)
+	_museum.position = Vector3.ZERO
 	_museum.activate()
-	print("PFT porta %s: %s, %d ms" % [id, "loja pronta" if cached else "montada agora", (Time.get_ticks_usec() - t_door) / 1000])
 	if UI.software():
 		for l in _museum.find_children("*", "Light3D", true, false):
 			(l as Light3D).visible = false
 	player.get_parent().remove_child(player)
 	_museum.add_child(player)
-	player.global_position = _museum.spawn_pos()
+	# o chão e as paredes já estão montados: só agora o jogador entra (posição local da sala)
+	player.position = _museum.spawn_pos()
 	# de costas para a porta, olhando o centro da sala, câmera nivelada
 	player._yaw = 0.0
 	player.rotation.y = 0.0
@@ -834,13 +867,16 @@ func enter_museum(project: Dictionary) -> void:
 	_tour_i = -1
 	_hide_prompt()
 	_sync_mode()
+	print("PFT porta %s: %s, %d ms" % [id, "loja pronta" if cached else "montada agora", (Time.get_ticks_usec() - t_door) / 1000])
 	UI.toast(self, L.t("Use as setas da barra para o tour guiado"), _museum._accent)
 	await _veil_out()
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.__pfShopReady=%s" % JSON.stringify(id), true)
 	_entering = false
 
 
 func exit_museum() -> void:
-	if _museum == null:
+	if _museum == null or _entering:
 		return
 	player.get_parent().remove_child(player)
 	city.add_child(player)
@@ -977,9 +1013,15 @@ func _prebuild(project: Dictionary) -> void:
 ## 1º desenho da loja fora da vista: no navegador, o primeiro uso de cada imagem/variante custava ~250 ms na
 ## porta (só na 1ª visita). A loja desce 500 m, aparece por 8 quadros numa viewport minúscula que olha em 8
 ## direções e volta a se esconder.
+var _warming = null
+var _warm_abort := false
+
+
 func _warm_shop(m) -> void:
 	if OS.get_environment("PF_NOSHOPWARM") != "" or not is_instance_valid(m) or _museum == m:
 		return
+	_warming = m
+	_warm_abort = false
 	var vp := SubViewport.new()
 	vp.size = Vector2i(128, 72)
 	vp.world_3d = city.get_viewport().find_world_3d()
@@ -998,16 +1040,16 @@ func _warm_shop(m) -> void:
 	var c: Vector3 = off + Vector3(0, 1.6, 0)
 	# 8 direções (um oitavo da sala por quadro: o custo do 1º uso se espalha)
 	for k in 8:
-		if not is_instance_valid(m) or _museum == m:
+		if not is_instance_valid(m) or _museum == m or _warm_abort:
 			break
 		cam.global_transform = Transform3D(Basis(Vector3.UP, k * PI / 4.0), c)
 		await get_tree().process_frame
 	vp.queue_free()
-	if is_instance_valid(m) and _museum != m:
+	if is_instance_valid(m):
 		m.visible = false
 		m.position = Vector3.ZERO
-	elif is_instance_valid(m):
-		m.position = Vector3.ZERO
+	_warming = null
+	_warm_abort = false
 
 
 ## ao sair de uma loja, a seta de HUD sugere o próximo projeto ainda não visitado (o mais perto)

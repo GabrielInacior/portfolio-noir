@@ -73,7 +73,8 @@ static func thumb(pr: Dictionary) -> Texture2D:
 
 ## leva o jogador até a porta do lugar (com escurecimento) e entra (ou abre o contato)
 static func travel(hud, place: Dictionary) -> void:
-	if hud == null or hud.player == null:
+	# entrando numa loja (véu na tela): a viagem espera a porta terminar, nunca mexe no jogador no meio
+	if hud == null or hud.player == null or hud._entering:
 		return
 	var fade := ColorRect.new()
 	fade.color = Color(0, 0, 0, 0)

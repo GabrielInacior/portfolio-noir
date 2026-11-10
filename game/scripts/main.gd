@@ -490,6 +490,12 @@ func _ab(args: Array) -> void:
 				hud.enter_museum(pj)
 			elif not on:
 				hud.exit_museum()
+		"travel":
+			# sonda: viagem do mapa/menu de lugares até a porta (e entra), como o jogador faz
+			for pl in Nav.places(city):
+				if str((pl["project"] as Dictionary).get("id", "")) == str(args[2]) or (str(args[2]) == "sobre" and str((pl["project"] as Dictionary).get("special", "")) == "about"):
+					Nav.travel(hud, pl)
+					break
 		"enter":
 			if _gate and is_instance_valid(_gate):
 				_gate.entered.emit()

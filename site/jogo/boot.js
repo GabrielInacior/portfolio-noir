@@ -1,6 +1,6 @@
 // Gerado por tools/deploy/make_boot.py
 (function () {
-  var CFG = {"canvasResizePolicy": 2, "emscriptenPoolSize": 8, "executable": "/jogo/index.4654e8f792", "experimentalVK": false, "fileSizes": {"/jogo/index.4654e8f792.wasm": 34731138, "/jogo/index.8a2ca4de50.pck": 9420276}, "focusCanvas": true, "gdextensionLibs": [], "godotPoolSize": 4, "mainPack": "/jogo/index.8a2ca4de50.pck", "pfPacks": {"music": {"url": "/jogo/index.89c6c488c5.pck", "size": 3502220}, "shops": {"url": "/jogo/index.7fe448b697.pck", "size": 5941520}}, "pfMusic": "/jogo/music.7b04e9643b.mp3", "pfLang": {"pt": {"url": "/jogo/index.c8c3ce34a6.pck", "size": 2070888}, "en": {"url": "/jogo/index.587be347c1.pck", "size": 2059144}}}, JSURL = "/jogo/index.ffcdec5055.js";
+  var CFG = {"canvasResizePolicy": 2, "emscriptenPoolSize": 8, "executable": "/jogo/index.4654e8f792", "experimentalVK": false, "fileSizes": {"/jogo/index.4654e8f792.wasm": 34731138, "/jogo/index.47e3c15959.pck": 9421988}, "focusCanvas": true, "gdextensionLibs": [], "godotPoolSize": 4, "mainPack": "/jogo/index.47e3c15959.pck", "pfPacks": {"music": {"url": "/jogo/index.89c6c488c5.pck", "size": 3502220}, "shops": {"url": "/jogo/index.7fe448b697.pck", "size": 5941520}}, "pfMusic": "/jogo/music.7b04e9643b.mp3", "pfLang": {"pt": {"url": "/jogo/index.c8c3ce34a6.pck", "size": 2070888}, "en": {"url": "/jogo/index.587be347c1.pck", "size": 2059144}}}, JSURL = "/jogo/index.ffcdec5055.js";
   var T0 = 0, TM = {};  // marcas em ms desde o início da navegação
   window.__pf = { t: TM };
   function mark(k) { if (!(k in TM)) { TM[k] = Math.round(performance.now() - T0); try { console.log('[pf] ' + k + ' ' + TM[k] + ' ms'); } catch (e) {} } }
@@ -219,13 +219,31 @@
       window.pfMusicUrl = CFG.pfMusic || '';
       var PK = { lang: langPack, lang_pt: CFG.pfLang.pt, lang_en: CFG.pfLang.en, music: CFG.pfPacks.music, shops: CFG.pfPacks.shops };
       function whenEngine(fn) { if (engine.rtenv) fn(); else setTimeout(function () { whenEngine(fn); }, 100); }
+      // progresso por pacote (o véu da loja mostra a porcentagem e as falhas) e nova tentativa sob pedido do jogo
+      var PI = {}, busy = false;
+      window.pfPackInfo = function (id) { return PI[id] || { loaded: 0, total: 0, fails: 0 }; };
+      window.pfPackFirst = function (id) { var i = queue.indexOf(id); if (i > 0) { queue.splice(i, 1); queue.unshift(id); } };
+      window.pfPackRetry = function (id) { delete packState[id]; var p = PI[id] || (PI[id] = { loaded: 0, total: 0, fails: 0 }); p.fails++; p.loaded = 0; if (queue.indexOf(id) < 0) queue.unshift(id); if (!busy) nextPack(); };
+      function readAll(r, id) {
+        var p = PI[id] || (PI[id] = { loaded: 0, total: 0, fails: 0 });
+        p.total = +(r.headers.get('content-length') || 0) || (PK[id].size || 0); p.loaded = 0;
+        if (!r.body || !r.body.getReader) return r.arrayBuffer();
+        var rd = r.body.getReader(), parts = [];
+        return (function pump() {
+          return rd.read().then(function (x) {
+            if (x.done) { var n = 0; parts.forEach(function (c) { n += c.length; }); var out = new Uint8Array(n), o = 0; parts.forEach(function (c) { out.set(c, o); o += c.length; }); return out.buffer; }
+            parts.push(x.value); p.loaded += x.value.length; return pump();
+          });
+        })();
+      }
       function nextPack() {
         var id = queue.shift();
-        if (!id) return;
+        if (!id) { busy = false; return; }
+        busy = true;
         if (id !== 'lang' && !dlDone) { queue.unshift(id); setTimeout(nextPack, 200); return; }
         fetch(PK[id].url, { credentials: 'same-origin', priority: 'low' }).then(function (r) {
           if (!r.ok) throw new Error('HTTP ' + r.status);
-          return r.arrayBuffer();
+          return readAll(r, id);
         }).then(function (buf) {
           whenEngine(function () {
             var p = '/pfpacks/' + id + '.pck';
@@ -235,7 +253,7 @@
             mark('pacote_' + id);
             nextPack();
           });
-        }).catch(function () { setTimeout(nextPack, 3000); queue.unshift(id); });
+        }).catch(function () { var p = PI[id] || (PI[id] = { loaded: 0, total: 0, fails: 0 }); p.fails++; queue.unshift(id); setTimeout(nextPack, 3000); });
       }
       // o pacote de idioma baixa em paralelo com o principal (a cidade precisa dele para abrir); o resto depois
       nextPack();

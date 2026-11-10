@@ -136,8 +136,16 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     out.shops = {};
     for (const shop of shops) {
       await ev('pfFrameStats(true)');
-      await ev('pfAB("shop",true,"' + shop + '")');
-      await sleep(2500);
+      await ev('window.__pfShopReady=""');
+      const tq = Date.now();
+      await ev('pfAB(' + (argv.includes('--travel') ? '"travel"' : '"shop"') + ',true,"' + shop + '")');
+      // --veilshot arq.png: captura o véu 1,5 s depois de abrir a porta (progresso do pacote das lojas)
+      if (opt('--veilshot', '') && shop === shops[0]) { await sleep(1500); const r0 = await send('Page.captureScreenshot', { format: 'png' }); fs.writeFileSync(opt('--veilshot', ''), Buffer.from(r0.result.data, 'base64')); }
+      // espera o véu sair (loja completa) e captura o 1º quadro visível; sites antigos sem o aviso: 2,5 s
+      let rdy = false;
+      for (let k = 0; Date.now() - tq < 120000 && !rdy; k++) { await sleep(100); const sr = await ev('window.__pfShopReady'); rdy = sr === shop || sr === '_' + shop || (shop === 'sobre' && sr === '_lab'); }
+      out['porta_' + shop] = 'véu fora em ' + (Date.now() - tq) + ' ms de relógio' + (rdy ? '' : ' (SEM AVISO)');
+      console.error('porta ' + shop + ': ' + out['porta_' + shop] + ' | ' + logs.filter(function (l) { return /porta|montada|ERROR/.test(l); }).slice(-2).join(' | '));
       const en = JSON.parse(await ev('JSON.stringify(pfFrameStats(true))'));
       if (opt('--shopshots', '')) { const r = await send('Page.captureScreenshot', { format: 'png' }); fs.writeFileSync(path.join(opt('--shopshots', ''), shop + '.png'), Buffer.from(r.result.data, 'base64')); }
       await sleep(SECS * 1000);
@@ -168,6 +176,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     }
     // --tpshots pasta --tp "nome:x,y,z,yaw,pitch;nome2:..." : leva o jogador a cada ponto e captura
     if (opt('--tpshots', '')) {
+      // --tpquiet: sem carros, pedestres e chuva (o que se mexe atrapalha a comparação pixel a pixel)
+      if (argv.includes('--tpquiet')) { for (const n of ['cars', 'walkers', 'rain']) await ev('pfAB("' + n + '",false)'); await sleep(300); }
       for (const it of opt('--tp', '').split(';').filter(Boolean)) {
         const [nm, pos] = it.split(':');
         await ev('pfAB("tp",true,"' + pos + '")'); await sleep(+opt('--tpwait', 1800));

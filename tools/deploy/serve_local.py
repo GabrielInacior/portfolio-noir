@@ -21,6 +21,9 @@ ap.add_argument("port", nargs="?", type=int, default=8090)
 ap.add_argument("--kbps", type=int, default=0)
 ap.add_argument("--root", default="site")
 ap.add_argument("--rtt", type=int, default=0, help="atraso por requisição, ms")
+ap.add_argument("--slow-re", default="", help="só os caminhos que casam com esta regex usam --slow-kbps (ex.: pacote das lojas)")
+ap.add_argument("--slow-kbps", type=int, default=0)
+ap.add_argument("--fail-re", default="", help="caminhos que respondem 503 na 1ª tentativa (teste de nova tentativa)")
 A = ap.parse_args()
 SITE = os.path.join(ROOT, A.root)
 CACHE = os.path.join(ROOT, "tools", "deploy", ".cache_br")
@@ -30,6 +33,9 @@ for h in json.load(open(os.path.join(ROOT, "vercel.json"), encoding="utf8")).get
     RULES.append((re.compile("^" + h["source"] + "$"), {x["key"]: x["value"] for x in h["headers"]}))
 COMP = (".wasm", ".js", ".pck", ".html", ".json", ".css", ".svg")
 mimetypes.add_type("application/wasm", ".wasm")
+
+
+FAILED = set()
 
 
 class H(SimpleHTTPRequestHandler):
@@ -51,6 +57,10 @@ class H(SimpleHTTPRequestHandler):
             return
         if A.rtt:
             time.sleep(A.rtt / 1000)
+        if A.fail_re and re.search(A.fail_re, self.path) and self.path not in FAILED:
+            FAILED.add(self.path)
+            self.send_error(503)
+            return
         url = self.path.split("?")[0]
         ext = os.path.splitext(fs)[1].lower()
         data = None
@@ -81,8 +91,9 @@ class H(SimpleHTTPRequestHandler):
         self.send_header("Content-Length", str(len(data)))
         self.end_headers()
         try:
-            if A.kbps:
-                chunk = max(4096, A.kbps * 1024 // 20)
+            kb = A.slow_kbps if (A.slow_re and re.search(A.slow_re, self.path)) else A.kbps
+            if kb:
+                chunk = max(4096, kb * 1024 // 20)
                 for i in range(0, len(data), chunk):
                     self.wfile.write(data[i:i + chunk])
                     time.sleep(0.05)

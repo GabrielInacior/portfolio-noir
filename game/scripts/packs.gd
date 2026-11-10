@@ -21,9 +21,24 @@ func ready_pack(id: String) -> bool:
 		_ok[id] = true
 		print("PFT pacote montado: ", id)
 		return true
+	# arquivo chegou corrompido/incompleto: baixa de novo (o carregador conta a falha e mostra no véu)
 	push_error("pacote falhou: " + id)
-	_ok[id] = true  # não trava o jogo; o recurso que faltar já cai nos caminhos de erro de sempre
-	return true
+	JavaScriptBridge.eval("window.pfPackRetry&&window.pfPackRetry('%s')" % id, true)
+	return false
+
+
+## progresso do download de um pacote: {loaded, total, fails} (bytes; fails = tentativas que falharam)
+func info(id: String) -> Dictionary:
+	if not OS.has_feature("web"):
+		return {}
+	var v: Variant = JSON.parse_string(str(JavaScriptBridge.eval("window.pfPackInfo?JSON.stringify(window.pfPackInfo('%s')):'{}'" % id, true)))
+	return v if v is Dictionary else {}
+
+
+## põe o pacote na frente da fila de downloads (o jogador está esperando por ele)
+func prioritize(id: String) -> void:
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.pfPackFirst&&window.pfPackFirst('%s')" % id, true)
 
 
 ## coroutine: espera o pacote chegar (poucos décimos de segundo quando a rede é boa)
