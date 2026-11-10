@@ -12,6 +12,8 @@ var _gate: Control
 
 func _ready() -> void:
 	print("PFT %5d ms  main._ready" % Time.get_ticks_msec())
+	if OS.has_feature("web") and UI.js_flag("/[?&]asyncsh=0/.test(location.search)?1:0"):
+		OS.set_environment("PF_SYNC_SHADERS", "1")   # teste: shaders compilados um a um, como antes
 	_setup_input()
 	if UI.software():
 		# sem placa de vídeo: 30 quadros por segundo dão fôlego à CPU, e o 3D desenha em 240 px de altura
@@ -69,6 +71,9 @@ func _ready() -> void:
 	if not UI.software():
 		await L.prepare(true)
 	print("PFT %5d ms  idioma preparado" % Time.get_ticks_msec())
+	# shaders em paralelo (template web, KHR_parallel_shader_compile) só durante o carregamento: daqui em diante
+	# um programa que ainda esteja compilando é esperado no primeiro desenho (nada some da tela no jogo)
+	OS.set_environment("PF_SYNC_SHADERS", "1")
 	_build_gate(layer)
 	print("PFT %5d ms  tela de entrada" % Time.get_ticks_msec())
 	# avisa a página (boot.js) que a cidade está montada e desenhada: o carregador HTML some

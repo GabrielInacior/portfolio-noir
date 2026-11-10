@@ -1,8 +1,68 @@
+diff --git a/drivers/gles3/rasterizer_canvas_gles3.cpp b/drivers/gles3/rasterizer_canvas_gles3.cpp
+index 3b57052..66a29a2 100644
+--- a/drivers/gles3/rasterizer_canvas_gles3.cpp
++++ b/drivers/gles3/rasterizer_canvas_gles3.cpp
+@@ -2827,6 +2827,7 @@ RasterizerCanvasGLES3::RasterizerCanvasGLES3() {
+ 	global_defines += "#define MAX_GLOBAL_SHADER_UNIFORMS 256\n"; // TODO: this is arbitrary for now
+ 	global_defines += "#define MAX_LIGHTS " + itos(data.max_lights_per_render) + "\n";
+ 
++	GLES3::MaterialStorage::get_singleton()->shaders.canvas_shader.allow_async = true;
+ 	GLES3::MaterialStorage::get_singleton()->shaders.canvas_shader.initialize(global_defines, 1);
+ 	data.canvas_shader_default_version = GLES3::MaterialStorage::get_singleton()->shaders.canvas_shader.version_create();
+ 
+diff --git a/drivers/gles3/rasterizer_scene_gles3.cpp b/drivers/gles3/rasterizer_scene_gles3.cpp
+index bf41012..a3d86f7 100644
+--- a/drivers/gles3/rasterizer_scene_gles3.cpp
++++ b/drivers/gles3/rasterizer_scene_gles3.cpp
+@@ -4613,6 +4613,7 @@ RasterizerSceneGLES3::RasterizerSceneGLES3() {
+ 		if (!config->specular_occlusion) {
+ 			global_defines += "\n#define SPECULAR_OCCLUSION_DISABLED\n";
+ 		}
++		material_storage->shaders.scene_shader.allow_async = true;
+ 		material_storage->shaders.scene_shader.initialize(global_defines);
+ 		scene_globals.shader_default_version = material_storage->shaders.scene_shader.version_create();
+ 		material_storage->shaders.scene_shader.version_bind_shader(scene_globals.shader_default_version, SceneShaderGLES3::MODE_COLOR);
 diff --git a/drivers/gles3/shader_gles3.cpp b/drivers/gles3/shader_gles3.cpp
-index 4fe333e..587a538 100644
+index 4fe333e..38598ce 100644
 --- a/drivers/gles3/shader_gles3.cpp
 +++ b/drivers/gles3/shader_gles3.cpp
-@@ -322,7 +322,9 @@ void ShaderGLES3::_compile_specialization(Version::Specialization &spec, uint32_
+@@ -30,6 +30,35 @@
+ 
+ #include "shader_gles3.h"
+ 
++#ifdef WEB_ENABLED
++#include <emscripten/html5.h>
++#include <stdlib.h>
++#endif
++
++#ifndef GL_COMPLETION_STATUS_KHR
++#define GL_COMPLETION_STATUS_KHR 0x91B1
++#endif
++
++bool ShaderGLES3::async_supported = false;
++int ShaderGLES3::async_pending = 0;
++
++// portfolio-noir: async only while the game is loading (PF_SYNC_SHADERS unset); afterwards a queued program is
++// waited for on its next bind, so nothing pops in during play
++bool ShaderGLES3::async_enabled() {
++#ifdef WEB_ENABLED
++	static int checked = 0;
++	if (!checked) {
++		checked = 1;
++		EMSCRIPTEN_WEBGL_CONTEXT_HANDLE ctx = emscripten_webgl_get_current_context();
++		async_supported = ctx && emscripten_webgl_enable_extension(ctx, "KHR_parallel_shader_compile");
++		print_line(String("PFT shaders paralelos (KHR_parallel_shader_compile): ") + (async_supported ? "sim" : "nao"));
++	}
++	return async_supported && getenv("PF_SYNC_SHADERS") == nullptr;
++#else
++	return false;
++#endif
++}
++
+ #ifdef GLES3_ENABLED
+ 
+ #include "core/io/dir_access.h"
+@@ -322,7 +351,9 @@ void ShaderGLES3::_compile_specialization(Version::Specialization &spec, uint32_
  		glShaderSource(spec.vert_id, 1, &cstr, &cstr_len);
  		glCompileShader(spec.vert_id);
  
@@ -13,7 +73,7 @@ index 4fe333e..587a538 100644
  		if (status == GL_FALSE) {
  			GLsizei iloglen;
  			glGetShaderiv(spec.vert_id, GL_INFO_LOG_LENGTH, &iloglen);
-@@ -370,7 +372,7 @@ void ShaderGLES3::_compile_specialization(Version::Specialization &spec, uint32_
+@@ -370,7 +401,7 @@ void ShaderGLES3::_compile_specialization(Version::Specialization &spec, uint32_
  		glShaderSource(spec.frag_id, 1, &cstr, &cstr_len);
  		glCompileShader(spec.frag_id);
  
@@ -22,8 +82,38 @@ index 4fe333e..587a538 100644
  		if (status == GL_FALSE) {
  			GLsizei iloglen;
  			glGetShaderiv(spec.frag_id, GL_INFO_LOG_LENGTH, &iloglen);
-@@ -428,6 +430,23 @@ void ShaderGLES3::_compile_specialization(Version::Specialization &spec, uint32_
+@@ -426,8 +457,53 @@ void ShaderGLES3::_compile_specialization(Version::Specialization &spec, uint32_
  
+ 	glLinkProgram(spec.id);
+ 
++	if (allow_async && async_enabled()) {
++		spec.build_queued = true;
++		async_pending++;
++#ifdef WEB_ENABLED
++		setenv("PF_SHADERS_PENDING", itos(async_pending).utf8().get_data(), 1);
++#endif
++		return;
++	}
++	_finish_specialization(spec, p_version, true);
++}
++
++bool ShaderGLES3::_finish_specialization(Version::Specialization &spec, Version *p_version, bool p_wait) {
++	GLint status;
++	if (spec.build_queued) {
++		if (!p_wait) {
++			GLint done = 0;
++			glGetProgramiv(spec.id, GL_COMPLETION_STATUS_KHR, &done);
++			if (!done) {
++				return false;
++			}
++		}
++		spec.build_queued = false;
++		async_pending--;
++#ifdef WEB_ENABLED
++		setenv("PF_SHADERS_PENDING", itos(async_pending).utf8().get_data(), 1);
++#endif
++	}
++
  	glGetProgramiv(spec.id, GL_LINK_STATUS, &status);
  	if (status == GL_FALSE) {
 +		// portfolio-noir: deferred stage checks (see above), with their logs
@@ -46,7 +136,41 @@ index 4fe333e..587a538 100644
  		GLsizei iloglen;
  		glGetProgramiv(spec.id, GL_INFO_LOG_LENGTH, &iloglen);
  
-@@ -703,15 +722,23 @@ void ShaderGLES3::_clear_version(Version *p_version) {
+@@ -438,7 +514,7 @@ void ShaderGLES3::_compile_specialization(Version::Specialization &spec, uint32_
+ 			spec.id = 0;
+ 
+ 			ERR_PRINT("No OpenGL program link log. Something is wrong.");
+-			ERR_FAIL();
++			ERR_FAIL_V(false);
+ 		}
+ 
+ 		if (iloglen == 0) {
+@@ -461,12 +537,13 @@ void ShaderGLES3::_compile_specialization(Version::Specialization &spec, uint32_
+ 		glDeleteProgram(spec.id);
+ 		spec.id = 0;
+ 
+-		ERR_FAIL();
++		ERR_FAIL_V(false);
+ 	}
+ 
+ 	_get_uniform_locations(spec, p_version);
+ 
+ 	spec.ok = true;
++	return true;
+ }
+ 
+ RenderingServerTypes::ShaderNativeSourceCode ShaderGLES3::version_get_native_source_code(RID p_version) {
+@@ -689,6 +766,9 @@ void ShaderGLES3::_clear_version(Version *p_version) {
+ 
+ 	for (int i = 0; i < variant_count; i++) {
+ 		for (KeyValue<uint64_t, Version::Specialization> &kv : p_version->variants[i]) {
++			if (kv.value.build_queued) {
++				async_pending--;
++			}
+ 			if (kv.value.id != 0) {
+ 				glDeleteShader(kv.value.vert_id);
+ 				glDeleteShader(kv.value.frag_id);
+@@ -703,15 +783,23 @@ void ShaderGLES3::_clear_version(Version *p_version) {
  void ShaderGLES3::_initialize_version(Version *p_version) {
  	ERR_FAIL_COND(p_version->variants.size() > 0);
  	bool use_cache = shader_cache_dir_valid && !(feedback_count > 0 && GLES3::Config::get_singleton()->disable_transform_feedback_shader_cache);
@@ -73,6 +197,64 @@ index 4fe333e..587a538 100644
  	}
  	if (use_cache) {
  		_save_to_cache(p_version);
+diff --git a/drivers/gles3/shader_gles3.h b/drivers/gles3/shader_gles3.h
+index 4ff35c1..3bb5f0a 100644
+--- a/drivers/gles3/shader_gles3.h
++++ b/drivers/gles3/shader_gles3.h
+@@ -107,6 +107,17 @@ private:
+ 
+ 	void _get_uniform_locations(Version::Specialization &spec, Version *p_version);
+ 	void _compile_specialization(Version::Specialization &spec, uint32_t p_variant, Version *p_version, uint64_t p_specialization);
++	// portfolio-noir: KHR_parallel_shader_compile (web). The link is issued and the status is read later, when the
++	// driver says it is done; meanwhile the draw is skipped (only while loading, see async_enabled()).
++	bool _finish_specialization(Version::Specialization &spec, Version *p_version, bool p_wait);
++	static bool async_enabled();
++
++public:
++	bool allow_async = false; // portfolio-noir: only scene and canvas (redrawn every frame; a skipped draw is harmless)
++
++protected:
++	static bool async_supported;
++	static int async_pending;
+ 
+ 	void _clear_version(Version *p_version);
+ 	void _initialize_version(Version *p_version);
+@@ -192,23 +203,19 @@ protected:
+ 
+ 		Version::Specialization *spec = version->variants[p_variant].getptr(p_specialization);
+ 		if (!spec) {
+-			if (false) {
+-				// Queue load this specialization and use defaults in the meantime (TODO)
+-
+-				spec = version->variants[p_variant].getptr(specialization_default_mask);
+-			} else {
+-				// Compile on the spot
+-				Version::Specialization s;
+-				_compile_specialization(s, p_variant, version, p_specialization);
+-				version->variants[p_variant].insert(p_specialization, s);
+-				spec = version->variants[p_variant].getptr(p_specialization);
+-				if (shader_cache_dir_valid) {
+-					_save_to_cache(version);
+-				}
++			// Compile on the spot (with async: link issued, status read on a later bind)
++			Version::Specialization s;
++			_compile_specialization(s, p_variant, version, p_specialization);
++			version->variants[p_variant].insert(p_specialization, s);
++			spec = version->variants[p_variant].getptr(p_specialization);
++			if (shader_cache_dir_valid && !spec->build_queued) {
++				_save_to_cache(version);
++			}
++		}
++		if (spec->build_queued) {
++			if (!_finish_specialization(*spec, version, !async_enabled())) {
++				return false; // still compiling in the driver: skip this draw
+ 			}
+-		} else if (spec->build_queued) {
+-			// Still queued, wait
+-			spec = version->variants[p_variant].getptr(specialization_default_mask);
+ 		}
+ 
+ 		if (!spec || !spec->ok) {
 diff --git a/platform/web/detect.py b/platform/web/detect.py
 index 57b79b2..2187398 100644
 --- a/platform/web/detect.py

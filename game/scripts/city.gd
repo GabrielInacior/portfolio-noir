@@ -1974,7 +1974,8 @@ func _mid() -> float:
 ## shader, na primeira visita, isso era um único congelamento de 30 s). Aqui cada material único aparece
 ## num quadradinho diante da câmera, poucos por quadro, com a cidade escondida; o carregador mostra a
 ## porcentagem real e a thread nunca fica parada mais que um programa.
-func _warm_up() -> void:
+## issue_only: só pede os programas (testado antes da fusão com os shaders em paralelo: sem ganho medido)
+func _warm_up(issue_only := false) -> void:
 	# um quadradinho por PROGRAMA (não por material): cópias do mesmo shader, ou StandardMaterial3D com as
 	# mesmas flags, compartilham o programa; antes eram ~425 materiais, agora ~20 programas
 	var Census := preload("res://scripts/render/census.gd")
@@ -2042,7 +2043,7 @@ func _warm_up() -> void:
 	mmq.instance_count = 1
 	var total := items.size()
 	var slow := 0
-	var take_n := 6
+	var take_n := 64 if issue_only else 6
 	var prof := {}
 	var t_all := Time.get_ticks_usec()
 	# duas voltas: 1) com luzes de teste por perto (variante de shader com luz omni, spot e direcional);
@@ -2094,6 +2095,8 @@ func _warm_up() -> void:
 			m.set_meta("noir_skip_conv", true)
 			lit_items.append([m, false])
 	var rounds := 2 if (not Noir.enabled() or not lit_items.is_empty()) else 1
+	if issue_only:
+		rounds = 1
 	for rnd in rounds:
 		if Noir.enabled():
 			items = lit_items if (rnd == 0 and rounds == 2) else all_items
@@ -2159,17 +2162,17 @@ func _warm_up() -> void:
 				prof[desc] = e
 			for nd in nodes:
 				nd.queue_free()
-			if i / 8 != (i - batch) / 8 or i >= total:
+			if not issue_only and (i / 8 != (i - batch) / 8 or i >= total):
 				await _prog(0.82 + 0.16 * float(rnd * total + i) / maxf(1.0, float(rounds * total)), "Warming up shaders")
 	holder.queue_free()
 	var keys := prof.keys()
 	keys.sort_custom(func(x, y) -> bool: return prof[x][1] > prof[y][1])
 	for k in keys.slice(0, 14):
 		print("PFTPROF %5d ms  x%-3d %s" % [prof[k][1], prof[k][0], k])
-	print("PFT warm-up: %d materiais, %d ms" % [total, (Time.get_ticks_usec() - t_all) / 1000])
+	print("PFT warm-up%s: %d materiais, %d ms" % [" (só pedidos, antes da fusão)" if issue_only else "", total, (Time.get_ticks_usec() - t_all) / 1000])
 	visible = true
 	vp.render_target_update_mode = old_mode
-	if warm_key != "":
+	if warm_key != "" and not issue_only:
 		JavaScriptBridge.eval("try{localStorage.setItem('pf_warm',%s)}catch(e){}" % JSON.stringify(warm_key), true)
 
 

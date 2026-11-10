@@ -47,12 +47,16 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const r = await send('Profiler.stop');
   const prof = r.result.profile;
   if (opt('--out', '')) fs.writeFileSync(opt('--out', ''), JSON.stringify(prof));
+  // --symbols arquivo.symbols (emcc --emit-symbol-map, mesmo wasm): troca wasm-function[N] pelo nome
+  const SYM = {};
+  if (opt('--symbols', '')) for (const ln of fs.readFileSync(opt('--symbols', ''), 'utf8').split(String.fromCharCode(10))) { const i = ln.indexOf(':'); if (i > 0) SYM[ln.slice(0, i)] = ln.slice(i + 1).trim(); }
+  const nm = (f) => { const m = /^(?:wasm-function\[)?(\d+)\]?$/.exec(f); return m && SYM[m[1]] ? SYM[m[1]].slice(0, 110) : f; };
   const self = {}; const byId = {};
   for (const n of prof.nodes) byId[n.id] = n;
   const dt = prof.timeDeltas; let total = 0;
   for (let i = 0; i < prof.samples.length; i++) {
     const n = byId[prof.samples[i]]; const d = dt[i] || 0; total += d;
-    const cf = n.callFrame; const k = (cf.functionName || '(anon)') + ' ' + (cf.url ? path.basename(cf.url) : '') ;
+    const cf = n.callFrame; const k = nm(cf.functionName || '(anon)') + ' ' + (cf.url ? path.basename(cf.url) : '') ;
     self[k] = (self[k] || 0) + d;
   }
   const top = Object.entries(self).sort((a, b) => b[1] - a[1]).slice(0, +opt('--top', 40));
