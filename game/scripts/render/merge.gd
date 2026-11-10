@@ -36,17 +36,25 @@ static func merge(root: Node3D, exclude: Array, near := 24.0, mid := 42.0, dyn_m
 	_reads = 0
 	var count := 0
 	var idx := 0
-	for n in root.find_children("*", "MeshInstance3D", true, false):
+	var T := [0, 0, 0, 0, 0, 0]
+	var tf0 := Time.get_ticks_usec()
+	var all_mi := root.find_children("*", "MeshInstance3D", true, false)
+	T[0] = Time.get_ticks_usec() - tf0
+	for n in all_mi:
 		idx += 1
-		if tick.is_valid() and idx % 4 == 0:
+		if tick.is_valid() and idx % 12 == 0:
 			await tick.call()
 		if not is_instance_valid(n):
 			continue
 		var mi := n as MeshInstance3D
 		if mi.mesh == null or not mi.visible or mi.has_meta("no_merge"):
 			continue
-		if mi.skin != null or _excluded(mi, ex, root):
+		var ta := Time.get_ticks_usec()
+		var exd := mi.skin != null or _excluded(mi, ex, root)
+		T[1] += Time.get_ticks_usec() - ta
+		if exd:
 			continue
+		ta = Time.get_ticks_usec()
 		if mi.mesh is ArrayMesh and (mi.mesh as ArrayMesh).get_blend_shape_count() > 0:
 			continue
 		var gxf := mi.global_transform
@@ -72,6 +80,8 @@ static func merge(root: Node3D, exclude: Array, near := 24.0, mid := 42.0, dyn_m
 		var c := gxf.origin
 		var ck := "%d,%d" % [int(floor(c.x / cell)), int(floor(c.z / cell))]
 		var xf := inv * gxf
+		T[2] += Time.get_ticks_usec() - ta
+		ta = Time.get_ticks_usec()
 		var parts := []
 		var ok_all := true
 		for i in mi.mesh.get_surface_count():
@@ -83,8 +93,11 @@ static func merge(root: Node3D, exclude: Array, near := 24.0, mid := 42.0, dyn_m
 			if not dyn.has(mat.get_instance_id()):
 				var inf: Array = info_cache.get(mat.get_instance_id(), [])
 				if inf.is_empty():
+					var tcn := Time.get_ticks_usec()
 					inf = _canon(mat, canon)
 					info_cache[mat.get_instance_id()] = inf
+					T[4] += Time.get_ticks_usec() - tcn
+					T[5] = int(T[5]) + 1 if T.size() > 5 else 1
 				mat = inf[0]
 				tint = inf[1]
 			var fmt := _fmt(mi.mesh, i)
@@ -97,6 +110,7 @@ static func merge(root: Node3D, exclude: Array, near := 24.0, mid := 42.0, dyn_m
 					fmt |= NOIR_FMT
 			var key := "%s|%d|%d|%d|%d|%d" % [ck, mat.get_instance_id(), fmt, mi.layers, int(mi.cast_shadow), cls]
 			parts.append([key, i, mat, tint])
+		T[3] += Time.get_ticks_usec() - ta
 		if not ok_all or parts.is_empty():
 			continue
 		for p in parts:
@@ -125,6 +139,8 @@ static func merge(root: Node3D, exclude: Array, near := 24.0, mid := 42.0, dyn_m
 			g["n"] = int(g["n"]) + 1
 		done.append(mi)
 		count += 1
+	print("MERGE laço (ms): find_children %d | excluídos %d | transformação/aabb %d | materiais/formato/chave %d (material canônico %d ms, %d materiais)" % [T[0] / 1000, T[1] / 1000, T[2] / 1000, T[3] / 1000, T[4] / 1000, T[5]])
+	var t_loop2 := Time.get_ticks_usec()
 	var made := 0
 	var holder := Node3D.new()
 	holder.name = "Fundidos"
@@ -151,9 +167,12 @@ static func merge(root: Node3D, exclude: Array, near := 24.0, mid := 42.0, dyn_m
 		out.set_meta("merged", true)
 		holder.add_child(out)
 		made += 1
+	var t_free := Time.get_ticks_usec()
 	for mi in done:
 		(mi as MeshInstance3D).mesh = null
 		(mi as MeshInstance3D).material_override = null
+	print("MERGE fim (ms): grupos+nós %d (junção incluída) | soltar malhas originais %d" % [(t_free - t_loop2) / 1000, (Time.get_ticks_usec() - t_free) / 1000])
+	_icache.clear()
 	print("MERGE tempos (ms): total %d | partes %d | junção %d | leituras de malha %d | %s" % [(Time.get_ticks_usec() - t_all) / 1000, t_parts / 1000, t_commit / 1000, _reads, "antigo" if _slow else "rápido"])
 	if OS.get_environment("MERGE_DEBUG") != "":
 		var emis := 0
@@ -340,15 +359,27 @@ static func _noir_baked(m: Mesh, i: int, d: Array) -> ArrayMesh:
 
 # ─────────────────────────────── caminho rápido (sem ler a mesma malha da GPU várias vezes)
 static var _acache := {}
+static var _icache := {}   # (instância, superfície) -> arrays: _fmt e _part pedem a mesma malha em seguida
 static var _pnames := {}
 static var _reads := 0
 ## ?mergeslow=1 / PF_MERGESLOW=1: volta ao caminho antigo (SurfaceTool.append_from) para comparar
 static var _slow := false
+static var _gpu_read := false   # PF_MERGEGPU=1 / ?mergegpu=1: lê as primitivas da GPU como antes
 
 
 ## arrays de uma superfície, lidos uma vez por malha distinta (primitivas iguais por parâmetro contam como uma);
 ## malhas montadas por código podem trazer os arrays prontos na meta "pf_arrays"
 static func src_arrays(m: Mesh, i: int) -> Array:
+	var ik := m.get_instance_id() * 16 + i
+	var ia: Variant = _icache.get(ik)
+	if ia != null:
+		return ia
+	ia = _src_arrays(m, i)
+	_icache[ik] = ia
+	return ia
+
+
+static func _src_arrays(m: Mesh, i: int) -> Array:
 	if m.has_meta("pf_arrays"):
 		var pa: Array = m.get_meta("pf_arrays")
 		if i < pa.size():
@@ -371,8 +402,12 @@ static func src_arrays(m: Mesh, i: int) -> Array:
 		k = "%d:%d" % [m.get_instance_id(), i]
 	var a: Variant = _acache.get(k)
 	if a == null:
-		a = m.surface_get_arrays(i)
-		_reads += 1
+		# primitiva: os arrays são gerados na CPU (get_mesh_arrays), sem ler a malha de volta da GPU
+		if m is PrimitiveMesh and i == 0 and not _gpu_read:
+			a = (m as PrimitiveMesh).get_mesh_arrays()
+		else:
+			a = m.surface_get_arrays(i)
+			_reads += 1
 		_acache[k] = a
 	return a
 

@@ -236,6 +236,7 @@ func _ready() -> void:
 				dmc.append(Noir.conv(m))
 			dm = dmc
 		Merge._slow = OS.get_environment("PF_MERGESLOW") != "" or (OS.has_feature("web") and UI.js_flag("/[?&]mergeslow=1/.test(location.search)?1:0"))
+		Merge._gpu_read = OS.get_environment("PF_MERGEGPU") != "" or (OS.has_feature("web") and UI.js_flag("/[?&]mergegpu=1/.test(location.search)?1:0"))
 		var r: Dictionary = await Merge.merge(self, ex, _near(), _mid(), dm, _slice)
 		print("MERGE cidade: %d malhas -> %d" % [r["in"], r["out"]])
 		_pft("merge")
