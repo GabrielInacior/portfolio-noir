@@ -970,7 +970,44 @@ func _prebuild(project: Dictionary) -> void:
 	if UI.software():
 		for l in m.find_children("*", "Light3D", true, false):
 			(l as Light3D).visible = false
+	await _warm_shop(m)
 	_prebuilding = false
+
+
+## 1º desenho da loja fora da vista: no navegador, o primeiro uso de cada imagem/variante custava ~250 ms na
+## porta (só na 1ª visita). A loja desce 500 m, aparece por 8 quadros numa viewport minúscula que olha em 8
+## direções e volta a se esconder.
+func _warm_shop(m) -> void:
+	if OS.get_environment("PF_NOSHOPWARM") != "" or not is_instance_valid(m) or _museum == m:
+		return
+	var vp := SubViewport.new()
+	vp.size = Vector2i(128, 72)
+	vp.world_3d = city.get_viewport().find_world_3d()
+	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	vp.audio_listener_enable_3d = false
+	vp.gui_disable_input = true
+	var cam := Camera3D.new()
+	cam.cull_mask = 0xFFFFF
+	cam.fov = 62.0
+	vp.add_child(cam)
+	add_child(vp)
+	cam.current = true
+	var off := Vector3(0, -500, 0)
+	m.position = off
+	m.visible = true
+	var c: Vector3 = off + Vector3(0, 1.6, 0)
+	# 8 direções (um oitavo da sala por quadro: o custo do 1º uso se espalha)
+	for k in 8:
+		if not is_instance_valid(m) or _museum == m:
+			break
+		cam.global_transform = Transform3D(Basis(Vector3.UP, k * PI / 4.0), c)
+		await get_tree().process_frame
+	vp.queue_free()
+	if is_instance_valid(m) and _museum != m:
+		m.visible = false
+		m.position = Vector3.ZERO
+	elif is_instance_valid(m):
+		m.position = Vector3.ZERO
 
 
 ## ao sair de uma loja, a seta de HUD sugere o próximo projeto ainda não visitado (o mais perto)

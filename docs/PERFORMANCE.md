@@ -251,7 +251,7 @@ Medido com `cdp_perf.js` no ar (inaciodev.online), PC (RTX 4070 Ti SUPER, Chrome
 | PC: pronto para ENTRAR, visita repetida | 11,0 s | 9,7 s |
 | Celular: download até ENTRAR, 1ª visita | 52,7 s | 38,4 s |
 | Celular: download até ENTRAR, repetida | não medido | 28,4 s |
-| PC: porta da loja rumor, 1ª entrada a frio | 6 589 ms congelado | 25 ms (loja pré-montada) |
+| PC: porta da loja rumor, 1ª entrada a frio | 6 589 ms congelado | 57 a 64 ms (1ª visita: loja pré-montada e já desenhada fora da vista); 15 a 25 ms nas seguintes |
 | PC: porta de loja não pré-montada (labia/fortress) | 0,7 a 1,2 s | 350 a 460 ms |
 | Celular: porta da loja rumor | 16 668 ms | 53 a 293 ms |
 | PC: draws dentro da loja (mundo + nítida) | rumor 306+236, fortress 269+208, formataai 314+240, labia 133+67 | 70+94, 71+104, 69+100, 33+22 |
@@ -274,6 +274,10 @@ Medido com `cdp_perf.js` no ar (inaciodev.online), PC (RTX 4070 Ti SUPER, Chrome
   GitHub vira texto noutro quadro e só o começo que cabe no cartão). Cache de até 3 lojas (2 no celular); ao sair a
   loja fica escondida e parada. O ambiente da loja só entra na árvore ao abrir a porta. Pior quadro da rua durante a
   pré-montagem (nativo): 21 ms. `PF_NOPREBUILD=1` desliga.
+- **1º desenho da loja fora da vista** (`hud._warm_shop`): depois de montada, a loja desce 500 m e aparece por 8 quadros
+  numa viewport de 128x72 que gira em 8 direções. No navegador, o 1º uso das imagens da sala custava ~260 ms na porta na
+  1ª visita (cai para ~60 ms); o pior quadro da rua nesse momento fica em ~100 ms (com 4 direções era ~310 ms).
+  `PF_NOSHOPWARM=1` desliga.
 - **Passada nítida exclusiva nas lojas** (`sharp_pass._shop_tag`): textos e imagens da loja só nela (um draw cada, não
   dois) e todo o cenário fixo vira um oclusor único (antes ~70 gêmeos).
 - **Cidade: texto 3D e imagem pequena em par perto/longe** (`sharp_pass._split`): o original fica só no retrô e só além de
