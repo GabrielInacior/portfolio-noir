@@ -201,3 +201,17 @@ texturas de superfície 128 px (PS1); filtro VHS. Em aberto, por ganho esperado:
    no menu de lugares.
 4. Imagens do outro idioma no celular (~2,4 s): páginas de anúncio por idioma menores ou só a parte com texto.
 5. Papéis do chão (`sd_papeis`) mais claros no noir que no motor (normal para baixo + luz por vértice): conferir.
+
+
+## Desempenho depois da rodada 5 (ver docs/PERFORMANCE.md)
+Celular (4x, no ar): 29,6 s do download ao ENTRAR na 1ª visita, 19,5 s na repetida (meta 12 s / 6 s). PC repetida 6,5 s.
+Por ganho esperado:
+1. **Montar a cidade (~8 s)**: fachadas das lojas 3,1 s (suspeita: glifos dos letreiros em 230 px rasterizados na hora;
+   testar fonte com cache pré-renderizado no import ou MSDF só nos letreiros, conferindo nitidez), anúncios 1,4 s,
+   outdoors 0,8 s. Medir com `cdp_profile.js` e marcas `PFT` por loja.
+2. **Cidade pronta no build** (o que a rodada 4 descartou por tamanho): com a fusão em 3,4 s, o ganho restante está
+   em montar os nós; avaliar salvar a cena inteira com as listas do `city.gd` refeitas a partir de caminhos.
+3. **Motor (~7,6 s a frio)**: 3,3 s esperando o link dos shaders internos (`glGetProgramiv`); template próprio que não
+   consulte o status logo após o link (KHR_parallel_shader_compile) ou que compile só as variantes usadas.
+4. **Aquecimento a frio (6,2 s)**: mais programas podem ir para depois do ENTRAR se a vista inicial não os usa.
+5. Loja não pré-montada no celular (~750 ms): pré-montar também o destino escolhido no mapa.

@@ -315,3 +315,76 @@ Medido com `cdp_perf.js` no ar (inaciodev.online), PC (RTX 4070 Ti SUPER, Chrome
 - Curvatura de CRT no filtro VHS: não aplicada (atrapalharia mira e cliques).
 
 Capturas no ar: `docs/perf/r4_cidade_live.png` (cidade) e `docs/perf/r4_loja_live.png` (dentro da loja rumor).
+
+
+## Rodada 5 (nov 2026): carregamento no celular, sons de volta, sem VHS, beco do InacioCyber
+Medido no ar (inaciodev.online) com `cdp_perf.js`, mesma máquina da rodada 4. Celular = `--mobile` (390x844, toque,
+CPU 4x). "Download até ENTRAR" = marca `download_concluido` até `pronto_para_entrar` do carregador.
+
+| Etapa (celular 4x) | Rodada 4 (no ar) | Rodada 5 (no ar), 1ª visita | Rodada 5, repetida |
+|---|---|---|---|
+| Motor (fim do download até o 1º script) | ~6 s | 7,6 s | 4,3 s |
+| Montar a cidade | ~11 s | 8,1 s | 7,9 s |
+| Otimizar (fusão + conversão noir + luzes por objeto) | ~14 s | 4,1 s (fusão 3,4 s) | 4,0 s (fusão 3,3 s) |
+| Aquecer shaders | ~13 s | 6,2 s (+ 4,5 s das lojas depois, com a tela de entrada) | dispensado (+1,5 s depois) |
+| Interface até o ENTRAR | ~3 s | ~3,4 s | ~3,3 s |
+| **Download até ENTRAR** | **38,4 s** | **29,6 s** | **19,5 s** (antes 28,4 s) |
+
+| PC | Rodada 4 (no ar) | Rodada 5 (no ar) |
+|---|---|---|
+| Pronto para ENTRAR, 1ª visita (da navegação) | 25,2 a 29,9 s | 23,3 s (download lento nessa medida: 12,1 s; download até ENTRAR 11,2 s) |
+| Pronto para ENTRAR, visita repetida | 9,7 s | 6,5 s |
+| Fusão de malhas | ~2,2 s | 0,5 s |
+
+| Porta da loja (no ar) | Rodada 4 | Rodada 5 |
+|---|---|---|
+| Celular, rumor (pré-montada) | 53 a 293 ms | 244 a 281 ms |
+| Celular, labia (não pré-montada) | ~1,4 s | 731 a 769 ms |
+| PC, rumor | 57 a 64 ms | 51 a 57 ms |
+| PC, labia | 350 a 460 ms | 147 a 151 ms |
+
+Download adicionado: nenhum (o `.pck` principal ficou do mesmo tamanho; nada novo baixa).
+
+### O que entrou
+- **Fusão sem ler a GPU** (`render/merge.gd`): no navegador, `surface_get_arrays` e `SurfaceTool.append_from` leem a malha
+  de volta da GPU (`glGetBufferSubData`, síncrono). Cada uma das 2294 malhas era lida 2 a 3 vezes. Agora cada malha
+  distinta é lida uma vez (primitivas iguais pelos parâmetros contam como uma: 585 leituras no celular, 691 no PC) e as
+  cópias transformadas (`Transform3D * PackedVector3Array`, nativo) são juntadas em PackedArrays. Mesmas 374 malhas,
+  mesma imagem (capturas de 18 pontos iguais, só o que se mexe muda). Celular 10,5 s -> 3,4 s. `?mergeslow=1` volta.
+  Material com normal map continua no caminho antigo.
+- **Oclusores da passada nítida** montados das posições guardadas na fusão (meta `pf_occ`): 650 -> 240 ms no celular.
+- **Programas das lojas aquecem depois** (`city.warm_late`): os 9 programas que só existem dentro das lojas compilam
+  com a tela de entrada já na frente, numa viewport 16x16 que olha 500 m abaixo da cidade (mesmo mundo, mesma variante).
+  `?latewarm=0` volta a aquecer tudo antes.
+- **Parâmetros de teste da URL**: `?vhs=1`, `?sfx=stream`, `?census=1`, `?split=0`, `?live=0`, `?shopnoir=0` nunca
+  funcionavam (o número volta do JavaScript como float e `"1.0" != "1"`). `UI.js_flag` resolve.
+- **Marcas por subetapa** no console (`PFT ... lowpoly / merge / assign_sets / hud / 1º quadro / lojas: fachadas /
+  outdoors / anúncios`) e `MERGE tempos`. Sondas novas: `cdp_profile.js` (perfil de CPU do CDP até uma marca),
+  `cdp_perf.js --sfxcheck` (som na saída do Web Audio), `--tp/--tpshots` (capturas em pontos fixos, `pfAB("tp")`),
+  `--shadercap` (grava o GLSL de cada programa ligado).
+
+### Urgentes desta rodada
+- **Efeitos sonoros mudos desde a rodada 4**: `AudioServer.add_bus()` chega ao Web Audio do modo sample como "inserir na
+  posição -1" e embaralha a cópia dos barramentos do navegador; o Master perdia a ligação com a saída (o grafo
+  fonte -> barramento -> Master existia, mas o último ganho não chegava ao destino). Barramentos criados com `bus_count`.
+  Efeitos curtos registrados em segundo plano depois do ENTRAR (o 1º toque de cada um no celular não atrasa).
+  Conferido no ar com `--sfxcheck` (pico RMS na saída): ambientes 0,13 a 0,17, cada efeito 0,07 a 0,27 no PC e no celular
+  (antes 0). Sem o mixer do Godot: sem distorção no celular.
+- **Filtro VHS e vinheta extra removidos** em todos os perfis (`?vhs=1` liga para teste). Captura `r5_vhs_removido.png`.
+- **Loja do InacioCyber espremida**: não era regressão (igual na rodada 3, `df1d99c`): desde `e611639` a fachada tem 5,6 m
+  e o beco 4 m. O fim do beco virou um pátio de 7,2 m; os prédios do beco são cortados sem mudar o sorteio da cidade
+  (o resto fica idêntico). Capturas `r5_inaciocyber_antes_depois.png` e `r5_fachadas_antes_depois.png` (18 pontos).
+
+### Testado e descartado
+- **Pré-compilar os shaders no carregador** (compilar no JS, num contexto WebGL próprio, o mesmo GLSL que o jogo liga,
+  185 programas, 62 KB em brotli): piorou (29,6 -> 34 s locais). O jogo não aproveitou os programas (o aquecimento
+  seguiu igual) e o envio de 19 MB de fonte GLSL ocupou a thread principal e a GPU durante o boot.
+- **Fatias de 40 ms na montagem** (em vez de 12): sem ganho medível (ruído de 20% entre rodadas a frio). `?slice=N`.
+- **Cidade/fusão pronta no build**: a fusão caiu para 3,4 s sem baixar nada novo; o que sobra no celular é o motor
+  (~7,6 s a frio, 3,3 s disso esperando o link dos shaders internos do Godot, `glGetProgramiv`), montar a cidade (~8 s:
+  fachadas das lojas 3,1 s, anúncios 1,4 s, outdoors 0,8 s; texto 3D em 230 px rasterizado pela FreeType) e o
+  aquecimento dos programas da cidade (6,2 s a frio). Meta de 12 s / 6 s no celular não atingida.
+
+Capturas: `docs/perf/r5_cidade_antes_depois.png` (fusão antiga x nova, mesmo ponto), `docs/perf/r5_loader_celular.png`
+(carregador no celular, no ar), `docs/perf/r5_vhs_removido.png`, `docs/perf/r5_inaciocyber_antes_depois.png`,
+`docs/perf/r5_fachadas_antes_depois.png`.
