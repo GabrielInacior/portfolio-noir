@@ -247,7 +247,7 @@ Medido com `cdp_perf.js` no ar (inaciodev.online), PC (RTX 4070 Ti SUPER, Chrome
 
 | Item | Antes (no ar) | Depois (no ar) |
 |---|---|---|
-| PC: pronto para ENTRAR, 1ª visita | 37,9 s (aquecimento 20,8 s) | 29,9 s (aquecimento ~9,5 s) |
+| PC: pronto para ENTRAR, 1ª visita | 37,9 s (aquecimento 20,8 s) | 25,2 a 29,9 s (aquecimento ~9,5 s) |
 | PC: pronto para ENTRAR, visita repetida | 11,0 s | 9,7 s |
 | Celular: download até ENTRAR, 1ª visita | 52,7 s | 38,4 s |
 | Celular: download até ENTRAR, repetida | não medido | 28,4 s |
@@ -277,7 +277,7 @@ Medido com `cdp_perf.js` no ar (inaciodev.online), PC (RTX 4070 Ti SUPER, Chrome
 - **1º desenho da loja fora da vista** (`hud._warm_shop`): depois de montada, a loja desce 500 m e aparece por 8 quadros
   numa viewport de 128x72 que gira em 8 direções. No navegador, o 1º uso das imagens da sala custava ~260 ms na porta na
   1ª visita (cai para ~60 ms); o pior quadro da rua nesse momento fica em ~100 ms (com 4 direções era ~310 ms).
-  `PF_NOSHOPWARM=1` desliga.
+  `PF_NOSHOPWARM=1` desliga. No ar (PC, perfil novo): porta da rumor 49 ms, CPU na cidade 17,4 ms em média.
 - **Passada nítida exclusiva nas lojas** (`sharp_pass._shop_tag`): textos e imagens da loja só nela (um draw cada, não
   dois) e todo o cenário fixo vira um oclusor único (antes ~70 gêmeos).
 - **Cidade: texto 3D e imagem pequena em par perto/longe** (`sharp_pass._split`): o original fica só no retrô e só além de
@@ -313,3 +313,5 @@ Medido com `cdp_perf.js` no ar (inaciodev.online), PC (RTX 4070 Ti SUPER, Chrome
 - Troca de idioma no celular: textos na hora; as imagens do outro idioma (3 páginas 2048 + 10 outdoors, ~100 MB de
   VRAM) não ficam pré-carregadas, então os anúncios trocam em ~2,4 s.
 - Curvatura de CRT no filtro VHS: não aplicada (atrapalharia mira e cliques).
+
+Capturas no ar: `docs/perf/r4_cidade_live.png` (cidade) e `docs/perf/r4_loja_live.png` (dentro da loja rumor).
