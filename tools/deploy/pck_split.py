@@ -6,6 +6,7 @@ O jogo carrega os extras com ProjectSettings.load_resource_pack (scripts/packs.g
 Uso: python tools/deploy/pck_split.py site/jogo/index.pck site/jogo   (gera main.pck lang_pt.pck lang_en.pck music.pck shops.pck)"""
 import glob
 import hashlib
+import json
 import os
 import re
 import struct
@@ -22,6 +23,43 @@ PACKS = [
     ("drop", lambda s: s.startswith("assets/tex/og_bg")),  # só serve à imagem de prévia do site (seo_build.py)
 ]
 LANG = re.compile(r"(?:^|/)[^/]*_(pt|en)(?:[_.][^/]*)?$")
+# imagens grandes da cidade decodificadas pelo NAVEGADOR (fora da thread do jogo, em paralelo com o boot):
+# os mesmos WebP de cada nível de mipmap do .ctex viram um arquivo próprio em jogo/img/ (scripts/render/fast_tex.gd)
+IMG = re.compile(r"^assets/(ads/atlas_(pt|en)_\d+\.png|billboards/[^/]+\.png|data/collages/[^/]+\.png|flyers/[^/]+\.jpg)$")
+
+
+def ctex_levels(d):
+    """.ctex (GST2) com dados em WebP: [(w, h, bytes)] por nível de mipmap, ou None se não for WebP"""
+    if d[:4] != b"GST2":
+        return None
+    o = 36
+    fmt, w, h, mips, iformat = struct.unpack("<IHHII", d[o:o + 16])
+    if fmt != 2:
+        return None
+    o += 16
+    out = []
+    for i in range(mips + 1):
+        n, = struct.unpack("<I", d[o:o + 4])
+        out.append((max(1, w >> i), max(1, h >> i), d[o + 4:o + 4 + n]))
+        o += 4 + n
+    return out, iformat
+
+
+def write_img(outdir, f, e, origin):
+    f.seek(e["off"])
+    d = f.read(e["size"])
+    r = ctex_levels(d)
+    if r is None:
+        return None
+    lv, iformat = r
+    blob = b"PFTX" + struct.pack("<I", len(lv)) + b"".join(struct.pack("<III", w, h, len(x)) for w, h, x in lv) + b"".join(x for _, _, x in lv)
+    hs = hashlib.sha256(blob).hexdigest()[:10]
+    name = "%s.%s.tex" % (re.sub(r"[^a-zA-Z0-9_]", "_", origin.split("/")[-1]), hs)
+    os.makedirs(os.path.join(outdir, "img"), exist_ok=True)
+    open(os.path.join(outdir, "img", name), "wb").write(blob)
+    m = IMG.match(origin)
+    lang = m.group(2) or (LANG.search(origin).group(1) if LANG.search(origin) else "")
+    return {"u": "/jogo/img/" + name, "w": lv[0][0], "h": lv[0][1], "m": len(lv), "s": len(blob), "l": lang}
 
 
 def read_pck(path):
@@ -95,8 +133,14 @@ def main():
         return q
 
     groups = {"main": [], "lang_pt": [], "lang_en": [], "music": [], "shops": [], "drop": []}
+    imgs = {}
     for e in ents:
         o = origin(e["path"])
+        if e["path"].endswith(".ctex") and IMG.match(o) and os.environ.get("PF_NOFASTTEX", "") == "":
+            r = write_img(outdir, f, e, o)
+            if r:
+                imgs["res://" + o] = r
+                continue
         for name, rule in PACKS:
             if rule(o):
                 groups[name].append(e)
@@ -107,6 +151,9 @@ def main():
                 groups["lang_" + m.group(1)].append(e)
             else:
                 groups["main"].append(e)
+    if imgs:
+        json.dump(imgs, open(os.path.join(outdir, "img", "index.json"), "w"), separators=(",", ":"))
+        print("img      %6.2f MB  %4d imagens decodificadas pelo navegador" % (sum(v["s"] for v in imgs.values()) / 1e6, len(imgs)))
     res = {}
     for name, es in groups.items():
         if name == "drop":

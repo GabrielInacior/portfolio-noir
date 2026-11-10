@@ -78,6 +78,21 @@ var _t_slice := 0
 var _slice_us := 12000
 var _pct := 0.0
 var _t_texload := 0
+## tempos por parte da montagem (µs), impressos no log PFT (perfil do carregamento)
+var _tacc := {}
+
+
+func _tk(key: String, t0: int) -> void:
+	_tacc[key] = int(_tacc.get(key, 0)) + Time.get_ticks_usec() - t0
+
+
+func _tdump(keys: Array) -> void:
+	if not sliced:
+		return
+	var parts: Array = []
+	for k in keys:
+		parts.append("%s %d" % [k, int(_tacc.get(k, 0)) / 1000])
+	print("PFT tempos (ms): " + ", ".join(parts))
 
 
 func _slice() -> void:
@@ -125,6 +140,10 @@ func _ready() -> void:
 	await _prog(0.10, "Building the blocks")
 	_build_blocks()
 	await _prog(0.16, "Opening the shops")
+	# imagens grandes decodificadas pelo navegador (render/fast_tex.gd): normalmente já chegaram
+	var t_img := Time.get_ticks_msec()
+	await FastTex.wait_lang(get_tree(), "en" if L.lang == "en" else "pt")
+	_pft("imagens do navegador (espera %d ms)" % (Time.get_ticks_msec() - t_img))
 	await _place_shops()
 	print("PFT shops: tex load = %d ms" % (_t_texload / 1000))
 	await _prog(0.34, "Laying the plaza")
@@ -136,10 +155,12 @@ func _ready() -> void:
 	await _prog(0.46, "Hanging billboards")
 	_build_billboards()
 	_pft("outdoors")
+	_tdump(["outdoor_textura"])
 	if OS.get_environment("NOADS") == "":
 		await _slice()
 		_build_ads()
 		_pft("anúncios")
+		_tdump(["anuncio_paginas", "anuncio_telhados"])
 	await _prog(0.54, "Wiring the signs")
 	_build_wayfinding()
 	_build_extras()
@@ -1044,6 +1065,7 @@ func _place_shops() -> void:  # coroutine (fatiada)
 			_shop(s[1], s[2], by_id[s[0]])
 			await _slice()
 	_pft("lojas: fachadas")
+	_tdump(["loja_total", "loja_ate_letreiro", "loja_letreiros", "loja_toldo_panfletos_luz"])
 	for g in [["rumor", Vector3(-5.6, 0.2, -9.0), PI / 2], ["fortress", Vector3(-25.0, 0.2, CROSS_Z + 4.6), PI],
 			["inaciocyber", Vector3(23.0, 0.06, ALLEY_Z + 1.2), -PI / 2]]:
 		if by_id.has(g[0]):
@@ -1059,6 +1081,7 @@ func _place_shops() -> void:  # coroutine (fatiada)
 ## Fachada de loja local (frente para +z local): porta, vitrine com a colagem, letreiro de neon
 ## com halo, toldo, luz colorida tingindo parede e chão, reflexo no asfalto, anel de interação.
 func _shop(face: Vector3, normal: Vector3, project: Dictionary, grand := false) -> void:
+	var t_shop := Time.get_ticks_usec()
 	var neon := Color(str(project.get("neon", "#ffc83d")))
 	var holder := Node3D.new()
 	# 16 cm à frente da fachada: o painel de concreto do térreo (14 cm de espessura) cobria a vitrine e a porta
@@ -1080,9 +1103,9 @@ func _shop(face: Vector3, normal: Vector3, project: Dictionary, grand := false) 
 	var tex: Texture2D = null
 	var id := str(project.get("id", ""))
 	for path in ["res://assets/data/collages/%s.png" % id, "res://assets/covers/%s" % str(project.get("cover", ""))]:
-		if path.ends_with(".png") and ResourceLoader.exists(path):
+		if path.ends_with(".png") and FastTex.exists(path):
 			var tl0 := Time.get_ticks_usec()
-			tex = load(path)
+			tex = FastTex.get_tex(path)
 			_t_texload += Time.get_ticks_usec() - tl0
 			break
 	var disp := MeshInstance3D.new()
@@ -1126,6 +1149,8 @@ func _shop(face: Vector3, normal: Vector3, project: Dictionary, grand := false) 
 		sq.material_override = smat
 		sq.position = Vector3(0, 3.3, 0.37)
 		holder.add_child(sq)
+	_tk("loja_ate_letreiro", t_shop)
+	var t_lbl := Time.get_ticks_usec()
 	# letreiro: placa escura e letras de neon com halo; o grande leva um segundo letreiro vertical
 	var sign := Label3D.new()
 	sign.text = str(project.get("title", "")).to_upper()
@@ -1166,6 +1191,7 @@ func _shop(face: Vector3, normal: Vector3, project: Dictionary, grand := false) 
 	holder.add_child(badge)
 	_lbox(holder, Vector3(bx - bw / 2.0, 4.15 + th2 * 0.5 + 0.02 + badge.font_size * badge.pixel_size * 0.38, 0.3),
 		Vector3(bw + 0.1, badge.font_size * badge.pixel_size * 0.95, 0.04), _mat(neon.darkened(0.55), 0.3))
+	_tk("loja_letreiros", t_lbl)
 	if _rng.randf() < 0.35:
 		_broken.append({"node": sign, "seed": _rng.randf() * 8.0})
 	_lbox(holder, Vector3(0, 4.15, 0.12), Vector3(W * 0.95, 0.9, 0.22), dark)
@@ -1188,6 +1214,7 @@ func _shop(face: Vector3, normal: Vector3, project: Dictionary, grand := false) 
 		fl.double_sided = true
 		flag.add_child(fl)
 		_swing.append({"node": flag, "seed": _rng.randf() * TAU, "amp": 0.06})
+	var t_rest := Time.get_ticks_usec()
 	# toldo sobre a vitrine
 	if not grand:
 		_awning(holder, vx, vw + 0.3, 3.02, neon)
@@ -1227,6 +1254,8 @@ func _shop(face: Vector3, normal: Vector3, project: Dictionary, grand := false) 
 	kiosks.append({"pos": rp, "project": project, "light": l, "ring": ring, "base_energy": l.light_energy,
 		"neon": neon, "visited": false, "marker": holder.to_global(Vector3(door_x, 2.95, 0.6)), "normal": holder.global_transform.basis.z})
 	map_labels.append({"p": Vector2(rp.x, rp.z), "t": str(project.get("title", "")), "c": neon})
+	_tk("loja_toldo_panfletos_luz", t_rest)
+	_tk("loja_total", t_shop)
 
 
 func _guide_npc(pos: Vector3, yaw: float, project: Dictionary) -> void:
@@ -2435,7 +2464,7 @@ func _flyers(parent: Node3D, center: Vector3, project: Dictionary) -> void:
 	# miniaturas (384 px) em vez dos prints cheios: poupa dezenas de MB de VRAM na rua
 	for i in 5:
 		var fp := "res://assets/flyers/%s_%d.jpg" % [id, i]
-		if ResourceLoader.exists(fp):
+		if FastTex.exists(fp):
 			pics.append(fp)
 	pics.sort()
 	if pics.is_empty():
@@ -2444,7 +2473,7 @@ func _flyers(parent: Node3D, center: Vector3, project: Dictionary) -> void:
 	rng.seed = hash(id)
 	var spots := [Vector2(-0.32, 0.45), Vector2(0.3, 0.38), Vector2(-0.25, -0.25), Vector2(0.33, -0.3), Vector2(0.02, 0.05)]
 	for i in mini(spots.size(), maxi(3, pics.size())):
-		var tex: Texture2D = load(pics[i % pics.size()])
+		var tex: Texture2D = FastTex.get_tex(pics[i % pics.size()])
 		if tex == null:
 			continue
 		var r := float(tex.get_width()) / maxf(1.0, tex.get_height())
@@ -2524,9 +2553,11 @@ func _floor_arrow(parent: Node3D, pos: Vector3, col: Color) -> void:
 ## estrutura presa na parede e holofotes. Recebe a luz e a névoa da cena (material com luz).
 func _billboard(art: String, face: Vector3, normal: Vector3, w: float, h: float, y: float, side := 0.0, spot := false) -> void:
 	var path := "res://assets/billboards/%s_%s.png" % [art, "en" if L.lang == "en" else "pt"]
-	if not ResourceLoader.exists(path):
+	if not FastTex.exists(path):
 		return
-	var tex: Texture2D = load(path)
+	var t_l := Time.get_ticks_usec()
+	var tex: Texture2D = FastTex.get_tex(path)
+	_tk("outdoor_textura", t_l)
 	var holder := Node3D.new()
 	var right := Vector3(normal.z, 0, -normal.x)
 	holder.position = face + normal * 0.5 + right * side
@@ -2592,9 +2623,11 @@ func _build_billboards() -> void:
 ## Totem de rua em pé (base no chão, painel retroiluminado dos dois lados).
 func _totem(art: String, p: Vector3, yaw: float) -> void:
 	var path := "res://assets/billboards/%s_%s.png" % [art, "en" if L.lang == "en" else "pt"]
-	if not ResourceLoader.exists(path):
+	if not FastTex.exists(path):
 		return
-	var tex: Texture2D = load(path)
+	var t_l := Time.get_ticks_usec()
+	var tex: Texture2D = FastTex.get_tex(path)
+	_tk("outdoor_textura", t_l)
 	var h := Node3D.new()
 	h.position = p
 	h.rotation.y = yaw
@@ -2904,8 +2937,10 @@ func _ad_tex(id: String) -> Texture2D:
 	if r is Array:
 		var page := "res://assets/ads/atlas_%s_%d.png" % [lg, int(r[0])]
 		var pt: Texture2D = _ad_tex_cache.get(page)
-		if pt == null and ResourceLoader.exists(page):
-			pt = load(page)
+		if pt == null and FastTex.exists(page):
+			var t_l := Time.get_ticks_usec()
+			pt = FastTex.get_tex(page)
+			_tk("anuncio_paginas", t_l)
 			_ad_tex_cache[page] = pt
 		if pt:
 			var a := AtlasTexture.new()
@@ -3145,7 +3180,9 @@ func _build_ads() -> void:
 		var scr := _screen_quad(hold6, texs[0], Vector3(0, ty, 0.05), Vector2(tw, th), 0.0, float(ti) * 3.1)
 		_lhalo(hold6, Vector3(0, ty, 0.3), Vector2(tw * 1.3, th * 1.5), Color("#9fd8ff"), 0.08)
 		_ad_tvs.append({"mat": scr.material_override, "texs": texs, "i": 0, "t": float(ti) * 1.3, "g": 0.0})
+	var t_r := Time.get_ticks_usec()
 	_build_roofs()
+	_tk("anuncio_telhados", t_r)
 
 
 ## troca de idioma ao vivo (i18n.gd): os telões guardam a lista de anúncios da língua antiga

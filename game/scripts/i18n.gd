@@ -320,6 +320,7 @@ func switch_live(l: String) -> void:
 	var packs := get_node_or_null("/root/Packs")
 	if packs and packs.has_method("need"):
 		await packs.need("lang_" + l)
+	await FastTex.wait_lang(get_tree(), l)
 	var t1 := Time.get_ticks_usec()
 	var from := lang
 	if _pairs_cache.is_empty():
@@ -426,8 +427,11 @@ func swap_tex(t: Texture2D, from: String, to: String) -> Texture2D:
 		var re := RegEx.create_from_string("_%s(?=[_.])" % from)
 		if p != "" and re.search(p.get_file()) != null:
 			var np := p.get_base_dir().path_join(re.sub(p.get_file(), "_" + to))
-			if ResourceLoader.exists(np):
-				out = load(np)
+			if FastTex.exists(np):
+				var nt: Texture2D = FastTex.get_tex(np)
+				if nt == null:
+					return t   # imagem do navegador ainda não chegou: fica a atual (sem guardar no cache)
+				out = nt
 	_swap_cache[key] = out
 	return out
 

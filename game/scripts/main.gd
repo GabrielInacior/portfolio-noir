@@ -77,6 +77,9 @@ func _ready() -> void:
 	if OS.has_feature("web"):
 		JavaScriptBridge.eval("window.pfReady&&window.pfReady()", true)
 	print("PFT %5d ms  pronto (ENTRAR)" % Time.get_ticks_msec())
+	# PC: as imagens do outro idioma já vêm decodificadas pelo navegador (troca de idioma sem espera)
+	if FastTex.enabled() and not UI.is_mobile():
+		JavaScriptBridge.eval("window.pfImg.want(%s)" % JSON.stringify("pt" if L.lang == "en" else "en"), true)
 	city.warm_late()
 	_setup_ab()
 

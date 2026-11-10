@@ -1,0 +1,88 @@
+diff --git a/drivers/gles3/shader_gles3.cpp b/drivers/gles3/shader_gles3.cpp
+index 4fe333e..587a538 100644
+--- a/drivers/gles3/shader_gles3.cpp
++++ b/drivers/gles3/shader_gles3.cpp
+@@ -322,7 +322,9 @@ void ShaderGLES3::_compile_specialization(Version::Specialization &spec, uint32_
+ 		glShaderSource(spec.vert_id, 1, &cstr, &cstr_len);
+ 		glCompileShader(spec.vert_id);
+ 
+-		glGetShaderiv(spec.vert_id, GL_COMPILE_STATUS, &status);
++		// portfolio-noir: the compile status is only read when the link fails (each query is a sync
++		// round trip to the GPU process on the web, and blocks KHR_parallel_shader_compile)
++		status = GL_TRUE;
+ 		if (status == GL_FALSE) {
+ 			GLsizei iloglen;
+ 			glGetShaderiv(spec.vert_id, GL_INFO_LOG_LENGTH, &iloglen);
+@@ -370,7 +372,7 @@ void ShaderGLES3::_compile_specialization(Version::Specialization &spec, uint32_
+ 		glShaderSource(spec.frag_id, 1, &cstr, &cstr_len);
+ 		glCompileShader(spec.frag_id);
+ 
+-		glGetShaderiv(spec.frag_id, GL_COMPILE_STATUS, &status);
++		status = GL_TRUE;
+ 		if (status == GL_FALSE) {
+ 			GLsizei iloglen;
+ 			glGetShaderiv(spec.frag_id, GL_INFO_LOG_LENGTH, &iloglen);
+@@ -428,6 +430,23 @@ void ShaderGLES3::_compile_specialization(Version::Specialization &spec, uint32_
+ 
+ 	glGetProgramiv(spec.id, GL_LINK_STATUS, &status);
+ 	if (status == GL_FALSE) {
++		// portfolio-noir: deferred stage checks (see above), with their logs
++		for (int st = 0; st < 2; st++) {
++			GLuint sid = st == 0 ? spec.vert_id : spec.frag_id;
++			GLint cst = GL_TRUE;
++			glGetShaderiv(sid, GL_COMPILE_STATUS, &cst);
++			if (cst == GL_FALSE) {
++				GLsizei sl = 0;
++				glGetShaderiv(sid, GL_INFO_LOG_LENGTH, &sl);
++				if (sl <= 0) {
++					sl = 4096;
++				}
++				char *slog = (char *)Memory::alloc_static_zeroed(sl + 1);
++				glGetShaderInfoLog(sid, sl, &sl, slog);
++				ERR_PRINT(name + (st == 0 ? ": Vertex" : ": Fragment") + String(" shader compilation failed: ") + String(slog));
++				Memory::free_static(slog);
++			}
++		}
+ 		GLsizei iloglen;
+ 		glGetProgramiv(spec.id, GL_INFO_LOG_LENGTH, &iloglen);
+ 
+@@ -703,15 +722,23 @@ void ShaderGLES3::_clear_version(Version *p_version) {
+ void ShaderGLES3::_initialize_version(Version *p_version) {
+ 	ERR_FAIL_COND(p_version->variants.size() > 0);
+ 	bool use_cache = shader_cache_dir_valid && !(feedback_count > 0 && GLES3::Config::get_singleton()->disable_transform_feedback_shader_cache);
++#ifdef WEB_ENABLED
++	use_cache = false; // portfolio-noir: no program binaries in WebGL (load/save are no-ops there)
++#endif
+ 	if (use_cache && _load_from_cache(p_version)) {
+ 		return;
+ 	}
+ 	p_version->variants.reserve(variant_count);
+ 	for (int i = 0; i < variant_count; i++) {
+ 		p_version->variants.push_back(AHashMap<uint64_t, Version::Specialization>());
+-		Version::Specialization spec;
+-		_compile_specialization(spec, i, p_version, specialization_default_mask);
+-		p_version->variants[i].insert(specialization_default_mask, spec);
++		if (use_cache) {
++			Version::Specialization spec;
++			_compile_specialization(spec, i, p_version, specialization_default_mask);
++			p_version->variants[i].insert(specialization_default_mask, spec);
++		}
++		// portfolio-noir: without a shader cache (web) each variant+specialization compiles on its first
++		// bind; compiling every mode with the default specialization up front linked ~4 unused programs per
++		// material (mode_color/instancing/depth with defaults that are never drawn)
+ 	}
+ 	if (use_cache) {
+ 		_save_to_cache(p_version);
+diff --git a/platform/web/detect.py b/platform/web/detect.py
+index 57b79b2..2187398 100644
+--- a/platform/web/detect.py
++++ b/platform/web/detect.py
+@@ -340,7 +340,7 @@ def configure(env: "SConsEnvironment"):
+         "HEAPF32",
+         "HEAPF64",
+     ]
+-    env["EXPORTED_RUNTIME_METHODS"] += ["callMain", "cwrap"] + heap_arrays
++    env["EXPORTED_RUNTIME_METHODS"] += ["callMain", "cwrap", "GL"] + heap_arrays  # portfolio-noir: GL (texturas decodificadas pelo navegador)
+     env["EXPORTED_FUNCTIONS"] += ["_malloc", "_free"]
+ 
+     # Add code that allow exiting runtime.

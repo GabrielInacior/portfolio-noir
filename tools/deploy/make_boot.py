@@ -77,6 +77,11 @@ if os.path.exists(_mp3):
     shutil.copyfile(_mp3, os.path.join(JOGO, _mn))
     cfg["pfMusic"] = "/jogo/" + _mn
 cfg["pfLang"] = {"pt": pk.get("lang_pt"), "en": pk.get("lang_en")}
+# imagens decodificadas pelo navegador (pck_split.py grava jogo/img/index.json)
+_imgi = os.path.join(JOGO, "img", "index.json")
+if os.path.exists(_imgi):
+    cfg["pfImg"] = json.load(open(_imgi, encoding="utf8"))
+    os.remove(_imgi)
 cfg.pop("args", None)
 cfg.pop("ensureCrossOriginIsolationHeaders", None)
 
@@ -275,6 +280,59 @@ JS = r"""(function () {
     CFG.fileSizes[langPack.url] = langPack.size;
     var packState = {};
     window.pfPackPath = function (id) { return packState[id] || ''; };
+    // imagens grandes da cidade (scripts/render/fast_tex.gd): baixadas e decodificadas pelo navegador, fora da
+    // thread do jogo, em paralelo com o download e o boot do motor; ?fasttex=0 desliga (o jogo usa o pacote)
+    var IMG = CFG.pfImg || {}, IS = {}, ENG = null;
+    var imgOff = /[?&]fasttex=0/.test(location.search) || typeof createImageBitmap !== 'function';
+    function imgGet(p, tries) {
+      var e = IMG[p], st = IS[p] || (IS[p] = { st: 0 });
+      st.st = 0;
+      fetch(e.u, { credentials: 'same-origin' }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); }).then(function (buf) {
+        var dv = new DataView(buf), n = dv.getUint32(4, true), o = 8 + 12 * n, ps = [];
+        st.parts = [];
+        for (var i = 0; i < n; i++) {
+          var len = dv.getUint32(16 + 12 * i, true), u8 = new Uint8Array(buf, o, len);
+          st.parts.push(u8); o += len;
+          ps.push(createImageBitmap(new Blob([u8], { type: 'image/webp' }), { premultiplyAlpha: 'none', colorSpaceConversion: 'none', imageOrientation: 'none' }));
+        }
+        return Promise.all(ps).then(function (bm) { st.lv = bm; st.st = 1; }, function () { st.st = 2; });
+      }).catch(function () { if ((tries || 0) < 2) setTimeout(function () { imgGet(p, (tries || 0) + 1); }, 1500); else st.st = -1; });
+    }
+    function imgWant(lang) { for (var p in IMG) if (!IS[p] && (IMG[p].l === '' || IMG[p].l === lang)) imgGet(p, 0); }
+    window.pfImg = {
+      ok: function () { return !imgOff && Object.keys(IMG).length > 0; },
+      has: function (p) { return !imgOff && !!IMG[p]; },
+      state: function (p) { return IS[p] ? IS[p].st : -2; },
+      meta: function (p) { var e = IMG[p]; return e ? e.w + ',' + e.h + ',' + e.m : ''; },
+      want: function (lang) { if (!imgOff) imgWant(lang); },
+      pending: function (lang) { var n = 0; for (var p in IMG) if ((IMG[p].l === '' || IMG[p].l === lang) && (!IS[p] || IS[p].st === 0)) n++; return n; },
+      bytes: function (p, i) { var st = IS[p]; return st && st.parts ? st.parts[i].slice().buffer : null; },
+      // envia cada nível de mipmap direto para a textura GL que o jogo criou (estado do WebGL salvo e restaurado)
+      upload: function (p, id) {
+        var st = IS[p];
+        if (!st || st.st !== 1 || !ENG || !ENG.rtenv || !ENG.rtenv.GL) return false;
+        var G = ENG.rtenv.GL, gl = G.currentContext && G.currentContext.GLctx, tex = G.textures[id];
+        if (!gl || !tex) return false;
+        var prev = gl.getParameter(gl.TEXTURE_BINDING_2D), pbo = gl.getParameter(gl.PIXEL_UNPACK_BUFFER_BINDING);
+        var ps = [[gl.UNPACK_FLIP_Y_WEBGL, false], [gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false], [gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE],
+          [gl.UNPACK_ROW_LENGTH, 0], [gl.UNPACK_SKIP_ROWS, 0], [gl.UNPACK_SKIP_PIXELS, 0], [gl.UNPACK_ALIGNMENT, 4]];
+        var old = ps.map(function (q) { return gl.getParameter(q[0]); });
+        try {
+          if (pbo) gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null);
+          ps.forEach(function (q) { gl.pixelStorei(q[0], q[1]); });
+          gl.bindTexture(gl.TEXTURE_2D, tex);
+          for (var i = 0; i < st.lv.length; i++) gl.texImage2D(gl.TEXTURE_2D, i, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, st.lv[i]);
+        } finally {
+          gl.bindTexture(gl.TEXTURE_2D, prev);
+          ps.forEach(function (q, k) { gl.pixelStorei(q[0], old[k]); });
+          if (pbo) gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, pbo);
+        }
+        st.lv.forEach(function (b) { try { b.close(); } catch (e) {} });
+        st.lv = null; st.parts = null; st.st = 3;
+        return true;
+      }
+    };
+    if (!imgOff) imgWant(en ? 'en' : 'pt');
     var args = [];
     if (en) args.push('lang=en');
     if (loja) args.push('loja=' + loja);
@@ -294,7 +352,7 @@ JS = r"""(function () {
         CFG = Object.assign({}, CFG, { executable: CFG.executable + 'c' + cm[1], fileSizes: nf });
       }
       var engine = new Engine(Object.assign({}, CFG, { canvas: canvas, args: args.length ? ['--'].concat(args) : [] }));
-      window.__pfEngine = engine;
+      window.__pfEngine = engine; ENG = engine;
       // pacotes em segundo plano (música, lojas): baixam depois do principal e entram no sistema de arquivos do motor
       // o pacote do OUTRO idioma vem por último (troca de idioma ao vivo, sem recarregar)
       var queue = ['lang', 'shops', en ? 'lang_pt' : 'lang_en'];

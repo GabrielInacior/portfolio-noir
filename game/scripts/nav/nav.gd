@@ -63,9 +63,9 @@ static func thumb(pr: Dictionary) -> Texture2D:
 	if str(pr.get("special", "")) == "about":
 		paths.push_front("res://assets/photo/gabriel.jpg")
 	for p in paths:
-		if p.ends_with("/") or not ResourceLoader.exists(p):
+		if p.ends_with("/") or not FastTex.exists(p):
 			continue
-		var t = load(p)
+		var t = FastTex.get_tex(p)
 		if t is Texture2D:
 			return t
 	return null

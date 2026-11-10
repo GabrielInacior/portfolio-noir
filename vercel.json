@@ -17,6 +17,19 @@
       ]
     },
     {
+      "source": "/jogo/img/(.*\\.[0-9a-f]{10}\\.tex)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        },
+        {
+          "key": "Content-Type",
+          "value": "application/octet-stream"
+        }
+      ]
+    },
+    {
       "source": "/jogo/(music\\.[0-9a-f]{10}\\.mp3)",
       "headers": [
         {
