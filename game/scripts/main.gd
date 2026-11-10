@@ -493,6 +493,15 @@ func _ab(args: Array) -> void:
 			_census(str(args[2]) if args.size() > 2 else "cena")
 		"sfxtick":
 			get_node("/root/Audio").set_process(on)
+		"tp":
+			# sonda de captura: "x,y,z,yaw_graus,pitch_graus" (posição dos olhos menos 1,6 m)
+			var v := str(args[2]).split(",")
+			if city and city.player and v.size() >= 4:
+				var pl = city.player
+				pl.global_position = Vector3(float(v[0]), float(v[1]), float(v[2]))
+				pl._yaw = deg_to_rad(float(v[3]))
+				pl._pitch = deg_to_rad(float(v[4])) if v.size() > 4 else 0.0
+				pl.sync_look()
 		"sfx", "sfx3d":
 			# sonda de som: toca um efeito pelo id (2D ou 3D a 2 m na frente do jogador)
 			var au2 := get_node("/root/Audio")

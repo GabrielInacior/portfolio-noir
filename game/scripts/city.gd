@@ -54,6 +54,10 @@ const CROSS_Z := -42.0        # centro da rua transversal
 const CROSS_HW := 4.0         # meia largura do asfalto da transversal
 const ALLEY_Z := -20.0        # centro do beco (lado direito)
 const ALLEY_END := 26.0
+## fim do beco alargado num pátio (a fachada da loja do InacioCyber tem 5,6 m e o beco só 4 m: antes as
+## pilastras, o letreiro e o toldo ficavam espremidos dentro das paredes)
+const POCKET_X := 20.5
+const POCKET_HW := 3.6
 const PLAZA := Rect2(-66, -56, 18, 28)   # x, z, w, d
 const AVE_END := -72.0
 const AVE_START := 8.0
@@ -373,6 +377,18 @@ func _add_mat(col: Color, a: float) -> StandardMaterial3D:
 # ═════════════════════════════════════════════ geometria fundida (poucos draw calls)
 ## Caixa estática somada a um lote por material e pedaço de 16 m (cada lote recebe só as luzes perto).
 func _sbox(pos: Vector3, size: Vector3, mat: Material, yaw := 0.0) -> void:
+	if _ghost:
+		return
+	if _clip_alley:
+		# paredes do beco (yaw 0 ou PI: largura no eixo x): corta no começo do pátio
+		var x0 := pos.x - size.x / 2.0
+		if x0 >= POCKET_X - 0.01:
+			return
+		if pos.x + size.x / 2.0 > POCKET_X:
+			if size.x < 2.0:
+				return
+			pos = Vector3((x0 + POCKET_X) / 2.0, pos.y, pos.z)
+			size = Vector3(POCKET_X - x0, size.y, size.z)
 	var cell := Vector2i(floori(pos.x / 16.0), floori(pos.z / 16.0))
 	var key := "%d|%d,%d" % [mat.get_instance_id(), cell.x, cell.y]
 	if not _batch.has(key):
@@ -427,6 +443,8 @@ func _squad(center: Vector3, size: Vector2, normal: Vector3, col: Color, key_mat
 
 ## Janela com interior falso (atlas 4x4 de quartos/cozinhas/TV), cor por vértice dá o brilho.
 func _wquad(center: Vector3, size: Vector2, normal: Vector3, cell: int, col: Color) -> void:
+	if _ghost or _clipped(center.x, size.x / 2.0):
+		return
 	var m := _win_mat()
 	var c2 := Vector2i(floori(center.x / 32.0), floori(center.z / 32.0))
 	var key := "w|%d,%d" % [c2.x, c2.y]
@@ -507,6 +525,8 @@ func _prop_mesh(name: String) -> Mesh:
 
 
 func _prop(name: String, pos: Vector3, yaw := 0.0, scl := 1.0) -> void:
+	if _ghost:
+		return
 	if not _multi.has(name):
 		_multi[name] = []
 	(_multi[name] as Array).append(Transform3D(Basis(Vector3.UP, yaw).scaled(Vector3.ONE * scl), pos))
@@ -655,6 +675,7 @@ func _build_ground() -> void:
 			_sbox(Vector3(sx * (AVE_X + SIDE / 2), 0.08, cz), Vector3(SIDE, 0.26, SIDE), walk)
 	# beco (paralelepípedo escuro, sem calçada)
 	_sbox(Vector3((FAC + ALLEY_END) / 2, 0.0, ALLEY_Z), Vector3(ALLEY_END - FAC, 0.12, 4.0), _painted("calcada", Color("#3c4058"), 0.5, 0.2, 0.9))
+	_sbox(Vector3((POCKET_X + ALLEY_END) / 2, 0.0, ALLEY_Z), Vector3(ALLEY_END - POCKET_X, 0.12, POCKET_HW * 2), _painted("calcada", Color("#3c4058"), 0.5, 0.2, 0.9))
 	# faixas: linha central amarela tracejada, faixa de pedestre no cruzamento
 	var line := _mat(Color("#c9a640"), 0.25, false, 0.5)
 	var z := AVE_START - 2.0
@@ -700,7 +721,7 @@ func _build_ground() -> void:
 		_steam(p)
 	map_rects = [Rect2(-AVE_X - SIDE, AVE_END, (AVE_X + SIDE) * 2, AVE_START - AVE_END),
 		Rect2(-CROSS_END, CROSS_Z - CROSS_HW - SIDE, CROSS_END * 2, (CROSS_HW + SIDE) * 2),
-		Rect2(FAC, ALLEY_Z - 2.0, ALLEY_END - FAC, 4.0), PLAZA]
+		Rect2(FAC, ALLEY_Z - 2.0, ALLEY_END - FAC, 4.0), Rect2(POCKET_X, ALLEY_Z - POCKET_HW, ALLEY_END - POCKET_X, POCKET_HW * 2), PLAZA]
 
 
 func _steam(p: Vector3) -> void:
@@ -798,8 +819,8 @@ func _build_blocks() -> void:
 	segs.append([Vector3(PLAZA.end.x, 0, zs), Vector3(-FAC, 0, zs), Vector3(0, 0, 1)])
 	segs.append([Vector3(FAC, 0, zs), Vector3(CROSS_END, 0, zs), Vector3(0, 0, 1)])
 	# beco: paredes norte e sul, fundo
-	segs.append([Vector3(FAC, 0, ALLEY_Z + 2.0), Vector3(ALLEY_END, 0, ALLEY_Z + 2.0), Vector3(0, 0, -1)])
-	segs.append([Vector3(FAC, 0, ALLEY_Z - 2.0), Vector3(ALLEY_END, 0, ALLEY_Z - 2.0), Vector3(0, 0, 1)])
+	segs.append([Vector3(FAC, 0, ALLEY_Z + 2.0), Vector3(ALLEY_END, 0, ALLEY_Z + 2.0), Vector3(0, 0, -1), true])
+	segs.append([Vector3(FAC, 0, ALLEY_Z - 2.0), Vector3(ALLEY_END, 0, ALLEY_Z - 2.0), Vector3(0, 0, 1), true])
 	# fim da transversal à direita (parede com outdoor) e começo da avenida (atrás do jogador)
 	segs.append([Vector3(CROSS_END, 0, zn), Vector3(CROSS_END, 0, zs), Vector3(-1, 0, 0)])
 	segs.append([Vector3(-FAC, 0, AVE_START), Vector3(FAC, 0, AVE_START), Vector3(0, 0, -1)])
@@ -811,9 +832,56 @@ func _build_blocks() -> void:
 	segs.append([Vector3(PLAZA.end.x, 0, PLAZA.end.y), Vector3(PLAZA.end.x, 0, zn), Vector3(-1, 0, 0)])
 	segs.append([Vector3(PLAZA.end.x, 0, zs), Vector3(PLAZA.end.x, 0, PLAZA.position.y), Vector3(-1, 0, 0)])
 	for s in segs:
+		# paredes do beco: o trecho do pátio do fim é cortado (geometria fora), sem mudar o sorteio do resto da cidade
+		_clip_alley = s.size() > 3
 		_facade_row(s[0], s[1], s[2])
+		_clip_alley = false
 	# fundo do beco (loja do InacioCyber fica aqui, é um prédio próprio)
+	# o prédio antigo do fundo (atrás da loja, mais longe) vira "fantasma": consome o mesmo sorteio, não aparece
+	_ghost = true
 	_building(Vector3(ALLEY_END + 3.0, 0, ALLEY_Z), Vector3(-1, 0, 0), 6.0, 4.4, true)
+	_ghost = false
+	_build_pocket()
+
+
+## Pátio no fim do beco (a fachada da loja do InacioCyber tem 5,6 m e o beco só 4 m: as pilastras, o letreiro e
+## o toldo ficavam dentro das paredes). Sorteio próprio (o resto da cidade fica idêntico), sem janelas vivas,
+## ventiladores, ar-condicionado ou escada; entra no fim da lista de prédios (anúncios dos outros não mudam).
+var _clip_alley := false
+var _ghost := false
+var _quiet := false
+var _fan_n := 0
+var _ghost_bin := Node3D.new()
+
+
+func _host(n: Node) -> void:
+	if _ghost:
+		_ghost_bin.add_child(n)
+	else:
+		add_child(n)
+
+
+func _clipped(x: float, half: float) -> bool:
+	return _clip_alley and x + half > POCKET_X
+
+
+func _build_pocket() -> void:
+	var main_rng := _rng
+	_rng = RandomNumberGenerator.new()
+	_rng.seed = 26_2026
+	_quiet = true
+	_facade_row(Vector3(POCKET_X, 0, ALLEY_Z + POCKET_HW), Vector3(POCKET_X, 0, ALLEY_Z + 2.0), Vector3(1, 0, 0))
+	_facade_row(Vector3(POCKET_X, 0, ALLEY_Z - 2.0), Vector3(POCKET_X, 0, ALLEY_Z - POCKET_HW), Vector3(1, 0, 0))
+	_facade_row(Vector3(POCKET_X, 0, ALLEY_Z + POCKET_HW), Vector3(ALLEY_END, 0, ALLEY_Z + POCKET_HW), Vector3(0, 0, -1))
+	_facade_row(Vector3(POCKET_X, 0, ALLEY_Z - POCKET_HW), Vector3(ALLEY_END, 0, ALLEY_Z - POCKET_HW), Vector3(0, 0, 1))
+	_building(Vector3(ALLEY_END, 0, ALLEY_Z), Vector3(-1, 0, 0), POCKET_HW * 2 + 0.4, 4.4, true)
+	_quiet = false
+	_rng = main_rng
+
+
+func _exit_tree() -> void:
+	if is_instance_valid(_ghost_bin):
+		_ghost_bin.free()
 
 
 func _facade_row(a: Vector3, b: Vector3, normal: Vector3) -> void:
@@ -833,7 +901,18 @@ func _building(face_center: Vector3, normal: Vector3, w: float, h_force := 0.0, 
 	var h := h_force if h_force > 0.0 else _rng.randf_range(9.0, 19.0)
 	if is_end:
 		h = 14.0
-	_bldgs.append({"face": face_center, "normal": normal, "w": w, "h": h, "busy": _near_shop(face_center), "end": is_end})
+	var bent := {"face": face_center, "normal": normal, "w": w, "h": h, "busy": _near_shop(face_center), "end": is_end}
+	if _ghost or (_clip_alley and face_center.x - w / 2.0 >= POCKET_X - 0.01):
+		bent["ghost"] = true   # anúncios e telhado deste prédio não aparecem (contadores seguem iguais)
+	elif _clipped(face_center.x, w / 2.0):
+		# prédio cortado pelo pátio: anúncios e telhado no que sobrou da fachada
+		var x0 := face_center.x - w / 2.0
+		bent["w_full"] = w
+		bent["w"] = POCKET_X - x0
+		bent["face"] = Vector3((x0 + POCKET_X) / 2.0, face_center.y, face_center.z)
+	if _quiet:
+		bent["alt"] = true
+	_bldgs.append(bent)
 	var depth := 8.0
 	var yaw := atan2(normal.x, normal.z)
 	var body_c := face_center - normal * (depth / 2)
@@ -860,7 +939,7 @@ func _building(face_center: Vector3, normal: Vector3, w: float, h_force := 0.0, 
 			var cell := _rng.randi() % 16
 			if lit < 0.5:
 				var wc := Color(1, 1, 1) * _rng.randf_range(0.75, 1.25)
-				if lit < 0.06 and _wins.size() < 40:
+				if lit < 0.06 and _wins.size() < 40 and not _quiet:
 					_live_window(wp + normal * 0.03, normal, wc, cell)
 				else:
 					_wquad(wp + normal * 0.035, Vector2(1.1, 1.4), normal, cell, wc)
@@ -869,13 +948,16 @@ func _building(face_center: Vector3, normal: Vector3, w: float, h_force := 0.0, 
 				_wquad(wp + normal * 0.035, Vector2(1.1, 1.4), normal, cell, Color(0.12, 0.12, 0.2))
 	# escada de incêndio e ar-condicionado
 	var busy := _near_shop(face_center)
-	if not is_end and not busy and h > 11.0 and _rng.randf() < 0.45:
+	if not is_end and not busy and h > 11.0 and _rng.randf() < 0.45 and not _quiet:
 		for k in range(1, mini(4, rows)):
+			if _ghost or _clipped((face_center + right * (w * 0.22)).x, 1.0):
+				continue
 			_prop("escada_incendio", face_center + normal * 0.7 + right * (w * 0.22) + Vector3(0, 3.6 + (k - 1) * 3.0, 0), yaw + PI)
-	if not busy and _rng.randf() < 0.5:
+	if not busy and _rng.randf() < 0.5 and not _quiet:
 		var ac := face_center + normal * 0.35 + right * _rng.randf_range(-w / 3, w / 3) + Vector3(0, 4.4 + _rng.randi_range(0, 2) * 2.6, 0)
 		_sbox(ac, Vector3(0.9, 0.6, 0.55), _painted("metal", Color("#6a7088"), 0.5, 0.4, 2.0), yaw)
-		if _fans.size() < 10:
+		if _fan_n < 10:
+			_fan_n += 1
 			var fan := MeshInstance3D.new()
 			var fm := CylinderMesh.new()
 			fm.top_radius = 0.22
@@ -885,8 +967,11 @@ func _building(face_center: Vector3, normal: Vector3, w: float, h_force := 0.0, 
 			fan.material_override = _mat(Color("#20232f"))
 			fan.position = ac + normal * 0.29
 			fan.rotation = Vector3(PI / 2, yaw, 0)
-			add_child(fan)
-			_fans.append(fan)
+			if _ghost or _clipped(fan.position.x, 0.3):
+				fan.free()
+			else:
+				add_child(fan)
+				_fans.append(fan)
 		# pingos do ar-condicionado
 	# caixa d'água / chaminé no teto
 	if _rng.randf() < 0.4:
@@ -907,7 +992,10 @@ func _live_window(p: Vector3, normal: Vector3, col: Color, cell := 0) -> void:
 	mi.material_override = m
 	mi.position = p
 	mi.rotation.y = atan2(normal.x, normal.z)
-	add_child(mi)
+	if _ghost or _clipped(p.x, 0.55):
+		_ghost_bin.add_child(mi)
+	else:
+		add_child(mi)
 	_wins.append({"m": m, "col": col, "next": _rng.randf_range(2, 14), "on": true})
 
 
@@ -1438,7 +1526,7 @@ func _dress_alley() -> void:
 	# varal de lâmpadas atravessando o beco em zigue-zague (emissivas, um lote só)
 	var bulb := _mat(Color(2.4, 1.7, 0.9), 0.0, true)
 	var wire := _mat(Color("#0a0a10"))
-	for k in 5:
+	for k in 4:
 		var x0 := FAC + 2.0 + k * 3.6
 		var a := Vector3(x0, 4.6, zn)
 		var b := Vector3(x0 + 1.8, 4.6, zs)
@@ -2037,6 +2125,7 @@ func _spawn_player() -> void:
 		Rect2(-FAC + m, AVE_END + m, (FAC - m) * 2, AVE_START - AVE_END - m * 2),
 		Rect2(-CROSS_END + m, CROSS_Z - CROSS_HW - SIDE + m, (CROSS_END - m) * 2, (CROSS_HW + SIDE - m) * 2),
 		Rect2(FAC - 1.0, ALLEY_Z - 2.0 + m, ALLEY_END - FAC + 1.0 - m, 4.0 - m * 2),
+		Rect2(POCKET_X + m, ALLEY_Z - POCKET_HW + m, ALLEY_END - POCKET_X - m * 2, (POCKET_HW - m) * 2),
 		Rect2(PLAZA.position.x + m, PLAZA.position.y + m, PLAZA.size.x - m + 1.0, PLAZA.size.y - m * 2),
 	]
 
@@ -2626,7 +2715,7 @@ func _build_extras() -> void:
 	# caixas de entrega empilhadas nas portas
 	for p in [Vector3(-6.3, 0.2, -10.6), Vector3(6.3, 0.2, -12.6), Vector3(-6.2, 0.2, -59.0)]:
 		_prop("caixas_papelao", p, _rng.randf() * TAU, 0.7)
-	_mural(Vector3(ALLEY_END - 0.5, 0, ALLEY_Z + 1.9), Vector3(0, 0, -1), 5.0)
+	_mural(Vector3((POCKET_X + ALLEY_END) / 2.0 - 0.3, 0, ALLEY_Z + POCKET_HW - 0.1), Vector3(0, 0, -1), 4.2)
 
 
 ## Food truck "CAFÉ DEV" parado no fim da avenida.
@@ -2826,7 +2915,7 @@ func _ad_holder(face: Vector3, normal: Vector3, out := 0.0) -> Node3D:
 	var h := Node3D.new()
 	h.position = face + normal * out
 	h.rotation.y = atan2(normal.x, normal.z)
-	add_child(h)
+	_host(h)
 	return h
 
 
@@ -2850,6 +2939,7 @@ func _build_ads() -> void:
 	var k_lambe := 0
 	for i in _bldgs.size():
 		var b: Dictionary = _bldgs[i]
+		_ghost = b.has("ghost")
 		if b["end"]:
 			continue
 		var face: Vector3 = b["face"]
@@ -2884,7 +2974,7 @@ func _build_ads() -> void:
 				var hold2 := Node3D.new()
 				hold2.position = corner + nrm * (vw / 2 + 0.35)
 				hold2.rotation.y = atan2(right.x, right.z)
-				add_child(hold2)
+				_host(hold2)
 				var yc := 5.2 + vh / 2
 				_lbox(hold2, Vector3(0, yc, 0), Vector3(vw + 0.16, vh + 0.16, 0.16), dark)
 				_ad_quad(hold2, tex2, Vector3(0, yc, 0.09), Vector2(vw, vh), 0.55)
@@ -2898,7 +2988,7 @@ func _build_ads() -> void:
 					arm.material_override = metal
 					arm.position = corner + nrm * ((vw / 2 + 0.35) / 2) + Vector3(0, yy, 0)
 					arm.rotation.y = atan2(nrm.x, nrm.z)
-					add_child(arm)
+					_host(arm)
 		# 3) lightbox 3:4 no 2º andar
 		else:
 			var tex3 := _ad_tex(_ad_pick("lightbox", k_box))
@@ -2912,7 +3002,7 @@ func _build_ads() -> void:
 					_lbox(hold3, Vector3(off, 4.4 + lh / 2, -0.08), Vector3(lw + 0.18, lh + 0.18, 0.2), dark)
 					_ad_quad(hold3, tex3, Vector3(off, 4.4 + lh / 2, 0.04), Vector2(lw, lh), 0.6)
 		# 4) muros sem loja: lambe-lambes em sequência no térreo
-		if not b["busy"] and w > 4.0:
+		if not b["busy"] and float(b.get("w_full", w)) > 4.0:
 			var n := mini(int((w - 1.0) / 0.95), 5)
 			var tex4 := _ad_tex(_ad_pick("lseq", k_lambe))
 			k_lambe += 1
@@ -2926,6 +3016,7 @@ func _build_ads() -> void:
 					a4.region = Rect2(a4.region.position, Vector2(a4.region.size.x * n / 5.0, a4.region.size.y))
 					sub = a4
 				_ad_quad(hold4, sub, Vector3(0, 1.75, 0.0), Vector2(0.9 * n, 1.32), 0.15)
+	_ghost = false
 	# 5) faixas penduradas cruzando a avenida e a transversal
 	var faixas := [[Vector3(-FAC, 0, -6.0), Vector3(FAC, 0, -6.0)], [Vector3(-FAC, 0, -33.0), Vector3(FAC, 0, -33.0)],
 		[Vector3(-FAC, 0, -63.0), Vector3(FAC, 0, -63.0)],
@@ -2964,7 +3055,7 @@ func _build_ads() -> void:
 	var tvs := []
 	var cands := []
 	for b in _bldgs:
-		if not b["end"] and not b["busy"] and float(b["w"]) >= 6.0 and float(b["h"]) >= 11.5:
+		if not b["end"] and not b["busy"] and not b.has("alt") and float(b.get("w_full", b["w"])) >= 6.0 and float(b["h"]) >= 11.5:
 			var fc: Vector3 = b["face"]
 			cands.append([fc.distance_to(Vector3(0, 0, CROSS_Z)), b])
 	cands.sort_custom(func(x, y): return x[0] < y[0])
@@ -3059,6 +3150,7 @@ func _build_roofs() -> void:
 	var tv_k := 0
 	for i in _bldgs.size():
 		var b: Dictionary = _bldgs[i]
+		_ghost = b.has("ghost")
 		if b["end"] or (_light and i % 2 == 1):
 			continue
 		var face: Vector3 = b["face"]
@@ -3071,7 +3163,7 @@ func _build_roofs() -> void:
 		var hold := Node3D.new()
 		hold.position = roof
 		hold.rotation.y = atan2(nrm.x, nrm.z)
-		add_child(hold)
+		_host(hold)
 		var kind := (i * 7 + 3) % 5
 		var ox := clampf((((i * 13) % 7) - 3) * 0.6, -lim, lim)
 		if kind == 0:   # torre de rádio treliçada com luz vermelha
@@ -3081,7 +3173,8 @@ func _build_roofs() -> void:
 			_lbox(hold, Vector3(ox, th * 0.75, -1.0), Vector3(0.8, 0.06, 0.06), metal)
 			var lm := _mat(Color("#ff2030"), 6.0, true)
 			_lbox(hold, Vector3(ox, th + 0.12, -1.0), Vector3(0.22, 0.22, 0.22), lm)
-			_blinkers.append({"m": lm, "seed": float(red) * 0.37})
+			if not _ghost:
+				_blinkers.append({"m": lm, "seed": float(red) * 0.37})
 			red += 1
 		elif kind == 1:   # antenas + parabólica
 			for j in 3:
@@ -3137,7 +3230,9 @@ func _build_roofs() -> void:
 			beam.position = Vector3(0, 20.0, 0)
 			beam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			sl.add_child(beam)
-			_searchlights.append({"n": sl, "seed": float(i) * 1.3})
+			if not _ghost:
+				_searchlights.append({"n": sl, "seed": float(i) * 1.3})
+	_ghost = false
 	_build_alley_lights()
 
 
@@ -3146,7 +3241,7 @@ func _build_alley_lights() -> void:
 	var warm := _mat(Color(2.6, 1.9, 1.2), 0.0, true)
 	var x := FAC + 2.5
 	var k := 0
-	while x < ALLEY_END - 1.5:
+	while x < POCKET_X - 1.9:
 		for sz in [-1.0, 1.0]:
 			var wz: float = ALLEY_Z + sz * 1.92
 			_sbox(Vector3(x + (0.0 if sz > 0 else 1.8), 3.1, wz), Vector3(0.3, 0.3, 0.12), warm)
@@ -3158,7 +3253,7 @@ func _build_alley_lights() -> void:
 			_lhalo(hold, Vector3(0, 0.04, 1.2), Vector2(2.4, 2.4), Color("#ffcf99"), 0.18, true)
 		x += 4.0
 		k += 1
-	var labels := [["24H", Color("#39ff9b"), 11.0, 1.0], ["SERVIÇO", Color("#ff3d7f"), 17.0, -1.0], ["NO PARKING", Color("#5bd0ff"), 21.5, 1.0]]
+	var labels := [["24H", Color("#39ff9b"), 11.0, 1.0], ["SERVIÇO", Color("#ff3d7f"), 17.0, -1.0], ["NO PARKING", Color("#5bd0ff"), 19.2, 1.0]]
 	for lb in labels:
 		var t := Label3D.new()
 		t.text = L.t(str(lb[0]))

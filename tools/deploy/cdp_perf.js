@@ -163,6 +163,15 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
       out.langswitch = 'textos ' + ms + ' ms, imagens ' + await ev('window.__pfLangAllMs') + ' ms | relógio ' + wall + ' ms | pior quadro ' + st.cpu_max + ' ms | url ' + href0 + ' -> ' + await ev('location.href') + ' | lang=' + await ev('document.documentElement.lang') + ' | title=' + await ev('document.title');
       if (pre) { await sleep(400); const r = await send('Page.captureScreenshot', { format: 'png' }); fs.writeFileSync(pre.replace(/\.png$/, '_depois.png'), Buffer.from(r.result.data, 'base64')); }
     }
+    // --tpshots pasta --tp "nome:x,y,z,yaw,pitch;nome2:..." : leva o jogador a cada ponto e captura
+    if (opt('--tpshots', '')) {
+      for (const it of opt('--tp', '').split(';').filter(Boolean)) {
+        const [nm, pos] = it.split(':');
+        await ev('pfAB("tp",true,"' + pos + '")'); await sleep(+opt('--tpwait', 1800));
+        const r = await send('Page.captureScreenshot', { format: 'png' });
+        fs.writeFileSync(path.join(opt('--tpshots', ''), nm + '.png'), Buffer.from(r.result.data, 'base64'));
+      }
+    }
     const shot = opt('--shot', '');
     if (shot) { const r = await send('Page.captureScreenshot', { format: 'png' }); fs.writeFileSync(shot, Buffer.from(r.result.data, 'base64')); }
   }
