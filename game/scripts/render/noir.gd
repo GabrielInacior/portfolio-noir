@@ -50,7 +50,7 @@ static func shop_noir() -> bool:
 		if _shop_on == 1:
 			if OS.get_environment("SHOPNOIR") == "0":
 				_shop_on = 0
-			elif OS.has_feature("web") and str(JavaScriptBridge.eval("(/[?&]shopnoir=0/.test(location.search))?1:0", true)) == "1":
+			elif OS.has_feature("web") and UI.js_flag("(/[?&]shopnoir=0/.test(location.search))?1:0"):
 				_shop_on = 0
 	return _shop_on == 1
 

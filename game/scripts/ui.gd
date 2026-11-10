@@ -525,3 +525,12 @@ static func quality() -> int:
 
 static func set_quality(q: int) -> void:
 	_quality = clampi(q, 0, 2)
+
+
+## parâmetro de teste da URL avaliado no navegador ("/[?&]x=1/.test(location.search)?1:0"); o número volta como
+## float do JavaScript (str() dava "1.0" e a comparação com "1" nunca batia: ?vhs, ?sfx, ?census... não valiam)
+func js_flag(expr: String) -> bool:
+	if not OS.has_feature("web"):
+		return false
+	var v: Variant = JavaScriptBridge.eval(expr, true)
+	return v != null and float(str(v)) > 0.5

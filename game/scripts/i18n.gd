@@ -19,6 +19,7 @@ var _dict: Dictionary = {}
 
 
 func _ready() -> void:
+	print("PFT %5d ms  autoload L" % Time.get_ticks_msec())
 	lang = _detect()
 	_load()
 
@@ -145,7 +146,7 @@ func live_ok() -> bool:
 	if OS.get_environment("PF_LIVE") == "0":
 		return false
 	if OS.has_feature("web"):
-		return str(JavaScriptBridge.eval("/[?&]live=0/.test(location.search)?1:0", true)) != "1"
+		return not UI.js_flag("/[?&]live=0/.test(location.search)?1:0")
 	return true
 
 

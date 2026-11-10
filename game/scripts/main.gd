@@ -11,6 +11,7 @@ var _gate: Control
 
 
 func _ready() -> void:
+	print("PFT %5d ms  main._ready" % Time.get_ticks_msec())
 	_setup_input()
 	if UI.software():
 		# sem placa de vídeo: 30 quadros por segundo dão fôlego à CPU, e o 3D desenha em 240 px de altura
@@ -22,6 +23,7 @@ func _ready() -> void:
 	_build_world_view()
 	# os anúncios e outdoors do idioma vêm num pacote pequeno que baixa em paralelo com o principal
 	await Packs.need("lang")
+	print("PFT %5d ms  pacote lang pronto" % Time.get_ticks_msec())
 	city = City.new()
 	# na web (ou com PFSLICE=1) a cidade monta em fatias, com progresso para o carregador da página
 	city.sliced = OS.has_feature("web") or OS.get_environment("PFSLICE") != ""
@@ -57,19 +59,25 @@ func _ready() -> void:
 	hud = Hud.new()
 	hud.visible = false
 	layer.add_child(hud)
+	print("PFT %5d ms  hud criado" % Time.get_ticks_msec())
 	await get_tree().process_frame
+	print("PFT %5d ms  1º quadro da cidade" % Time.get_ticks_msec())
 	hud.setup(city.player, city)
+	print("PFT %5d ms  hud montado" % Time.get_ticks_msec())
 	_read_args()
 	# troca de idioma ao vivo: índice e imagens do outro idioma prontos ainda com o carregador na tela
 	if not UI.software():
 		await L.prepare(true)
+	print("PFT %5d ms  idioma preparado" % Time.get_ticks_msec())
 	_build_gate(layer)
+	print("PFT %5d ms  tela de entrada" % Time.get_ticks_msec())
 	# avisa a página (boot.js) que a cidade está montada e desenhada: o carregador HTML some
 	for _i in 3:
 		await get_tree().process_frame
 	if OS.has_feature("web"):
 		JavaScriptBridge.eval("window.pfReady&&window.pfReady()", true)
 	print("PFT %5d ms  pronto (ENTRAR)" % Time.get_ticks_msec())
+	city.warm_late()
 	_setup_ab()
 
 
@@ -195,7 +203,7 @@ func _fit_world() -> void:
 func _vhs_level() -> float:
 	if OS.get_environment("PF_VHS") != "":
 		return float(OS.get_environment("PF_VHS"))
-	if not OS.has_feature("web") or str(JavaScriptBridge.eval("/[?&]vhs=1/.test(location.search)?1:0", true)) != "1":
+	if not OS.has_feature("web") or not UI.js_flag("/[?&]vhs=1/.test(location.search)?1:0"):
 		return 0.0
 	if UI.software() or UI.quality() == 0:
 		return 1.0
@@ -369,7 +377,7 @@ func _scan_labels(n: Node) -> void:
 func _census_on() -> bool:
 	if OS.get_environment("CENSUS") != "":
 		return true
-	return OS.has_feature("web") and str(JavaScriptBridge.eval("/[?&]census=1/.test(location.search)?1:0", true)) == "1"
+	return OS.has_feature("web") and UI.js_flag("/[?&]census=1/.test(location.search)?1:0")
 
 
 func _census(label: String) -> void:

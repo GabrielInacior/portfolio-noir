@@ -74,6 +74,8 @@ signal built
 var sliced := false
 var is_built := false
 var _t_slice := 0
+## orçamento de cada fatia da montagem (ms); ?slice=N para comparar (40 ms não mediu melhor que 12 no celular)
+var _slice_us := 12000
 var _pct := 0.0
 var _t_texload := 0
 
@@ -81,9 +83,15 @@ var _t_texload := 0
 func _slice() -> void:
 	if not sliced:
 		return
-	if Time.get_ticks_usec() - _t_slice > 12000:
+	if Time.get_ticks_usec() - _t_slice > _slice_us:
 		await get_tree().process_frame
 		_t_slice = Time.get_ticks_usec()
+
+
+## marca de tempo de uma subetapa (log PFT, só na montagem fatiada)
+func _pft(what: String) -> void:
+	if sliced:
+		print("PFT %5d ms        %s" % [Time.get_ticks_msec(), what])
 
 
 ## progresso 0..1 e etapa legível; a página (boot.js) desenha a barra e o texto
@@ -100,6 +108,10 @@ func _prog(p: float, stage: String) -> void:
 func _ready() -> void:
 	add_to_group("pf_lang_tex")
 	_rng.seed = 20260501
+	if OS.has_feature("web"):
+		var sl := int(str(JavaScriptBridge.eval("(location.search.match(/[?&]slice=([0-9]+)/)||[])[1]||''", true)))
+		if sl > 0:
+			_slice_us = sl * 1000
 	_t_slice = Time.get_ticks_usec()
 	# modo leve: celular, GPU fraca ou perfil "batata" (ver UI.quality); corta luzes reais, metade dos
 	# anúncios de prédio, menos carros/pedestres, chuva menor e distâncias de desenho menores
@@ -123,9 +135,11 @@ func _ready() -> void:
 	_dress_alley()
 	await _prog(0.46, "Hanging billboards")
 	_build_billboards()
+	_pft("outdoors")
 	if OS.get_environment("NOADS") == "":
 		await _slice()
 		_build_ads()
+		_pft("anúncios")
 	await _prog(0.54, "Wiring the signs")
 	_build_wayfinding()
 	_build_extras()
@@ -141,7 +155,9 @@ func _ready() -> void:
 	await _prog(0.78, "Optimizing the geometry")
 	# teto de segmentos nas primitivas e partículas sem sombra (ver lowpoly.gd)
 	await LowPoly.node(self, _slice)
+	_pft("lowpoly")
 	await LowPoly.cull_by_size(self, _near(), _mid(), _slice)
+	_pft("cull_by_size")
 	# fusão das malhas estáticas por célula+material (de ~3.700 nós para algumas centenas de draw calls)
 	if OS.get_environment("NOMERGE") == "":
 		var ex: Array = []
@@ -185,6 +201,7 @@ func _ready() -> void:
 			for k in kiosks:
 				(k["ring"] as Node).set_meta("noir_skip", true)
 			Noir.convert_tree(self)
+			_pft("noir convert_tree")
 			var dmc: Array = []
 			for m in dm:
 				if m in _neon_mats:
@@ -197,8 +214,10 @@ func _ready() -> void:
 				Noir.track(m)
 				dmc.append(Noir.conv(m))
 			dm = dmc
+		Merge._slow = OS.get_environment("PF_MERGESLOW") != "" or (OS.has_feature("web") and UI.js_flag("/[?&]mergeslow=1/.test(location.search)?1:0"))
 		var r: Dictionary = await Merge.merge(self, ex, _near(), _mid(), dm, _slice)
 		print("MERGE cidade: %d malhas -> %d" % [r["in"], r["out"]])
+		_pft("merge")
 	if Noir.enabled():
 		# luz por objeto como no Compatibility (ver noir.gd); o que anda leva as luzes mais perto da câmera
 		var moving: Array = []
@@ -215,6 +234,7 @@ func _ready() -> void:
 		moving.append_array(_fans)
 		moving.append_array(npcs)
 		Noir.assign_sets(self, moving)
+		_pft("assign_sets")
 	print("PFT nodes: mesh=%d label=%d mm=%d light=%d part=%d" % [find_children("*", "MeshInstance3D", true, false).size(), find_children("*", "Label3D", true, false).size(), find_children("*", "MultiMeshInstance3D", true, false).size(), find_children("*", "Light3D", true, false).size(), find_children("*", "CPUParticles3D", true, false).size()])
 	await _warm_up()
 	is_built = true
@@ -1023,11 +1043,13 @@ func _place_shops() -> void:  # coroutine (fatiada)
 		if by_id.has(s[0]):
 			_shop(s[1], s[2], by_id[s[0]])
 			await _slice()
+	_pft("lojas: fachadas")
 	for g in [["rumor", Vector3(-5.6, 0.2, -9.0), PI / 2], ["fortress", Vector3(-25.0, 0.2, CROSS_Z + 4.6), PI],
 			["inaciocyber", Vector3(23.0, 0.06, ALLEY_Z + 1.2), -PI / 2]]:
 		if by_id.has(g[0]):
 			_guide_npc(g[1], g[2], by_id[g[0]])
 	_guide_npc(Vector3(2.5, 0.2, AVE_END + 2.6), PI + 0.4, {"id": "sobre", "title": "LAB · SOBRE MIM", "neon": "#ffffff", "special": "about"})
+	_pft("lojas: guias (personagens)")
 	# prédio da CARREIRA (empresas e projetos profissionais) no fim da transversal à direita
 	_shop(Vector3(34.0, 0, zn), Vector3(0, 0, -1), {"id": "carreira", "title": "CARREIRA", "neon": "#5bd0ff", "special": "career"})
 	# o LAB (Sobre mim) é o prédio no fim da avenida; contato é a cabine na praça
@@ -1945,12 +1967,18 @@ func _warm_up() -> void:
 			var mm := n as MultiMeshInstance3D
 			add_item.call(mm.material_override if mm.material_override else mm.multimesh.mesh.surface_get_material(0), true)
 	# programas das LOJAS também (as lojas montam ao entrar; sem isto a 1ª porta congelava compilando)
+	# rodada 5: esses programas (só existem dentro das lojas) aquecem DEPOIS, com a tela de entrada já na frente
+	# (warm_late, numa viewport fora da vista); ?latewarm=0 volta a aquecer tudo aqui
+	var late := not UI.js_flag("/[?&]latewarm=0/.test(location.search)?1:0") and OS.get_environment("PF_LATEWARM") != "0"
 	for sp in ["code_scroll", "chart_screen", "led_panel", "matrix_rain", "arcade_attract", "face_atlas", "hover_outline", "outline", "toon_noir"]:
 		var path := "res://shaders/%s.gdshader" % sp
 		if ResourceLoader.exists(path):
 			var wm := ShaderMaterial.new()
 			wm.shader = load(path)
-			items.append([Noir.conv(wm), false])
+			if late and sliced:
+				_late_warm.append(Noir.conv(wm))
+			else:
+				items.append([Noir.conv(wm), false])
 	for kind in Noir.SHADERS:
 		var nm := ShaderMaterial.new()
 		nm.shader = Noir.SHADERS[kind]
@@ -2114,6 +2142,46 @@ func _warm_up() -> void:
 	vp.render_target_update_mode = old_mode
 	if warm_key != "":
 		JavaScriptBridge.eval("try{localStorage.setItem('pf_warm',%s)}catch(e){}" % JSON.stringify(warm_key), true)
+
+
+## Aquecimento tardio (programas das lojas): um quadradinho por vez numa viewport de 16x16 que olha para
+## 500 m abaixo da cidade (mesmo mundo, mesma névoa e luzes: a variante compilada é a que a loja vai usar).
+## Roda com a tela de entrada na frente; se o ENTRAR vier antes, segue fora da vista.
+var _late_warm: Array = []
+
+
+func warm_late() -> void:
+	if _late_warm.is_empty():
+		return
+	var t0 := Time.get_ticks_msec()
+	var vp := SubViewport.new()
+	vp.size = Vector2i(16, 16)
+	vp.world_3d = get_viewport().find_world_3d()
+	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	vp.audio_listener_enable_3d = false
+	vp.gui_disable_input = true
+	var cam := Camera3D.new()
+	cam.far = 4.0
+	vp.add_child(cam)
+	get_parent().add_child(vp)
+	cam.current = true
+	cam.global_transform = Transform3D(Basis.IDENTITY, Vector3(0, -500, 0))
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.4, 0.4)
+	var n := 0
+	for m in _late_warm:
+		var mi := MeshInstance3D.new()
+		mi.mesh = quad
+		mi.material_override = m
+		get_parent().add_child(mi)
+		mi.global_position = Vector3(0, -500, -1.5)
+		await get_tree().process_frame
+		await get_tree().process_frame
+		mi.queue_free()
+		n += 1
+	_late_warm.clear()
+	vp.queue_free()
+	print("PFT aquecimento tardio: %d programas em %d ms" % [n, Time.get_ticks_msec() - t0])
 
 
 func _spawn_player() -> void:

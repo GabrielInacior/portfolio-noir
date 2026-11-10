@@ -46,7 +46,7 @@ func disable() -> void:
 func setup(p_world_vp: SubViewport, under_layer: CanvasLayer) -> void:
 	world_vp = p_world_vp
 	split = OS.get_environment("SHARP_SPLIT") != "0"
-	if OS.has_feature("web") and str(JavaScriptBridge.eval("/[?&]split=0/.test(location.search)?1:0", true)) == "1":
+	if OS.has_feature("web") and UI.js_flag("/[?&]split=0/.test(location.search)?1:0"):
 		split = false
 	vp = SubViewport.new()
 	vp.transparent_bg = true
@@ -183,6 +183,30 @@ func tag(root: Node) -> void:
 				var am := (g as MeshInstance3D).mesh
 				if OS.get_environment("SHARP_DEBUG") != "" and g.get_aabb().size.length() > 40.0:
 					print("SHARP grande: aabb=", g.global_transform * g.get_aabb(), " key=", ck, " vtx=", (am.surface_get_arrays(0)[Mesh.ARRAY_VERTEX] as PackedVector3Array).size(), " idx=", am.surface_get_arrays(0)[Mesh.ARRAY_INDEX] != null)
+				if am.has_meta("pf_occ"):
+					# malha da fusão rápida: posições/índices já na CPU, junta direto (sem SurfaceTool)
+					var po: Array = am.get_meta("pf_occ")
+					var acc: Array = occ[ck]
+					if acc.size() < 4:
+						acc.append(PackedVector3Array())
+						acc.append(PackedInt32Array())
+					var ov: PackedVector3Array = acc[2]
+					var oi: PackedInt32Array = acc[3]
+					var off := ov.size()
+					var pv: PackedVector3Array = po[0]
+					ov.append_array(g.global_transform * pv)
+					if po[1] == null:
+						oi.append_array(PackedInt32Array(range(off, off + pv.size())))
+					else:
+						var src: PackedInt32Array = po[1]
+						var base := oi.size()
+						oi.resize(base + src.size())
+						for k in src.size():
+							oi[base + k] = src[k] + off
+					acc[2] = ov
+					acc[3] = oi
+					continue
+				(occ[ck][0] as SurfaceTool).set_meta("used", true)
 				for i in am.get_surface_count():
 					var arr := am.surface_get_arrays(i)
 					var only := []
@@ -201,7 +225,29 @@ func tag(root: Node) -> void:
 		_classify(g)
 	for ck in occ:
 		var mi := MeshInstance3D.new()
-		mi.mesh = (occ[ck][0] as SurfaceTool).commit()
+		var acc2: Array = occ[ck]
+		if acc2.size() >= 4 and (acc2[2] as PackedVector3Array).size() > 0:
+			# parte rápida: vira uma superfície; o que veio pelo caminho antigo entra pelo SurfaceTool
+			var ov2: PackedVector3Array = acc2[2]
+			var oi2: PackedInt32Array = acc2[3]
+			var st2: SurfaceTool = acc2[0]
+			var arrs := []
+			arrs.resize(Mesh.ARRAY_MAX)
+			arrs[Mesh.ARRAY_VERTEX] = ov2
+			arrs[Mesh.ARRAY_INDEX] = oi2
+			var fast := ArrayMesh.new()
+			fast.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrs)
+			var old_part: ArrayMesh = st2.commit() if st2.has_meta("used") else null
+			if old_part and old_part.get_surface_count() > 0:
+				var sa := old_part.surface_get_arrays(0)
+				var only2 := []
+				only2.resize(Mesh.ARRAY_MAX)
+				only2[Mesh.ARRAY_VERTEX] = sa[Mesh.ARRAY_VERTEX]
+				only2[Mesh.ARRAY_INDEX] = sa[Mesh.ARRAY_INDEX]
+				fast.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, only2)
+			mi.mesh = fast
+		else:
+			mi.mesh = (occ[ck][0] as SurfaceTool).commit()
 		if OS.get_environment("SHARP_DEBUG") != "":
 			print("SHARP oclusor ", ck, " vtx=", (mi.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX] as PackedVector3Array).size() if mi.mesh and mi.mesh.get_surface_count() > 0 else -1, " aabb=", mi.mesh.get_aabb() if mi.mesh else null)
 		mi.material_override = _occ_mat

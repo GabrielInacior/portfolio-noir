@@ -30,6 +30,10 @@ static func merge(root: Node3D, exclude: Array, near := 24.0, mid := 42.0, dyn_m
 	var inv := root.global_transform.affine_inverse()
 	var groups := {}
 	var done := []
+	var t_all := Time.get_ticks_usec()
+	var t_parts := 0
+	var t_commit := 0
+	_reads = 0
 	var count := 0
 	var idx := 0
 	for n in root.find_children("*", "MeshInstance3D", true, false):
@@ -98,17 +102,26 @@ static func merge(root: Node3D, exclude: Array, near := 24.0, mid := 42.0, dyn_m
 		for p in parts:
 			var g: Dictionary = groups.get(p[0], {})
 			if g.is_empty():
-				g = {"st": SurfaceTool.new(), "mat": p[2], "layers": mi.layers, "shadow": mi.cast_shadow, "range": rng, "n": 0}
+				# caminho rápido (sem SurfaceTool.append_from): no navegador cada leitura de malha da GPU
+				# (surface_get_arrays) é síncrona; aqui cada malha distinta é lida uma vez só e as cópias
+				# transformadas são juntadas em PackedArrays. Material com normal map segue o caminho antigo.
+				var slow: bool = _slow or (p[2] is StandardMaterial3D and (p[2] as StandardMaterial3D).normal_enabled)
+				g = {"st": SurfaceTool.new() if slow else null, "parts": [], "mat": p[2], "layers": mi.layers, "shadow": mi.cast_shadow, "range": rng, "n": 0}
 				groups[p[0]] = g
-			var src_mesh: Mesh = mi.mesh
-			var si: int = p[1]
-			if p[3] is Array:
-				src_mesh = _noir_baked(mi.mesh, si, p[3])
-				si = 0
-			elif p[3] != null:
-				src_mesh = _tinted(mi.mesh, si, p[3])
-				si = 0
-			(g["st"] as SurfaceTool).append_from(src_mesh, si, xf)
+			var tb := Time.get_ticks_usec()
+			if g["st"] != null:
+				var src_mesh: Mesh = mi.mesh
+				var si: int = p[1]
+				if p[3] is Array:
+					src_mesh = _noir_baked(mi.mesh, si, p[3])
+					si = 0
+				elif p[3] != null:
+					src_mesh = _tinted(mi.mesh, si, p[3])
+					si = 0
+				(g["st"] as SurfaceTool).append_from(src_mesh, si, xf)
+			else:
+				(g["parts"] as Array).append(_part(src_arrays(mi.mesh, p[1]), xf, p[3]))
+			t_parts += Time.get_ticks_usec() - tb
 			g["n"] = int(g["n"]) + 1
 		done.append(mi)
 		count += 1
@@ -122,7 +135,9 @@ static func merge(root: Node3D, exclude: Array, near := 24.0, mid := 42.0, dyn_m
 		if tick.is_valid():
 			await tick.call()
 		var g: Dictionary = groups[k]
-		var am := (g["st"] as SurfaceTool).commit()
+		var tcm := Time.get_ticks_usec()
+		var am: ArrayMesh = (g["st"] as SurfaceTool).commit() if g["st"] != null else _commit_parts(g["parts"])
+		t_commit += Time.get_ticks_usec() - tcm
 		if am == null or am.get_surface_count() == 0:
 			continue
 		var out := MeshInstance3D.new()
@@ -139,6 +154,7 @@ static func merge(root: Node3D, exclude: Array, near := 24.0, mid := 42.0, dyn_m
 	for mi in done:
 		(mi as MeshInstance3D).mesh = null
 		(mi as MeshInstance3D).material_override = null
+	print("MERGE tempos (ms): total %d | partes %d | junção %d | leituras de malha %d | %s" % [(Time.get_ticks_usec() - t_all) / 1000, t_parts / 1000, t_commit / 1000, _reads, "antigo" if _slow else "rápido"])
 	if OS.get_environment("MERGE_DEBUG") != "":
 		var emis := 0
 		var tex := 0
@@ -239,7 +255,7 @@ static func _fmt(m: Mesh, i: int) -> int:
 		if am.surface_get_primitive_type(i) != Mesh.PRIMITIVE_TRIANGLES:
 			return -1
 		return am.surface_get_format(i) & FMT_MASK
-	var arr := m.surface_get_arrays(i)
+	var arr := src_arrays(m, i)
 	if arr.is_empty() or arr[Mesh.ARRAY_VERTEX] == null:
 		return -1
 	var f := 0
@@ -319,4 +335,177 @@ static func _noir_baked(m: Mesh, i: int, d: Array) -> ArrayMesh:
 	am.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr, [], {}, NOIR_FMT)
 	if OS.get_environment("MT_DEBUG") != "":
 		print("MT baked col=", col, " out=", (am.surface_get_arrays(0)[Mesh.ARRAY_COLOR] as PackedColorArray).slice(0, 1), " fmt=", am.surface_get_format(0))
+	return am
+
+
+# ─────────────────────────────── caminho rápido (sem ler a mesma malha da GPU várias vezes)
+static var _acache := {}
+static var _pnames := {}
+static var _reads := 0
+## ?mergeslow=1 / PF_MERGESLOW=1: volta ao caminho antigo (SurfaceTool.append_from) para comparar
+static var _slow := false
+
+
+## arrays de uma superfície, lidos uma vez por malha distinta (primitivas iguais por parâmetro contam como uma);
+## malhas montadas por código podem trazer os arrays prontos na meta "pf_arrays"
+static func src_arrays(m: Mesh, i: int) -> Array:
+	if m.has_meta("pf_arrays"):
+		var pa: Array = m.get_meta("pf_arrays")
+		if i < pa.size():
+			return pa[i]
+	var k: String
+	if m is PrimitiveMesh:
+		var cls := m.get_class()
+		var names: Array = _pnames.get(cls, [])
+		if names.is_empty():
+			for pr in m.get_property_list():
+				var nm := str(pr["name"])
+				if int(pr["usage"]) & PROPERTY_USAGE_STORAGE and not nm.begins_with("resource_") and nm != "material":
+					names.append(nm)
+			_pnames[cls] = names
+		var vals := [cls]
+		for nm in names:
+			vals.append(m.get(nm))
+		k = str(vals)
+	else:
+		k = "%d:%d" % [m.get_instance_id(), i]
+	var a: Variant = _acache.get(k)
+	if a == null:
+		a = m.surface_get_arrays(i)
+		_reads += 1
+		_acache[k] = a
+	return a
+
+
+## cópia transformada de uma superfície (posição, normal, cor/dados do material noir por vértice)
+static func _part(arr: Array, xf: Transform3D, tint: Variant) -> Dictionary:
+	var pos: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+	var vc := pos.size()
+	var d := {"n": vc, "v": xf * pos}
+	var nr: Variant = arr[Mesh.ARRAY_NORMAL]
+	if nr != null:
+		var b := xf.basis
+		var sc := b.get_scale()
+		if absf(sc.x - sc.y) < 0.0005 and absf(sc.y - sc.z) < 0.0005:
+			d["nr"] = Transform3D(b.orthonormalized(), Vector3.ZERO) * (nr as PackedVector3Array)
+		else:
+			var nb := b.inverse().transposed()
+			var nn := nr as PackedVector3Array
+			var out := PackedVector3Array()
+			out.resize(vc)
+			for k in vc:
+				out[k] = (nb * nn[k]).normalized()
+			d["nr"] = out
+	if arr[Mesh.ARRAY_TEX_UV] != null:
+		d["uv"] = arr[Mesh.ARRAY_TEX_UV]
+	if arr[Mesh.ARRAY_TEX_UV2] != null:
+		d["uv2"] = arr[Mesh.ARRAY_TEX_UV2]
+	if arr[Mesh.ARRAY_INDEX] != null:
+		d["i"] = arr[Mesh.ARRAY_INDEX]
+	var old: Variant = arr[Mesh.ARRAY_COLOR]
+	if tint == null:
+		if old != null:
+			d["c"] = old
+	else:
+		var col: Color
+		var mul := true
+		if tint is Array:
+			col = tint[0]
+			mul = bool(tint[1])
+			d["c0"] = _rep4(tint[2], vc)
+			d["c1"] = _rep4(tint[3], vc)
+		else:
+			var tc: Color = tint
+			col = Color(tc.r, tc.g, tc.b, 1.0)
+		var cols := PackedColorArray()
+		cols.resize(vc)
+		if mul and old is PackedColorArray and (old as PackedColorArray).size() == vc:
+			var oc := old as PackedColorArray
+			for k in vc:
+				cols[k] = oc[k] * col
+		else:
+			cols.fill(col)
+		d["c"] = cols
+	return d
+
+
+## junta as partes de um grupo numa ArrayMesh (índices com deslocamento; partes sem índice ganham 0..n-1)
+static func _commit_parts(parts: Array) -> ArrayMesh:
+	if parts.is_empty():
+		return null
+	var V := PackedVector3Array()
+	var N := PackedVector3Array()
+	var C := PackedColorArray()
+	var U := PackedVector2Array()
+	var U2 := PackedVector2Array()
+	var C0 := PackedFloat32Array()
+	var C1 := PackedFloat32Array()
+	var I := PackedInt32Array()
+	var p0: Dictionary = parts[0]
+	var has_i := false
+	for p in parts:
+		if (p as Dictionary).has("i"):
+			has_i = true
+			break
+	for p in parts:
+		var vc: int = p["n"]
+		var off := V.size()
+		V.append_array(p["v"])
+		if p0.has("nr"):
+			if p.has("nr"):
+				N.append_array(p["nr"])
+			else:
+				N.resize(N.size() + vc)
+		if p0.has("c"):
+			if p.has("c"):
+				C.append_array(p["c"])
+			else:
+				var cc := PackedColorArray()
+				cc.resize(vc)
+				cc.fill(Color.WHITE)
+				C.append_array(cc)
+		if p0.has("uv"):
+			if p.has("uv"):
+				U.append_array(p["uv"])
+			else:
+				U.resize(U.size() + vc)
+		if p0.has("uv2"):
+			if p.has("uv2"):
+				U2.append_array(p["uv2"])
+			else:
+				U2.resize(U2.size() + vc)
+		if p0.has("c0"):
+			C0.append_array(p["c0"])
+			C1.append_array(p["c1"])
+		if has_i:
+			if p.has("i"):
+				var src: PackedInt32Array = p["i"]
+				var base := I.size()
+				I.resize(base + src.size())
+				for k in src.size():
+					I[base + k] = src[k] + off
+			else:
+				I.append_array(PackedInt32Array(range(off, off + vc)))
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = V
+	if p0.has("nr"):
+		arrays[Mesh.ARRAY_NORMAL] = N
+	if p0.has("c"):
+		arrays[Mesh.ARRAY_COLOR] = C
+	if p0.has("uv"):
+		arrays[Mesh.ARRAY_TEX_UV] = U
+	if p0.has("uv2"):
+		arrays[Mesh.ARRAY_TEX_UV2] = U2
+	var flags := 0
+	if p0.has("c0"):
+		arrays[Mesh.ARRAY_CUSTOM0] = C0
+		arrays[Mesh.ARRAY_CUSTOM1] = C1
+		flags = NOIR_FMT
+	if has_i:
+		arrays[Mesh.ARRAY_INDEX] = I
+	var am := ArrayMesh.new()
+	am.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays, [], {}, flags)
+	# posições e índices ficam na CPU para os oclusores da passada nítida (sem ler a malha de volta da GPU)
+	am.set_meta("pf_occ", [V, I if has_i else null])
 	return am

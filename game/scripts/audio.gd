@@ -350,7 +350,7 @@ func _sample_enabled() -> bool:
 	if _sample_on < 0:
 		_sample_on = 0
 		if OS.has_feature("web"):
-			_sample_on = 0 if str(JavaScriptBridge.eval("/[?&]sfx=stream/.test(location.search)?1:0", true)) == "1" else 1
+			_sample_on = 0 if UI.js_flag("/[?&]sfx=stream/.test(location.search)?1:0") else 1
 	return _sample_on == 1
 
 

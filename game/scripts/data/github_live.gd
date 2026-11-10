@@ -40,6 +40,7 @@ func _ready() -> void:
 		data = cached
 		_index()
 	ready_data.emit()
+	print("PFT %5d ms  autoload GithubLive" % Time.get_ticks_msec())
 
 
 func _index() -> void:
