@@ -190,12 +190,12 @@ func _fit_world() -> void:
 		_world_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
 
-## filtro de fita VHS / TV antiga (retro_ps1.gdshader): completo no PC, com grão no celular, mínimo (vinheta e
-## scanline) no batata e sem placa; ?vhs=0 desliga
+## filtro de fita VHS / TV antiga (retro_ps1.gdshader): DESLIGADO (pedido do usuário depois da rodada 4; a imagem
+## volta à de antes). Só para teste: ?vhs=1 liga (completo no PC, com grão no celular, mínimo no batata/sem placa).
 func _vhs_level() -> float:
 	if OS.get_environment("PF_VHS") != "":
 		return float(OS.get_environment("PF_VHS"))
-	if OS.has_feature("web") and str(JavaScriptBridge.eval("/[?&]vhs=0/.test(location.search)?1:0", true)) == "1":
+	if not OS.has_feature("web") or str(JavaScriptBridge.eval("/[?&]vhs=1/.test(location.search)?1:0", true)) != "1":
 		return 0.0
 	if UI.software() or UI.quality() == 0:
 		return 1.0
@@ -493,6 +493,15 @@ func _ab(args: Array) -> void:
 			_census(str(args[2]) if args.size() > 2 else "cena")
 		"sfxtick":
 			get_node("/root/Audio").set_process(on)
+		"sfx", "sfx3d":
+			# sonda de som: toca um efeito pelo id (2D ou 3D a 2 m na frente do jogador)
+			var au2 := get_node("/root/Audio")
+			var sid2 := str(args[2]) if args.size() > 2 else "ui_abrir"
+			if name == "sfx":
+				au2.play(sid2)
+			elif city and city.player:
+				var cam3: Camera3D = city.player.cam
+				au2.play_at(sid2, cam3.global_position - cam3.global_transform.basis.z * 2.0)
 		"cars":
 			for c in city._cars:
 				_ab_vis(c["node"], on)

@@ -9,7 +9,7 @@ uniform vec2 res = vec2(640.0, 360.0);
 uniform float levels = 32.0;      // tons por canal (32 = 5 bits)
 uniform float dither = 1.0;       // força do pontilhado
 uniform float vignette = 0.35;
-uniform float fx = 3.0;
+uniform float fx = 0.0;
 
 float bayer4(vec2 p) {
 	int x = int(mod(p.x, 4.0));

@@ -72,7 +72,7 @@ func setup(p_world_vp: SubViewport, under_layer: CanvasLayer) -> void:
 	var key := Shader.new()
 	# mesma vinheta, scanline e grão do mundo (retro_ps1.gdshader) para quadros e letreiros não "saltarem";
 	# sem aberração nem tracking (texto continua nítido e legível)
-	key.code = "shader_type canvas_item;\nuniform float fx = 3.0;\nuniform float vignette = 0.35;\nfloat h12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }\nvoid fragment(){ vec4 c = texture(TEXTURE, UV); if (c.g < 0.03 && abs(c.r - c.b) < 0.03 && c.r > 0.45) { c.a = 0.0; }\n if (fx > 0.5) { c.rgb *= 1.0 - 0.07 * (0.5 + 0.5 * sin(FRAGCOORD.y * 3.14159)); }\n if (fx > 1.5) { c.rgb += (h12(FRAGCOORD.xy + floor(TIME * 24.0) * 37.0) - 0.5) * 0.02; }\n vec2 d = UV - 0.5; c.rgb *= 1.0 - (fx > 0.5 ? vignette + 0.28 : vignette) * dot(d, d) * 1.6; COLOR = c; }\n"
+	key.code = "shader_type canvas_item;\nuniform float fx = 0.0;\nuniform float vignette = 0.35;\nfloat h12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }\nvoid fragment(){ vec4 c = texture(TEXTURE, UV); if (c.g < 0.03 && abs(c.r - c.b) < 0.03 && c.r > 0.45) { c.a = 0.0; }\n if (fx > 0.5) { c.rgb *= 1.0 - 0.07 * (0.5 + 0.5 * sin(FRAGCOORD.y * 3.14159)); }\n if (fx > 1.5) { c.rgb += (h12(FRAGCOORD.xy + floor(TIME * 24.0) * 37.0) - 0.5) * 0.02; }\n if (fx > 0.5) { vec2 d = UV - 0.5; c.rgb *= 1.0 - (vignette + 0.28) * dot(d, d) * 1.6; } COLOR = c; }\n"
 	var km := ShaderMaterial.new()
 	km.shader = key
 	rect.material = km

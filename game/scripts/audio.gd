@@ -128,10 +128,14 @@ func _setup_buses() -> void:
 	if AudioServer.get_bus_index("Music") >= 0:
 		_bus_ok = true
 		return
-	for n in ["Music", "Amb", "SFX"]:
-		AudioServer.add_bus()
-		var i := AudioServer.bus_count - 1
-		AudioServer.set_bus_name(i, n)
+	# bus_count (e não add_bus): no navegador, add_bus() chega ao Web Audio como "inserir na posição -1" e a
+	# cópia dos barramentos do lado do navegador (modo sample) se embaralha; o Master perde a ligação com a
+	# saída e todo efeito e ambiente toca mudo (causa do sumiço dos sons na rodada 4)
+	var base := AudioServer.bus_count
+	AudioServer.bus_count = base + 3
+	for k in 3:
+		var i := base + k
+		AudioServer.set_bus_name(i, ["Music", "Amb", "SFX"][k])
 		AudioServer.set_bus_send(i, "Master")
 	var lp := AudioEffectLowPassFilter.new()
 	lp.cutoff_hz = 20000.0
@@ -151,8 +155,28 @@ func _bus_fx(bus: String, idx: int) -> AudioEffect:
 
 
 # ───────────────────────────────────────────────────────────────── API ──
+## No navegador (modo sample) o 1º toque de cada som decodifica o arquivo inteiro antes de soar; no celular
+## isso atrasava o 1º "abrir painel" ou a 1ª porta. Depois do ENTRAR os efeitos curtos são registrados aos
+## poucos (um a cada 0,15 s), em segundo plano.
+const PREREG := ["ui_abrir", "ui_fechar", "ui_mira", "ui_botao", "ui_contador", "ui_notificacao", "porta_loja", "porta_fecha",
+	"passo_asfalto", "passo_poca", "passo_madeira", "passo_piso", "passo_carpete", "carro_passa", "buzina", "interruptor",
+	"gaveta", "papel", "monitor_liga", "telefone_atende", "telefone_toca", "maquina_tecla", "maquina_sineta", "fliper_moeda", "fliper_bleep"]
+
+
+func _prereg() -> void:
+	if not _sample_enabled():
+		return
+	for id in PREREG:
+		for k in _variants(id):
+			var st := _stream(SFX % [id, k])
+			if st and not AudioServer.is_stream_registered_as_sample(st):
+				AudioServer.register_stream_as_sample(st)
+			await get_tree().create_timer(0.15).timeout
+
+
 func start() -> void:
 	_started = true
+	_prereg.call_deferred()
 	if _web:
 		_web_vol = _web_target()
 		JavaScriptBridge.eval("window.pfMus&&(window.pfMus.setVol(%f),window.pfMus.start())" % _web_vol, true)
@@ -322,12 +346,16 @@ func loop_at(node: Node3D, id: String, vol_db := -6.0, unit := 3.0, offset := Ve
 static var _sample_on := -1
 
 
-func _sample_mode(p: Node) -> void:
+func _sample_enabled() -> bool:
 	if _sample_on < 0:
 		_sample_on = 0
 		if OS.has_feature("web"):
 			_sample_on = 0 if str(JavaScriptBridge.eval("/[?&]sfx=stream/.test(location.search)?1:0", true)) == "1" else 1
-	if _sample_on == 1:
+	return _sample_on == 1
+
+
+func _sample_mode(p: Node) -> void:
+	if _sample_enabled():
 		p.set("playback_type", AudioServer.PLAYBACK_TYPE_SAMPLE)
 
 

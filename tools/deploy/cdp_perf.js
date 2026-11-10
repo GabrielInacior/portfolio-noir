@@ -53,6 +53,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   // --audiocheck: conta as amostras que o mixer do Godot entrega ao worklet (sem threads) por segundo de relógio;
   // abaixo de ~98% do necessário = buraco no som (estalo/distorção dos efeitos)
   if (argv.includes('--audiocheck')) await send('Page.addScriptToEvaluateOnNewDocument', { source: 'window.__au={n:0,t0:0,sr:0,ch:2,src:0};(function(){var S=window.AudioBufferSourceNode;if(S){var st=S.prototype.start;S.prototype.start=function(){window.__au.src++;return st.apply(this,arguments)}}var W=window.AudioWorkletNode;if(!W)return;window.AudioWorkletNode=function(ctx,name,o){var w=new W(ctx,name,o);if(name==="godot-processor"){window.__au.sr=ctx.sampleRate;window.__au.ch=(o&&o.outputChannelCount&&o.outputChannelCount[0])||2;var pm=w.port.postMessage.bind(w.port);w.port.postMessage=function(m,t){try{if(m&&m.cmd==="chunk"&&m.data){window.__au.n+=m.data.length}}catch(e){}return pm(m,t)}}return w};window.AudioWorkletNode.prototype=W.prototype})();' });
+  // --sfxcheck: mede o som que chega à saída do Web Audio (analisador entre o contexto do Godot e a saída;
+  // o contexto da música do navegador fica de fora) e toca cada efeito pelo id para confirmar que soa
+  if (argv.includes('--sfxcheck')) await send('Page.addScriptToEvaluateOnNewDocument', { source: '(function(){window.__an=[];var C0=AudioNode.prototype.connect;var NID=0;window.__edges=[];var nid=function(n){if(!n.__id)n.__id=(++NID)+":"+n.constructor.name;return n.__id};var C=function(d){if(d instanceof AudioNode)window.__edges.push([nid(this),nid(d),this,d]);return C0.apply(this,arguments)};window.__path=function(){var src=window.__lastSrc;if(!src)return "sem fonte";var seen={};var q=[[src,[]]];while(q.length){var it=q.shift();var n=it[0];var id=nid(n);if(seen[id])continue;seen[id]=1;var p=it[1].concat([id+(n.gain?"="+n.gain.value.toFixed(2):"")]);if(n instanceof AudioDestinationNode||n.__pfan)return p.join(" > ");window.__edges.forEach(function(e){if(e[2]===n)q.push([e[3],p])})}return "SEM CAMINHO ate a saida; alcancados: "+Object.keys(seen).slice(0,30).join(",")};var M=AudioContext.prototype.createMediaElementSource;AudioContext.prototype.createMediaElementSource=function(){this.__music=1;return M.apply(this,arguments)};AudioNode.prototype.connect=function(d){if(d instanceof AudioDestinationNode&&!this.__pfan){var ctx=d.context;var a=ctx.__pfA;if(!a){a=ctx.createAnalyser();a.fftSize=2048;a.__pfan=1;C.call(a,d);ctx.__pfA=a;a.__ctx=ctx;a.__peak=0;window.__an.push(a);}return C.call(this,a)}return C.apply(this,arguments)};var buf=new Float32Array(2048);setInterval(function(){window.__an.forEach(function(a){a.getFloatTimeDomainData(buf);var s=0;for(var i=0;i<buf.length;i++)s+=buf[i]*buf[i];var r=Math.sqrt(s/buf.length);if(r>a.__peak)a.__peak=r})},40);window.__src={made:0,start:0,dur:[]};window.__gains=[];var CB=AudioContext.prototype.createBufferSource;AudioContext.prototype.createBufferSource=function(){window.__src.made++;var n=CB.apply(this,arguments);var st=n.start;n.start=function(){window.__src.start++;window.__lastSrc=n;try{var b=n.buffer;var d=b?b.getChannelData(0):null;var m=0;if(d)for(var i=0;i<d.length;i+=64)m=Math.max(m,Math.abs(d[i]));window.__src.dur.push([b?+b.duration.toFixed(2):-1,+m.toFixed(3)])}catch(e){}return st.apply(n,arguments)};return n};var CG=AudioContext.prototype.createGain;AudioContext.prototype.createGain=function(){var g=CG.apply(this,arguments);if(!this.__music)window.__gains.push(g);return g};window.__sfxDiag=function(){return JSON.stringify({src:window.__src.made,start:window.__src.start,last:window.__src.dur.slice(-6),gains:window.__gains.slice(0,24).map(function(g){return +g.gain.value.toFixed(3)}),path:window.__path()})};window.__sfxPeak=function(reset){var o=window.__an.map(function(a){return {music:!!a.__ctx.__music,state:a.__ctx.state,peak:+a.__peak.toFixed(4)}});if(reset)window.__an.forEach(function(a){a.__peak=0});return JSON.stringify(o)}})();' });
   if (opt('--lang', '')) await send('Page.addScriptToEvaluateOnNewDocument', { source: 'try{localStorage.setItem("pf_lang","' + opt('--lang', '') + '")}catch(e){}' });
   const t0 = Date.now();
   await send('Page.navigate', { url });
@@ -89,6 +92,25 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     try { const a = JSON.parse(m1), b = JSON.parse(m2); out.music = 'trilha ' + (b.t - a.t).toFixed(2) + ' s em ' + ((c2 - c1) / 1000).toFixed(2) + ' s de relógio | ' + m2; } catch (e) { out.music = 'sem pfMus: ' + m1; }
     await ev('pfAB("info",true)'); await sleep(300);
     out.info = await ev('window.__pfInfo');
+    if (argv.includes('--sfxcheck')) {
+      out.sfx = {};
+      await ev('__sfxPeak(true)'); await sleep(3000);
+      out.sfx.ambientes = await ev('__sfxPeak(true)');
+      await ev('pfAB("audio",false)'); await sleep(2500); await ev('__sfxPeak(true)'); await sleep(1000);
+      out.sfx.sem_ambientes = await ev('__sfxPeak(true)');
+      const ids = (opt('--sfxids', '') || 'ui_abrir,ui_fechar,porta_loja,porta_fecha,passo_asfalto,passo_poca,passo_madeira,interruptor,telefone_atende,gaveta,monitor_liga,fliper_moeda,papel,ui_mira,ui_contador,maquina_tecla').split(',');
+      for (const id of ids) {
+        await ev('__sfxPeak(true)'); await ev('pfAB("sfx",true,"' + id + '")'); await sleep(1200);
+        out.sfx[id] = await ev('__sfxPeak(true)');
+      }
+      for (const id of ['carro_passa', 'buzina']) {
+        await ev('__sfxPeak(true)'); await ev('pfAB("sfx3d",true,"' + id + '")'); await sleep(1500);
+        out.sfx['3d_' + id] = await ev('__sfxPeak(true)');
+      }
+      await ev('pfAB("audio",true)');
+      out.sfx.diag = await ev('__sfxDiag()');
+      if (opt('--eval', '')) out.sfx.eval = await ev(opt('--eval', ''));
+    }
     if (argv.includes('--audiocheck')) {
       const a1 = JSON.parse(await ev('JSON.stringify(window.__au)')); const c1 = Date.now();
       await sleep(6000);
