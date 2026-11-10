@@ -30,6 +30,8 @@ var enabled := true
 ## (testado: com o nítido só nesta passada e sem limite de distância, letreiros distantes vazavam por vidros
 ## e frestas que o mundo retrô cobre; fica desligado e o ganho vem dos oclusores fundidos por célula)
 var exclusive := false
+## a câmera está numa loja com nítido exclusivo (hud.gd liga ao entrar)
+var _in_shop := false
 
 
 ## PC sem placa: sem segunda renderização; o conteúdo nítido fica no mundo (resolução baixa)
@@ -43,6 +45,9 @@ func disable() -> void:
 
 func setup(p_world_vp: SubViewport, under_layer: CanvasLayer) -> void:
 	world_vp = p_world_vp
+	split = OS.get_environment("SHARP_SPLIT") != "0"
+	if OS.has_feature("web") and str(JavaScriptBridge.eval("/[?&]split=0/.test(location.search)?1:0", true)) == "1":
+		split = false
 	vp = SubViewport.new()
 	vp.transparent_bg = true
 	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
@@ -92,8 +97,16 @@ func _process(_dt: float) -> void:
 		_src_cam = world_vp.get_camera_3d()
 		if _src_cam:
 			# o retrô não desenha os oclusores
-			_src_cam.cull_mask = _src_cam.cull_mask & ~OCC_LAYER
-	if _src_cam == null or (not exclusive and get_tree().get_node_count_in_group("pf_modal") > 0):
+			# (nem o que é exclusivo desta passada: textos e imagens das lojas)
+			_src_cam.cull_mask = _src_cam.cull_mask & ~OCC_LAYER & ~SHARP_LAYER
+	_in_shop = false
+	if _src_cam:
+		var q: Node = _src_cam.get_parent()
+		while q != null and not _in_shop:
+			_in_shop = q is Node3D and _is_shop(q)
+			q = q.get_parent()
+	# com painel aberto a passada some (economia), menos na loja: lá os textos e imagens só existem aqui
+	if _src_cam == null or (not exclusive and not _in_shop and get_tree().get_node_count_in_group("pf_modal") > 0):
 		rect.visible = false
 		return
 	rect.visible = true
@@ -145,8 +158,15 @@ func tag(root: Node) -> void:
 				var kk := "%s|done=%s|sharp=%s" % [mo.get_meta("noir_kind", mo.get_class()) if mo else "-", n.has_meta("_sharp_done"), _is_sharp(n)]
 				kinds[kk] = int(kinds.get(kk, 0)) + 1
 		print("SHARP tipos dos fundidos: ", kinds)
+	# loja (sala fechada, rodada 4): textos e imagens SÓ nesta passada (um draw cada, não dois) e todo o
+	# cenário opaco que não se mexe vira UM oclusor (antes um gêmeo por malha: ~70 draws a mais por loja)
+	var shop := enabled and shop_exclusive and _is_shop(root)
+	if shop:
+		root.set_meta("_sharp_tagged", true)
 	for n in root.find_children("*", "GeometryInstance3D", true, false):
 		var g := n as GeometryInstance3D
+		if shop and not g.has_meta("_sharp_done") and _shop_tag(g, occ):
+			continue
 		if enabled and OS.get_environment("SHARP_TWINS") == "" and g is MeshInstance3D and g.has_meta("merged") and not g.has_meta("_sharp_done") 				and (g as MeshInstance3D).mesh != null and not _is_sharp(g):
 			g.set_meta("_sharp_done", true)
 			if _surface_kinds(g as MeshInstance3D).has(false):
@@ -209,6 +229,112 @@ func tag(root: Node) -> void:
 		print("SHARP oclusores fundidos: %d malhas (fundidos %d, nítidos %d, transparentes %d)" % [occ.size(), nm, ns, nt])
 
 
+var shop_exclusive := true
+
+## CIDADE (rodada 4): cada texto 3D / imagem pequena era desenhado DUAS vezes perto da câmera (no retrô e
+## aqui). Agora vira um par: o original só no retrô e só LONGE (visibility_range_begin = far_limit) e um
+## gêmeo só nesta passada e só PERTO (visibility_range_end = far_limit). Mesmo visual, um draw por peça.
+## Fica de fora a geometria fundida (a faixa de distância de uma malha por célula seria grossa demais).
+var split := true
+var _split_pairs: Array = []   # [original, gêmeo]
+
+
+func _split(g: GeometryInstance3D) -> bool:
+	if g.has_meta("merged") or g.get_aabb().size.length() > 10.0:
+		return false
+	var twin: GeometryInstance3D
+	if g is Label3D:
+		twin = (g as Label3D).duplicate(0) as Label3D
+	elif g is MeshInstance3D and (g as MeshInstance3D).skin == null:
+		var mi := g as MeshInstance3D
+		var tm := MeshInstance3D.new()
+		tm.mesh = mi.mesh
+		tm.material_override = mi.material_override
+		for i in mi.get_surface_override_material_count():
+			tm.set_surface_override_material(i, mi.get_surface_override_material(i))
+		tm.material_overlay = mi.material_overlay
+		twin = tm
+	else:
+		return false
+	for c in twin.get_children():
+		twin.remove_child(c)
+		c.free()
+	twin.set_meta("_sharp_done", true)
+	twin.set_meta("noir_skip", true)
+	twin.transform = Transform3D.IDENTITY
+	twin.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	twin.layers = SHARP_LAYER
+	twin.visibility_range_begin = 0.0
+	twin.visibility_range_end = far_limit if g.visibility_range_end <= 0.0 else minf(far_limit, g.visibility_range_end)
+	twin.visibility_range_end_margin = 0.0
+	twin.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
+	g.layers = g.layers & ~SHARP_LAYER
+	g.visibility_range_begin = far_limit
+	g.visibility_range_begin_margin = 0.0
+	g.add_child(twin)
+	_split_pairs.append([g, twin])
+	return true
+
+
+## perfil de qualidade / queda por FPS mudou a distância da passada nítida: refaz as faixas dos pares
+func set_far(v: float) -> void:
+	far_limit = v
+	for i in range(_split_pairs.size() - 1, -1, -1):
+		var pr: Array = _split_pairs[i]
+		if not is_instance_valid(pr[0]) or not is_instance_valid(pr[1]):
+			_split_pairs.remove_at(i)
+			continue
+		var g: GeometryInstance3D = pr[0]
+		var tw: GeometryInstance3D = pr[1]
+		g.visibility_range_begin = v
+		tw.visibility_range_end = v if g.visibility_range_end <= 0.0 else minf(v, g.visibility_range_end)
+
+
+func _is_shop(root: Node) -> bool:
+	return root.get_script() != null and str(root.get_script().resource_path).ends_with("museum.gd")
+
+
+## true = tratado (nítido exclusivo ou entrou no oclusor único da sala)
+func _shop_tag(g: GeometryInstance3D, occ: Dictionary) -> bool:
+	if _is_sharp(g):
+		g.set_meta("_sharp_done", true)
+		g.layers = SHARP_LAYER
+		return true
+	if not (g is MeshInstance3D) or (g as MeshInstance3D).mesh == null or (g as MeshInstance3D).skin != null:
+		return false
+	var q: Node = g
+	while q != null:
+		if q.has_meta("sharp_dyn") or q is Skeleton3D:
+			return false
+		q = q.get_parent()
+	var mi := g as MeshInstance3D
+	var surf := _surface_kinds(mi)
+	g.set_meta("_sharp_done", true)
+	if not surf.has(false):
+		return true
+	if not occ.has("shop"):
+		var st0 := SurfaceTool.new()
+		st0.begin(Mesh.PRIMITIVE_TRIANGLES)
+		occ["shop"] = [st0, 0.0]
+	for i in surf.size():
+		if surf[i]:
+			continue
+		var arr := mi.mesh.surface_get_arrays(i)
+		if arr.is_empty() or arr[Mesh.ARRAY_VERTEX] == null:
+			continue
+		var only := []
+		only.resize(Mesh.ARRAY_MAX)
+		only[Mesh.ARRAY_VERTEX] = arr[Mesh.ARRAY_VERTEX]
+		var ix: Variant = arr[Mesh.ARRAY_INDEX]
+		if ix == null:
+			ix = PackedInt32Array(range((arr[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()))
+		only[Mesh.ARRAY_INDEX] = ix
+		var pm := ArrayMesh.new()
+		pm.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, only)
+		(occ["shop"][0] as SurfaceTool).append_from(pm, 0, g.global_transform)
+	return true
+
+
 func _on_node_added(n: Node) -> void:
 	if not auto_tag:
 		return
@@ -216,6 +342,15 @@ func _on_node_added(n: Node) -> void:
 	if n is Node3D and n.get_script() and str(n.get_script().resource_path).ends_with("museum.gd"):
 		_tag_later.call_deferred(n)
 	elif n is GeometryInstance3D and not n.has_meta("_sharp_done"):
+		if shop_exclusive and enabled:
+			# dentro de uma loja que ainda vai ser marcada inteira (oclusor único): espera por ela
+			var q: Node = n.get_parent()
+			while q != null:
+				if q is Node3D and _is_shop(q):
+					if not q.has_meta("_sharp_tagged"):
+						return
+					break
+				q = q.get_parent()
 		# tudo que aparece depois (carros, pedestres, props instanciados) também vira oclusor
 		_tag_one_later.call_deferred(n)
 
@@ -223,6 +358,11 @@ func _on_node_added(n: Node) -> void:
 func _tag_later(n: Node) -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
+	# loja montando em fatias (pré-montagem): marca só quando terminar
+	if is_instance_valid(n) and "is_built" in n and not n.is_built:
+		await n.built
+	if n.has_meta("_sharp_tagged"):
+		return
 	tag(n)
 
 
@@ -238,6 +378,8 @@ func _classify(g: GeometryInstance3D) -> void:
 		return
 	g.set_meta("_sharp_done", true)
 	if _is_sharp(g):
+		if split and _split(g):
+			return
 		g.layers = SHARP_LAYER if exclusive else g.layers | SHARP_LAYER
 		return
 	# oclusor: TUDO que o mundo desenha com volume (cenário, carros, pedestres com esqueleto, props,

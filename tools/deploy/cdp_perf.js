@@ -50,6 +50,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   }
   if (THR > 1) await send('Emulation.setCPUThrottlingRate', { rate: THR });
   await send('Page.addScriptToEvaluateOnNewDocument', { source: 'window.__lt=[];try{new PerformanceObserver(function(l){l.getEntries().forEach(function(e){window.__lt.push([Math.round(e.startTime),Math.round(e.duration)])})}).observe({type:"longtask",buffered:true})}catch(e){}' });
+  // --audiocheck: conta as amostras que o mixer do Godot entrega ao worklet (sem threads) por segundo de relógio;
+  // abaixo de ~98% do necessário = buraco no som (estalo/distorção dos efeitos)
+  if (argv.includes('--audiocheck')) await send('Page.addScriptToEvaluateOnNewDocument', { source: 'window.__au={n:0,t0:0,sr:0,ch:2,src:0};(function(){var S=window.AudioBufferSourceNode;if(S){var st=S.prototype.start;S.prototype.start=function(){window.__au.src++;return st.apply(this,arguments)}}var W=window.AudioWorkletNode;if(!W)return;window.AudioWorkletNode=function(ctx,name,o){var w=new W(ctx,name,o);if(name==="godot-processor"){window.__au.sr=ctx.sampleRate;window.__au.ch=(o&&o.outputChannelCount&&o.outputChannelCount[0])||2;var pm=w.port.postMessage.bind(w.port);w.port.postMessage=function(m,t){try{if(m&&m.cmd==="chunk"&&m.data){window.__au.n+=m.data.length}}catch(e){}return pm(m,t)}}return w};window.AudioWorkletNode.prototype=W.prototype})();' });
   if (opt('--lang', '')) await send('Page.addScriptToEvaluateOnNewDocument', { source: 'try{localStorage.setItem("pf_lang","' + opt('--lang', '') + '")}catch(e){}' });
   const t0 = Date.now();
   await send('Page.navigate', { url });
@@ -86,6 +89,13 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     try { const a = JSON.parse(m1), b = JSON.parse(m2); out.music = 'trilha ' + (b.t - a.t).toFixed(2) + ' s em ' + ((c2 - c1) / 1000).toFixed(2) + ' s de relógio | ' + m2; } catch (e) { out.music = 'sem pfMus: ' + m1; }
     await ev('pfAB("info",true)'); await sleep(300);
     out.info = await ev('window.__pfInfo');
+    if (argv.includes('--audiocheck')) {
+      const a1 = JSON.parse(await ev('JSON.stringify(window.__au)')); const c1 = Date.now();
+      await sleep(6000);
+      const a2 = JSON.parse(await ev('JSON.stringify(window.__au)')); const c2 = Date.now();
+      const need = a2.sr * a2.ch * (c2 - c1) / 1000;
+      out.audio_mixer = 'efeitos (mixer do Godot): ' + (100 * (a2.n - a1.n) / Math.max(1, need)).toFixed(1) + '% das amostras necessárias em ' + ((c2 - c1) / 1000).toFixed(1) + ' s (sr ' + a2.sr + ', canais ' + a2.ch + ') | sons tocados pelo navegador: ' + a2.src;
+    }
     const abl = opt('--ab', '');
     if (abl) {
       out.ab = {};
@@ -111,6 +121,24 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
       if (argv.includes('--shopcensus')) { await ev('pfAB("census",true,"' + shop + '")'); await sleep(300); out['census_' + shop] = await ev('window.__pfCensus'); }
       out.shops[shop] = 'enter_max ' + en.cpu_max + ' ms | cpu avg ' + st.cpu_avg + ' p95 ' + st.cpu_p95 + ' max ' + st.cpu_max + ' | gap avg ' + st.gap_avg + ' max ' + st.gap_max + ' | ' + await ev('window.__pfInfo');
       await ev('pfAB("shop",false,"' + shop + '")'); await sleep(1500);
+    }
+    // --langswitch pt|en: troca de idioma ao vivo (sem recarregar); tempo do jogo e do relógio, captura antes/depois
+    const ls = opt('--langswitch', '');
+    if (ls) {
+      const pre = opt('--langshot', '');
+      if (pre) { const r = await send('Page.captureScreenshot', { format: 'png' }); fs.writeFileSync(pre.replace(/\.png$/, '_antes.png'), Buffer.from(r.result.data, 'base64')); }
+      const href0 = await ev('location.href');
+      await ev('window.__pfLangMs=-1;window.__pfNav=performance.getEntriesByType("navigation").length');
+      const c0 = Date.now();
+      await ev('pfFrameStats(true)');
+      await ev('pfAB("lang",true,"' + ls + '")');
+      let ms = -1;
+      for (let i = 0; i < 100 && ms < 0; i++) { await sleep(50); ms = await ev('window.__pfLangMs'); }
+      const wall = Date.now() - c0;
+      await sleep(600);
+      const st = JSON.parse(await ev('JSON.stringify(pfFrameStats(true))'));
+      out.langswitch = 'jogo ' + ms + ' ms | relógio ' + wall + ' ms | pior quadro ' + st.cpu_max + ' ms | url ' + href0 + ' -> ' + await ev('location.href') + ' | lang=' + await ev('document.documentElement.lang') + ' | title=' + await ev('document.title');
+      if (pre) { await sleep(400); const r = await send('Page.captureScreenshot', { format: 'png' }); fs.writeFileSync(pre.replace(/\.png$/, '_depois.png'), Buffer.from(r.result.data, 'base64')); }
     }
     const shot = opt('--shot', '');
     if (shot) { const r = await send('Page.captureScreenshot', { format: 'png' }); fs.writeFileSync(shot, Buffer.from(r.result.data, 'base64')); }

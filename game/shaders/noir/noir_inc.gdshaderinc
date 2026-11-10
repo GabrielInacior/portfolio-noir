@@ -65,7 +65,20 @@ void vertex() {
 	}
 }
 
+// texel exato do nível de mip certo (estilo PS1 sem cintilar ao longe): tex_nearest = 2
+vec4 n_tex_px(vec2 uv) {
+	vec2 sz = vec2(textureSize(albedo_tex, 0));
+	vec2 dx = dFdx(uv * sz);
+	vec2 dy = dFdy(uv * sz);
+	float lod = max(0.0, floor(0.5 * log2(max(dot(dx, dx), dot(dy, dy))) + 0.5));
+	vec2 msz = max(sz / exp2(lod), vec2(1.0));
+	return textureLod(albedo_tex, (floor(uv * msz) + 0.5) / msz, lod);
+}
+
 vec4 n_tex(vec2 uv) {
+	if (tex_nearest > 1.5) {
+		return n_tex_px(uv);
+	}
 	if (tex_nearest > 0.5) {
 		vec2 sz = vec2(textureSize(albedo_tex, 0));
 		return textureLod(albedo_tex, (floor(uv * sz) + 0.5) / sz, 0.0);

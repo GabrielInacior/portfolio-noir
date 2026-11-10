@@ -1,6 +1,6 @@
 // Gerado por tools/deploy/make_boot.py
 (function () {
-  var CFG = {"canvasResizePolicy": 2, "emscriptenPoolSize": 8, "executable": "/jogo/index.4654e8f792", "experimentalVK": false, "fileSizes": {"/jogo/index.4654e8f792.wasm": 34731138, "/jogo/index.8701fc5e1e.pck": 9616192}, "focusCanvas": true, "gdextensionLibs": [], "godotPoolSize": 4, "mainPack": "/jogo/index.8701fc5e1e.pck", "pfPacks": {"music": {"url": "/jogo/index.89c6c488c5.pck", "size": 3502220}, "shops": {"url": "/jogo/index.7fe448b697.pck", "size": 5941520}}, "pfMusic": "/jogo/music.7b04e9643b.mp3", "pfLang": {"pt": {"url": "/jogo/index.c8c3ce34a6.pck", "size": 2070888}, "en": {"url": "/jogo/index.587be347c1.pck", "size": 2059144}}}, JSURL = "/jogo/index.ffcdec5055.js";
+  var CFG = {"canvasResizePolicy": 2, "emscriptenPoolSize": 8, "executable": "/jogo/index.4654e8f792", "experimentalVK": false, "fileSizes": {"/jogo/index.4654e8f792.wasm": 34731138, "/jogo/index.52f471b622.pck": 9402532}, "focusCanvas": true, "gdextensionLibs": [], "godotPoolSize": 4, "mainPack": "/jogo/index.52f471b622.pck", "pfPacks": {"music": {"url": "/jogo/index.89c6c488c5.pck", "size": 3502220}, "shops": {"url": "/jogo/index.7fe448b697.pck", "size": 5941520}}, "pfMusic": "/jogo/music.7b04e9643b.mp3", "pfLang": {"pt": {"url": "/jogo/index.c8c3ce34a6.pck", "size": 2070888}, "en": {"url": "/jogo/index.587be347c1.pck", "size": 2059144}}}, JSURL = "/jogo/index.ffcdec5055.js";
   var T0 = 0, TM = {};  // marcas em ms desde o início da navegação
   window.__pf = { t: TM };
   function mark(k) { if (!(k in TM)) { TM[k] = Math.round(performance.now() - T0); try { console.log('[pf] ' + k + ' ' + TM[k] + ' ms'); } catch (e) {} } }
@@ -214,9 +214,10 @@
       var engine = new Engine(Object.assign({}, CFG, { canvas: canvas, args: args.length ? ['--'].concat(args) : [] }));
       window.__pfEngine = engine;
       // pacotes em segundo plano (música, lojas): baixam depois do principal e entram no sistema de arquivos do motor
-      var queue = ['lang', 'shops'];
+      // o pacote do OUTRO idioma vem por último (troca de idioma ao vivo, sem recarregar)
+      var queue = ['lang', 'shops', en ? 'lang_pt' : 'lang_en'];
       window.pfMusicUrl = CFG.pfMusic || '';
-      var PK = { lang: langPack, music: CFG.pfPacks.music, shops: CFG.pfPacks.shops };
+      var PK = { lang: langPack, lang_pt: CFG.pfLang.pt, lang_en: CFG.pfLang.en, music: CFG.pfPacks.music, shops: CFG.pfPacks.shops };
       function whenEngine(fn) { if (engine.rtenv) fn(); else setTimeout(function () { whenEngine(fn); }, 100); }
       function nextPack() {
         var id = queue.shift();
@@ -230,6 +231,7 @@
             var p = '/pfpacks/' + id + '.pck';
             engine.copyToFS(p, buf);
             packState[id] = p;
+            if (id === 'lang') packState[en ? 'lang_en' : 'lang_pt'] = p;
             mark('pacote_' + id);
             nextPack();
           });

@@ -258,6 +258,7 @@ func play(id: String, vol_db := 0.0, pitch_var := 0.03) -> void:
 	var p := AudioStreamPlayer.new()
 	p.stream = st
 	p.bus = "SFX"
+	_sample_mode(p)
 	p.volume_db = vol_db
 	p.pitch_scale = 1.0 + randf_range(-pitch_var, pitch_var)
 	add_child(p)
@@ -275,6 +276,7 @@ func play_at(id: String, pos: Vector3, vol_db := 0.0, unit := 6.0, parent: Node 
 	var p := AudioStreamPlayer3D.new()
 	p.stream = st
 	p.bus = "SFX"
+	_sample_mode(p)
 	p.volume_db = vol_db
 	p.unit_size = unit
 	p.max_distance = unit * 8.0
@@ -300,6 +302,7 @@ func loop_at(node: Node3D, id: String, vol_db := -6.0, unit := 3.0, offset := Ve
 	var p := AudioStreamPlayer3D.new()
 	p.stream = st
 	p.bus = "SFX"
+	_sample_mode(p)
 	p.volume_db = vol_db
 	p.unit_size = unit
 	p.max_distance = unit * 7.0
@@ -310,6 +313,22 @@ func loop_at(node: Node3D, id: String, vol_db := -6.0, unit := 3.0, offset := Ve
 	else:
 		p.add_to_group("_audio_wait")
 	return p
+
+
+## Efeitos e ambientes no navegador: modo "sample" (o Web Audio do navegador toca e posiciona cada som).
+## No modo "stream" o mixer do Godot sem threads roda na thread do jogo e, com a CPU do celular (4x mais
+## lenta), entregava ~96% das amostras: buracos e estalos. Sem os efeitos de barramento (reverb leve) no
+## navegador. `?sfx=stream` volta ao mixer do Godot.
+static var _sample_on := -1
+
+
+func _sample_mode(p: Node) -> void:
+	if _sample_on < 0:
+		_sample_on = 0
+		if OS.has_feature("web"):
+			_sample_on = 0 if str(JavaScriptBridge.eval("/[?&]sfx=stream/.test(location.search)?1:0", true)) == "1" else 1
+	if _sample_on == 1:
+		p.set("playback_type", AudioServer.PLAYBACK_TYPE_SAMPLE)
 
 
 ## Objetos interativos das lojas (hud._activate chama com a "action" do item).
@@ -390,6 +409,7 @@ func _bed(name: String) -> AudioStreamPlayer:
 	var p := AudioStreamPlayer.new()
 	p.stream = st
 	p.bus = "Amb"
+	_sample_mode(p)
 	p.volume_db = -60.0
 	add_child(p)
 	_beds[name] = p

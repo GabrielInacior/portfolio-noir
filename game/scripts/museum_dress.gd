@@ -72,16 +72,16 @@ static func pedestal_spots(m, style: String) -> Array:
 static func dress(m, style: String) -> void:
 	var stack: Array = m.project.get("stack", [])
 	match style:
-		"detetive": _detetive(m, stack)
-		"cyber": _cyber(m, stack)
-		"arcade": _arcade(m, stack)
-		"bar": _bar(m, stack)
-		"studio": _studio(m, stack, false)
-		"study": _studio(m, stack, true)
-		"lab": _lab(m)
-		"career": _career(m)
-		_: _startup(m, stack)
-	_common(m, style)
+		"detetive": await _detetive(m, stack)
+		"cyber": await _cyber(m, stack)
+		"arcade": await _arcade(m, stack)
+		"bar": await _bar(m, stack)
+		"studio": await _studio(m, stack, false)
+		"study": await _studio(m, stack, true)
+		"lab": await _lab(m)
+		"career": await _career(m)
+		_: await _startup(m, stack)
+	await _common(m, style)
 
 
 # ═════════════════════════════════════════════ peças reutilizáveis
@@ -477,14 +477,23 @@ static func _detetive(m, stack: Array) -> void:
 	var W: float = m.W
 	var dz := -D / 2 + 1.35
 	m.prop("mesa_detetive", Vector3(0, 0, dz), 0.0, 1.05)
+	await m.yb("480")
 	var tw: Node3D = m.prop("maquina_escrever", Vector3(0.22, 0.86, dz + 0.05), 0.12)
+	await m.yb("482")
 	m.prop("abajur_banqueiro", Vector3(-0.7, 0.86, dz - 0.2), 0.4)
+	await m.yb("484")
 	var ph: Node3D = m.prop("telefone_antigo", Vector3(0.82, 0.86, dz - 0.18), -0.4)
+	await m.yb("486")
 	m.prop("pilha_papeis", Vector3(-0.32, 0.86, dz + 0.18), 0.3)
+	await m.yb("488")
 	m.prop("sd_pastas", Vector3(-0.95, 0.86, dz + 0.15), 0.3)
+	await m.yb("490")
 	m.prop("sd_cinzeiro", Vector3(0.9, 0.86, dz + 0.2))
+	await m.yb("492")
 	m.prop("caneca", Vector3(0.58, 0.86, dz + 0.24))
+	await m.yb("494")
 	m.prop("cadeira_escritorio", Vector3(0, 0, dz - 0.85))
+	await m.yb("496")
 	var lamp := OmniLight3D.new()
 	lamp.position = Vector3(-0.7, 1.25, dz - 0.2)
 	lamp.light_color = Color("#ffcf7a")
@@ -493,24 +502,40 @@ static func _detetive(m, stack: Array) -> void:
 	m.add_child(lamp)
 	# arquivos de aço com gaveta que abre
 	var arq: Node3D = m.prop("arquivo_aco", Vector3(-W / 2 + 0.4, 0, -D / 2 + 0.6), PI / 2)
+	await m.yb("505")
 	m.prop("arquivo_aco", Vector3(-W / 2 + 0.4, 0, -D / 2 + 1.3), PI / 2)
+	await m.yb("507")
 	m.prop("sd_caixa_arquivo", Vector3(-W / 2 + 0.45, 1.32, -D / 2 + 0.6), 0.2)
+	await m.yb("509")
 	# persiana com luz âmbar (parede esquerda)
 	window_blinds(m, Vector3(-W / 2 + 0.12, 1.75, -0.4), PI / 2, Color("#ffb04a"))
+	await m.yb("512")
 	# estante de livros com títulos das tecnologias (parede direita)
 	tech_shelf(m, Vector3(W / 2 - 0.25, 0, -0.4), -PI / 2, stack + ["Design de jogo", "Shaders", "Multiplayer", "Mixamo", "Node.js", "Godot"])
+	await m.yb("515")
 	# frente: cabideiro com sobretudo, quadro de cortiça, sofá, guarda-chuva
 	m.prop("cabideiro", Vector3(-1.5, 0, D / 2 - 0.5))
+	await m.yb("518")
 	m.box(Vector3(-1.5, 1.35, D / 2 - 0.42), Vector3(0.42, 0.9, 0.14), m.flat(Color("#6a5236")))
+	await m.yb("520")
 	m.prop("quadro_cortica", Vector3(-2.6, 1.0, D / 2 - 0.2), PI)
+	await m.yb("522")
 	m.prop("sofa_couro", Vector3(2.5, 0, D / 2 - 0.65), PI)
+	await m.yb("524")
 	m.prop("sd_pizza", Vector3(2.4, 0.44, D / 2 - 0.7), 0.4)
+	await m.yb("526")
 	m.prop("sd_guarda_chuva", Vector3(-0.95, 0, D / 2 - 0.35), 0.3)
+	await m.yb("528")
 	trash_bin(m, Vector3(1.0, 0, dz + 0.1))
+	await m.yb("530")
 	m.prop("sd_papeis", Vector3(0.9, 0, dz + 0.9), 0.7)
+	await m.yb("532")
 	m.prop("sd_papeis", Vector3(-1.2, 0, 0.6), 2.0)
+	await m.yb("534")
 	m.prop("pilha_livros", Vector3(W / 2 - 0.4, 0, 1.0))
+	await m.yb("536")
 	m.prop("planta_vaso", Vector3(W / 2 - 0.4, 0, -D / 2 + 0.5))
+	await m.yb("538")
 	# tapete persa sob a mesa
 	var rug := MeshInstance3D.new()
 	var rq := QuadMesh.new()
@@ -525,8 +550,11 @@ static func _detetive(m, stack: Array) -> void:
 	rug.position = Vector3(0, 0.012, dz - 0.2)
 	m.add_child(rug)
 	ceiling_fan(m, Vector3(0, m.H - 0.45, 0.4))
+	await m.yb("553")
 	neon(m, "DETETIVE PARTICULAR", Vector3(-W / 2 + 0.14, 2.75, -0.4), PI / 2, Color("#ff4f6a"), 64)
+	await m.yb("555")
 	neon(m, "GODOT · NODE · WEBSOCKET", Vector3(W / 2 - 0.14, 2.65, -0.4), -PI / 2, Color("#ffc83d"), 50)
+	await m.yb("557")
 	# ações: telefone toca, máquina digita, gaveta abre
 	if ph:
 		var ring := {"on": true}
@@ -543,6 +571,7 @@ static func _detetive(m, stack: Array) -> void:
 			"doc_style": "typewriter", "text": "GABRIEL INÁCIO\nengenharia de software · games · IA\n\nCaso RUMOR: jogo de detetive multiplayer para a sala de aula. Godot no cliente, Node no servidor, 12 casos escritos à mão, 192 pistas com imagem."})
 	if arq:
 		var drawer: MeshInstance3D = m.box(Vector3(0, 0.95, 0.24), Vector3(0.42, 0.26, 0.04), m.flat(Color("#6a7480")), arq)
+		await m.yb("574")
 		act(m, arq, arq.global_position + Vector3(0.4, 1.0, 0), {"title": "Arquivo de casos", "action": "drawer", "panel": "doc", "verb": "ABRIR",
 			"doc_style": "file", "drawer": drawer, "text": "FICHA DO CASO\n\nCliente: escolas e professores\nProblema: ensinar raciocínio e trabalho em equipe\nSolução: casos de detetive jogados no celular, com quadro compartilhado de pistas\nTecnologias: Godot 4, GDScript, Node.js, WebSocket, Blender, Mixamo\nStatus: no ar em rumor.inaciodev.online"})
 	_switch(m, Vector3(1.05, 1.25, D / 2 - 0.12))
@@ -559,6 +588,7 @@ static func _cyber(m, stack: Array) -> void:
 		var path := "res://assets/museum/inaciocyber/%s.jpg" % names[i]
 		var pos := Vector3(-1.4 + (i % 3) * 1.4, 2.05 + (1 - i / 3) * 0.78, -D / 2 + 0.16)
 		m.box(pos + Vector3(0, 0, -0.03), Vector3(1.32, 0.74, 0.05), m.flat(Color("#06080a")))
+		await m.yb("591")
 		if ResourceLoader.exists(path):
 			var q := MeshInstance3D.new()
 			var qm := QuadMesh.new()
@@ -573,10 +603,13 @@ static func _cyber(m, stack: Array) -> void:
 			m.add_child(q)
 	for sx in [-2.75, 2.75]:
 		screen(m, Vector3(sx, 2.4, -D / 2 + 0.16), 0, Vector2(1.0, 1.4), MATRIX, {"seed": sx, "tint": Color("#39ff6a")})
+		await m.yb("606")
 	# mesa com 3 monitores de código e cadeira gamer
 	var dz := -D / 2 + 1.1
 	m.prop("mesa_monitores", Vector3(0, 0, dz), 0.0, 1.1)
+	await m.yb("610")
 	m.prop("cadeira_gamer", Vector3(0, 0, dz + 1.0), PI)
+	await m.yb("612")
 	var mon := Node3D.new()
 	mon.position = Vector3(0, 1.2, dz - 0.05)
 	m.add_child(mon)
@@ -599,40 +632,59 @@ static func _cyber(m, stack: Array) -> void:
 			r.rotation.y = -side * PI / 2
 			m.add_child(r)
 			m.box(Vector3(0, 1.0, 0), Vector3(0.6, 2.0, 0.7), m.flat(Color("#0c0f12")), r)
+			await m.yb("635")
 			screen(m, Vector3(0, 1.02, 0.36), 0, Vector2(0.5, 1.8), LED, {"seed": float(k) * 1.7, "units": 18.0}, r)
+			await m.yb("637")
 			var st := Node3D.new()
 			st.position = Vector3(-0.26, 1.95, 0.36)
 			r.add_child(st)
 			stickers(m, st, Vector3.ZERO, [techs[k % techs.size()], techs[(k + 3) % techs.size()]], 2, Vector2(0.18, 0.06))
+			await m.yb("642")
 			k += 1
 	# ilha central baixa: switches e roteador, cabos para todo lado
 	m.prop("roteador", Vector3(1.4, 0.0, 0.0), 0.4)
+	await m.yb("646")
 	m.prop("servidor_ia", Vector3(-1.5, 0, -0.1), 0.3, 0.9)
+	await m.yb("648")
 	for i in 10:
 		var a := Vector3(-W / 2 + 0.7, 0.03, -2.0 + i * 0.4)
 		cable(m, a, Vector3(0.0 + (i % 3 - 1) * 0.15, 0.03, dz + 0.4), Color("#0e1a14") if i % 2 else Color("#1a0e10"))
+		await m.yb("652")
 	# eletrocalha no teto com cabos pendurados
 	m.box(Vector3(-W / 2 + 0.6, m.H - 0.25, 0), Vector3(0.3, 0.08, D - 0.6), m.flat(Color("#2a3034")))
+	await m.yb("655")
 	m.box(Vector3(W / 2 - 0.6, m.H - 0.25, 0), Vector3(0.3, 0.08, D - 0.6), m.flat(Color("#2a3034")))
+	await m.yb("657")
 	for i in 6:
 		var z := -D / 2 + 1.0 + i * 1.3
 		cable(m, Vector3(-W / 2 + 0.6, m.H - 0.28, z), Vector3(-W / 2 + 0.45, 2.02, z + 0.1), Color("#1a2a22"), 0.012)
+		await m.yb("661")
 		cable(m, Vector3(W / 2 - 0.6, m.H - 0.28, z), Vector3(W / 2 - 0.45, 2.02, z + 0.1), Color("#2a1a1e"), 0.012)
+		await m.yb("663")
 	# telas Matrix na parede da frente, latas e pizza (madrugada de trabalho)
 	screen(m, Vector3(-2.4, 1.9, D / 2 - 0.13), PI, Vector2(1.4, 1.0), MATRIX, {"seed": 7.0, "tint": Color("#39ff6a")})
+	await m.yb("666")
 	screen(m, Vector3(2.4, 1.9, D / 2 - 0.13), PI, Vector2(1.4, 1.0), CODE, {"seed": 9.0, "c1": Color("#39ff6a"), "c2": Color("#2b9e4a"), "c3": Color("#bfffd0"), "c4": Color("#ff3d5a")})
+	await m.yb("668")
 	m.prop("sd_latas", Vector3(0.7, 0, dz + 0.9))
+	await m.yb("670")
 	m.prop("sd_pizza", Vector3(-0.8, 0.0, dz + 1.3), 0.9)
+	await m.yb("672")
 	m.prop("sd_cabos", Vector3(0.4, 0, 1.2), 0.4)
+	await m.yb("674")
 	m.prop("caixas_papelao", Vector3(W / 2 - 0.5, 0, D / 2 - 0.5), 0.3, 0.7)
+	await m.yb("676")
 	# luz: verde dos racks, giroflex vermelho no teto
 	for side in [-1, 1]:
 		m.light(Vector3(side * (W / 2 - 1.2), 1.2, 0), Color("#39ff6a"), 1.2, 3.5)
 	var beacon: OmniLight3D = m.light(Vector3(0, m.H - 0.3, D / 2 - 1.2), Color("#ff2a3a"), 1.0, 5.0)
 	m.box(Vector3(0, m.H - 0.12, D / 2 - 1.2), Vector3(0.14, 0.1, 0.14), m.flat(Color("#ff2a3a"), 3.0))
+	await m.yb("682")
 	m.tickers.append(func(_dt: float, t: float) -> void: beacon.light_energy = 0.4 + 1.2 * maxf(0.0, sin(t * 3.0)))
 	neon(m, "ACESSO AUTORIZADO", Vector3(0, m.H - 0.32, -D / 2 + 0.16), 0, Color("#39ff6a"), 60)
+	await m.yb("685")
 	neon(m, "BLACKWALL", Vector3(-W / 2 + 0.14, 2.6, 1.3), PI / 2, Color("#ff2a3a"), 80)
+	await m.yb("687")
 	_switch(m, Vector3(1.05, 1.25, D / 2 - 0.12))
 
 
@@ -644,26 +696,43 @@ static func _arcade(m, stack: Array) -> void:
 	for i in games.size():
 		var g: Array = games[i]
 		var cab := cabinet(m, Vector3(-2.2 + i * 2.2, 0, -D / 2 + 0.55), 0.0, g[1], g[2])
+		await m.yb("699")
 		act(m, cab, cab.global_position + Vector3(0, 1.4, 0.7), {"title": g[1], "panel": "arcade", "game": g[0], "verb": "JOGAR",
 			"text": "Um minijogo feito em Godot, rodando aqui dentro."})
 	# mesa de cartas com a miniatura da fortaleza
 	m.prop("mesa_cartas", Vector3(0, 0, 0.2), 0.0, 1.0)
+	await m.yb("704")
 	m.prop("miniatura_fortaleza", Vector3(0, 0.82, 0.15), 0.4, 1.0)
+	await m.yb("706")
 	m.prop("banqueta_bar", Vector3(-1.0, 0, 0.2))
+	await m.yb("708")
 	m.prop("banqueta_bar", Vector3(1.0, 0, 0.2))
+	await m.yb("710")
 	m.prop("sd_copos", Vector3(0.45, 0.82, 0.45))
+	await m.yb("712")
 	m.prop("sd_pizza", Vector3(-0.45, 0.82, 0.0), 0.3)
+	await m.yb("714")
 	# fliperamas decorativos e troféus nos cantos
 	m.prop("fliperama", Vector3(-W / 2 + 0.5, 0, D / 2 - 0.6), 3 * PI / 4, 0.95)
+	await m.yb("717")
 	m.prop("fliperama", Vector3(W / 2 - 0.5, 0, D / 2 - 0.6), -3 * PI / 4, 0.95)
+	await m.yb("719")
 	m.prop("trofeu", Vector3(-W / 2 + 0.45, 0, -0.4), PI / 2, 1.6)
+	await m.yb("721")
 	tech_shelf(m, Vector3(W / 2 - 0.25, 0, -0.4), -PI / 2, stack + ["Tower defense", "Roguelite", "Pixel art", "Shaders", "Steam", "Android"], 1.4)
+	await m.yb("723")
 	stack_poster(m, Vector3(-W / 2 + 0.13, 2.0, -0.4), PI / 2, "Feito com", ["Godot 4", "GDScript", "Blender", "Pixel art à mão", "Steam e Android", "9 idiomas"], Color("#ff7a3d"), 0.8, 1.1)
+	await m.yb("725")
 	m.prop("sd_latas", Vector3(-0.9, 0, 2.0))
+	await m.yb("727")
 	m.prop("sd_papeis", Vector3(1.2, 0, 1.4))
+	await m.yb("729")
 	trash_bin(m, Vector3(W / 2 - 0.5, 0, 1.4))
+	await m.yb("731")
 	neon(m, "INSERT COIN", Vector3(0, m.H - 0.3, -D / 2 + 0.16), 0, Color("#ff4fa3"), 70)
+	await m.yb("733")
 	neon(m, "GAME DEV", Vector3(-W / 2 + 0.14, 2.8, 2.2), PI / 2, Color("#4e9bff"), 70)
+	await m.yb("735")
 	for c in [Color("#ff4fa3"), Color("#4e9bff")]:
 		m.light(Vector3(0 if c == Color("#ff4fa3") else 2.0, 2.2, -D / 2 + 1.4), c, 1.0, 4.0)
 	_switch(m, Vector3(1.05, 1.25, D / 2 - 0.12))
@@ -715,31 +784,47 @@ static func _bar(m, stack: Array) -> void:
 	# prateleiras de garrafas retroiluminadas no fundo + balcão + banquetas
 	var bz := -D / 2 + 0.2
 	m.box(Vector3(0, 1.8, bz), Vector3(W - 1.2, 1.9, 0.06), m.flat(Color("#ff4fa3"), 0.9))
+	await m.yb("787")
 	var bottle_cols := [Color("#5a2a1a"), Color("#2a5a2a"), Color("#c89a3a"), Color("#3a2a5a"), Color("#9a2a3a"), Color("#d8d0b8")]
 	for s in 3:
 		var y := 1.05 + s * 0.6
 		m.box(Vector3(0, y, bz + 0.12), Vector3(W - 1.2, 0.04, 0.26), m.flat(Color("#1a0e0c")))
+		await m.yb("792")
 		for i in 18:
 			var x := -W / 2 + 0.8 + i * ((W - 1.6) / 17.0)
 			var c: Color = bottle_cols[(i * 7 + s * 3) % bottle_cols.size()]
 			var hb := 0.28 + ((i + s) % 3) * 0.05
 			m.box(Vector3(x, y + 0.02 + hb / 2, bz + 0.13), Vector3(0.08, hb, 0.08), m.flat(c))
+			await m.yb("798")
 	m.prop("balcao_bar", Vector3(0, 0, -D / 2 + 1.5), 0.0, 1.4)
+	await m.yb("800")
 	m.box(Vector3(0, 0.12, -D / 2 + 1.95), Vector3(3.6, 0.04, 0.05), m.flat(Color("#ff4fa3"), 3.0))
+	await m.yb("802")
 	for x in [-1.4, -0.45, 0.5, 1.45]:
 		m.prop("banqueta_bar", Vector3(x, 0, -D / 2 + 2.3))
+		await m.yb("805")
 	m.prop("sd_copos", Vector3(-0.6, 1.08, -D / 2 + 1.4), 0.5)
+	await m.yb("807")
 	m.prop("sd_garrafas_vazias", Vector3(1.0, 1.08, -D / 2 + 1.45))
+	await m.yb("809")
 	m.prop("sd_cinzeiro", Vector3(0.2, 1.08, -D / 2 + 1.35))
+	await m.yb("811")
 	m.prop("garrafas", Vector3(1.6, 1.08, -D / 2 + 1.4), 1.0)
+	await m.yb("813")
 	# mesinhas com cadeiras, palco com microfone e holofote, jukebox
 	for p in [Vector3(1.9, 0, 0.6), Vector3(1.9, 0, 2.4)]:
 		m.box(p + Vector3(0, 0.38, 0), Vector3(0.06, 0.76, 0.06), m.flat(Color("#141010")))
+		await m.yb("817")
 		m.box(p + Vector3(0, 0.77, 0), Vector3(0.7, 0.04, 0.7), m.painted("madeira", Color("#3a2014"), 1.5))
+		await m.yb("819")
 		m.prop("banqueta_bar", p + Vector3(-0.6, 0, 0), 0.0, 0.8)
+		await m.yb("821")
 		m.prop("sd_copos", p + Vector3(0.1, 0.79, 0))
+		await m.yb("823")
 	m.prop("microfone_estudio", Vector3(-2.3, 0.2, 2.0), PI / 2)
+	await m.yb("825")
 	m.box(Vector3(-2.3, 0.1, 2.0), Vector3(2.0, 0.2, 2.2), m.painted("madeira", Color("#2a1410"), 1.2))
+	await m.yb("827")
 	var spot := SpotLight3D.new()
 	spot.position = Vector3(-2.3, m.H - 0.2, 2.0)
 	spot.rotation.x = -PI / 2
@@ -752,24 +837,35 @@ static func _bar(m, stack: Array) -> void:
 	jb.rotation.y = -PI / 2
 	m.add_child(jb)
 	m.box(Vector3(0, 0.75, 0), Vector3(0.8, 1.5, 0.5), m.flat(Color("#3a1a2a")), jb)
+	await m.yb("840")
 	screen(m, Vector3(0, 1.0, 0.26), 0, Vector2(0.6, 0.5), CHART, {"accent": Color("#ff4fa3"), "accent2": Color("#ffc83d"), "seed": 3.0}, jb)
+	await m.yb("842")
 	stack_poster(m, Vector3(-W / 2 + 0.13, 2.0, -0.6), PI / 2, "Na mesa", stack + ["Reconhecimento de voz", "IA local"], Color("#ff4fa3"), 0.8, 1.0)
+	await m.yb("844")
 	m.prop("sd_latas", Vector3(1.2, 0, 1.4))
+	await m.yb("846")
 	m.prop("sd_garrafas_vazias", Vector3(-1.0, 0, 3.4), 2.0)
+	await m.yb("848")
 	trash_bin(m, Vector3(W / 2 - 0.5, 0, D / 2 - 0.6))
+	await m.yb("850")
 	var pid := str(m.project.get("id", ""))
 	var ttl := str(m.project.get("title", "LÁBIA")).to_upper()
 	var nc := Color(str(m.project.get("neon", "#ff4fa3")))
 	neon(m, ttl, Vector3(0, m.H - 0.32, -D / 2 + 0.25), 0, nc, 110)
+	await m.yb("855")
 	if pid == "barbercore":
 		# barbearia: cadeiras clássicas com espelho iluminado nas laterais
 		for side in [-1, 1]:
 			for k in 2:
 				var z := -D / 4 + k * 2.2
 				m.prop("cadeira_barbeiro", Vector3(side * (W / 2 - 1.1), 0, z), -side * PI / 2, 1.0)
+				await m.yb("862")
 				m.box(Vector3(side * (W / 2 - 0.12), 1.6, z), Vector3(0.04, 1.0, 0.8), m.flat(Color("#cfe8f0"), 0.35))
+				await m.yb("864")
 				m.box(Vector3(side * (W / 2 - 0.1), 2.15, z), Vector3(0.05, 0.06, 0.9), m.flat(Color("#fff1c4"), 2.0))
+				await m.yb("866")
 	neon(m, "FALE PARA JOGAR", Vector3(-W / 2 + 0.14, 2.8, 2.0), PI / 2, Color("#5bd0ff"), 54)
+	await m.yb("868")
 	_switch(m, Vector3(1.05, 1.25, D / 2 - 0.12))
 
 
@@ -779,10 +875,13 @@ static func _studio(m, stack: Array, study: bool) -> void:
 	var W: float = m.W
 	var dz := -D / 2 + 1.2
 	var d := desk(m, Vector3(0, 0, dz), 0.0, 2.2, 0.8, Color("#2a2a30") if not study else Color("#5a3a22"))
+	await m.yb("878")
 	if not study:
 		m.prop("mesa_som", Vector3(0, 0.77, dz), 0.0, 0.9)
+		await m.yb("881")
 		for sx in [-0.95, 0.95]:
 			m.box(Vector3(sx, 0.98, dz - 0.15), Vector3(0.2, 0.36, 0.22), m.flat(Color("#141418")))
+			await m.yb("884")
 			var cone := MeshInstance3D.new()
 			var cm := CylinderMesh.new()
 			cm.top_radius = 0.07
@@ -797,29 +896,49 @@ static func _studio(m, stack: Array, study: bool) -> void:
 		mon.position = Vector3(0, 1.22, dz - 0.25)
 		m.add_child(mon)
 		screen(m, Vector3.ZERO, 0, Vector2(1.1, 0.5), CHART, {"accent": Color("#5bd0ff"), "accent2": Color("#ff6fae"), "seed": 1.0}, mon)
+		await m.yb("899")
 		m.prop("microfone_estudio", Vector3(-1.5, 0, dz + 1.2), PI / 4)
+		await m.yb("901")
 		m.prop("cadeira_escritorio", Vector3(0, 0, dz + 0.8), PI)
+		await m.yb("903")
 		neon(m, "NO AR", Vector3(0, m.H - 0.35, -D / 2 + 0.16), 0, Color("#ff2a3a"), 90)
+		await m.yb("905")
 	else:
 		m.prop("abajur_banqueiro", Vector3(-0.8, 0.77, dz - 0.15), 0.4)
+		await m.yb("908")
 		m.prop("pilha_livros", Vector3(0.7, 0.77, dz))
+		await m.yb("910")
 		m.prop("cadeira_escritorio", Vector3(0, 0, dz + 0.8), PI)
+		await m.yb("912")
 		laptop(m, d, Vector3(0, 0.78, 0.05), stack, 4.0)
+		await m.yb("914")
 		postits(m, Vector3(0, 2.4, -D / 2 + 0.13), 0, ["Repetição espaçada", "Flashcards", "IA gera cartões", "Material 3", "Flutter", "Dart", "OpenAI", "Estatísticas"], 4)
+		await m.yb("916")
 		neon(m, "ESTUDE MELHOR", Vector3(0, m.H - 0.3, -D / 2 + 0.16), 0, Color("#5fd38a"), 70)
+		await m.yb("918")
 	laptop(m, d, Vector3(0.75 if not study else -0.6, 0.78, 0.15), stack, 2.0)
+	await m.yb("920")
 	m.prop("caneca", Vector3(-0.5, 0.77, dz + 0.25))
+	await m.yb("922")
 	m.prop("sd_cabos", Vector3(0.4, 0.0, dz + 0.5), 0.9)
+	await m.yb("924")
 	tech_shelf(m, Vector3(W / 2 - 0.25, 0, -0.4), -PI / 2, stack + ["Whisper", "GPT-4", "Prompt design", "Push", "AWS S3", "Node.js"])
+	await m.yb("926")
 	stack_poster(m, Vector3(-W / 2 + 0.13, 2.0, -0.4), PI / 2, "Stack", stack, Color(m._accent), 0.8, 1.1)
+	await m.yb("928")
 	m.prop("sofa_couro", Vector3(2.5, 0, D / 2 - 0.65), PI)
+	await m.yb("930")
 	m.prop("planta_vaso", Vector3(-W / 2 + 0.4, 0, D / 2 - 0.5))
+	await m.yb("932")
 	m.prop("sd_copos", Vector3(2.3, 0.45, D / 2 - 0.7))
+	await m.yb("934")
 	trash_bin(m, Vector3(-1.2, 0, dz + 0.3))
+	await m.yb("936")
 	if not study:
 		# espuma acústica extra em blocos nas laterais
 		for i in 10:
 			m.box(Vector3(-W / 2 + 0.13, 2.7 + (i % 2) * 0.4, -D / 2 + 0.8 + (i / 2) * 0.5), Vector3(0.08, 0.36, 0.44), m.flat(Color("#1e2232")))
+			await m.yb("941")
 	_switch(m, Vector3(1.05, 1.25, D / 2 - 0.12))
 
 
@@ -832,33 +951,55 @@ static func _startup(m, stack: Array) -> void:
 	for i in 2:
 		var x := -1.5 + i * 3.0
 		var d := desk(m, Vector3(x, 0, -D / 2 + 1.15), 0.0, 1.5, 0.7, Color("#6a4a30"))
+		await m.yb("954")
 		var mon := Node3D.new()
 		mon.position = Vector3(0, 1.08, -0.18)
 		d.add_child(mon)
 		code_monitor(m, mon, Vector3(-0.32, 0, 0), float(i) * 2.0 + 1.0)
+		await m.yb("959")
 		code_monitor(m, mon, Vector3(0.32, 0, 0), float(i) * 2.0 + 2.0, CHART, {"accent": Color(m._accent), "accent2": Color("#ffc83d")})
+		await m.yb("961")
 		laptop(m, d, Vector3(0.45, 0.77, 0.15), stack, float(i) + 5.0)
+		await m.yb("963")
 		m.prop("cadeira_escritorio", Vector3(x, 0, -D / 2 + 1.9), PI)
+		await m.yb("965")
 		m.prop("caneca", Vector3(x - 0.5, 0.77, -D / 2 + 1.3))
+		await m.yb("967")
 	# telão de métricas na parede da frente + quadro branco com a arquitetura do projeto
 	screen(m, Vector3(2.4, 1.85, D / 2 - 0.13), PI, Vector2(1.6, 0.95), CHART, {"accent": Color(m._accent), "accent2": Color("#ff6fae"), "seed": 5.0})
+	await m.yb("970")
 	var nodes := _arch_nodes(stack)
 	whiteboard(m, Vector3(-W / 2 + 0.14, 1.75, -0.4), PI / 2, L.t("Arquitetura"), nodes[0], nodes[1])
+	await m.yb("973")
 	postits(m, Vector3(W / 2 - 0.13, 2.35, -0.4), -PI / 2, _postit_words(id, stack), 4)
+	await m.yb("975")
 	m.prop("planta_vaso", Vector3(-W / 2 + 0.4, 0, D / 2 - 0.5))
+	await m.yb("977")
 	m.prop("planta_vaso", Vector3(W / 2 - 0.4, 0, -D / 2 + 0.4))
+	await m.yb("979")
 	m.prop("sofa_couro", Vector3(-2.4, 0, D / 2 - 0.65), PI)
+	await m.yb("981")
 	m.prop("sd_pizza", Vector3(-2.3, 0.44, D / 2 - 0.7))
+	await m.yb("983")
 	m.prop("caixas_papelao", Vector3(W / 2 - 0.5, 0, 0.9), 0.4, 0.7)
+	await m.yb("985")
 	m.prop("rack_servidor", Vector3(W / 2 - 0.45, 0, -1.6), -PI / 2, 0.8)
+	await m.yb("987")
 	m.prop("sd_cabos", Vector3(0.2, 0, -D / 2 + 1.8), 0.4)
+	await m.yb("989")
 	trash_bin(m, Vector3(0.0, 0, -D / 2 + 0.6))
+	await m.yb("991")
 	# cafeteira em cima de um aparador
 	m.box(Vector3(W / 2 - 0.4, 0.45, 2.0), Vector3(0.5, 0.9, 0.9), m.painted("madeira", Color("#4a3020"), 1.4))
+	await m.yb("994")
 	m.box(Vector3(W / 2 - 0.4, 1.08, 2.1), Vector3(0.3, 0.36, 0.26), m.flat(Color("#1a1a1e")))
+	await m.yb("996")
 	m.box(Vector3(W / 2 - 0.4, 1.0, 1.75), Vector3(0.18, 0.2, 0.18), m.flat(Color("#c8c0b0")))
+	await m.yb("998")
 	neon(m, str(m.project.get("title", "")).to_upper(), Vector3(0, m.H - 0.35, -D / 2 + 0.16), 0, Color(m._accent), 80)
+	await m.yb("1000")
 	stack_poster(m, Vector3(-1.3, 1.9, D / 2 - 0.13), PI, "Stack", stack, Color(m._accent), 0.8, 1.05)
+	await m.yb("1002")
 	_switch(m, Vector3(1.05, 1.25, D / 2 - 0.12))
 
 
@@ -889,6 +1030,7 @@ static func _lab(m) -> void:
 	wall.position = Vector3(0, 0, -D / 2 + 0.14)
 	m.add_child(wall)
 	m.box(Vector3(0, 1.75, -0.02), Vector3(W - 0.6, 2.6, 0.03), m.flat(Color("#0c0e16")), wall)
+	await m.yb("1033")
 	# "MEU ARSENAL": grupos do portfólio antigo (+ Design), cada placa com o LOGO oficial, o nome e a
 	# descrição curta (profile.tech_info)
 	var pal := [Color("#ff4fa3"), Color("#4e9bff"), Color("#5fd38a"), Color("#ffc83d"), Color("#b06bff"), Color("#ff7a3d"), Color("#5bd0ff"), Color("#ff3d5a")]
@@ -905,6 +1047,7 @@ static func _lab(m) -> void:
 		var x := -W / 2 + 0.45 + colw * (ci + 0.5)
 		var col: Color = pal[ci % pal.size()]
 		var hl := label3d(m, L.t(str(cat)).to_upper(), Vector3(x, 2.92, 0.01), 0, 26, col * 1.9, "title", wall, 0.0024)
+		await m.yb("1050")
 		hl.width = int(colw / 0.0024)
 		hl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		var list: Array = (groups[cat] as Array).slice(0, 5)
@@ -912,7 +1055,9 @@ static func _lab(m) -> void:
 		var y := 2.7 - ch / 2
 		for t in list:
 			var card: MeshInstance3D = m.box(Vector3(x, y, 0.0), Vector3(colw - 0.06, ch - 0.04, 0.014), m.flat(Color("#141826")), wall)
+			await m.yb("1058")
 			m.box(Vector3(x - (colw - 0.06) / 2 + 0.01, y, 0.008), Vector3(0.02, ch - 0.06, 0.004), m.flat(col, 2.0), wall)
+			await m.yb("1060")
 			var id := _tech_id(str(t))
 			var tex := _tech_tex(id) if id != "" else null
 			var isz := minf(ch - 0.1, colw * 0.28)
@@ -920,6 +1065,7 @@ static func _lab(m) -> void:
 				_icon_quad(card, tex, Vector3(-(colw - 0.06) / 2 + 0.05 + isz / 2, 0, 0.009), isz)
 			var tx := x - (colw - 0.06) / 2 + 0.1 + isz
 			var nl := label3d(m, str(t), Vector3(tx, y + ch * 0.14, 0.009), 0, 22, Color("#eef2ff"), "bold", wall, 0.0019)
+			await m.yb("1068")
 			nl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 			var desc := ""
 			if info.has(str(t)):
@@ -927,12 +1073,14 @@ static func _lab(m) -> void:
 				desc = str(iv[0]) if iv is Array and not (iv as Array).is_empty() else str(iv)
 			if desc != "":
 				var dl := label3d(m, L.t(desc), Vector3(tx, y - ch * 0.16, 0.009), 0, 15, Color("#9fb0d8"), "type", wall, 0.0016)
+				await m.yb("1076")
 				dl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 				dl.width = int((colw - 0.16 - isz) / 0.0016)
 				dl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			y -= ch
 		ci += 1
 	neon(m, "MEU ARSENAL", Vector3(0, 3.18, -D / 2 + 0.15), 0, Color("#5bd0ff"), 60)
+	await m.yb("1083")
 	act(m, wall, Vector3(0, 1.6, -D / 2 + 1.2), {"title": "Tecnologias que eu domino", "panel": "skills", "verb": "EXPLORAR",
 		"text": "Toque numa tecnologia para ver os projetos em que ela foi usada."})
 	# parede esquerda: linha do tempo da carreira (examinável)
@@ -941,18 +1089,25 @@ static func _lab(m) -> void:
 	tl.rotation.y = PI / 2
 	m.add_child(tl)
 	m.box(Vector3(0, 1.75, -0.01), Vector3(3.2, 1.6, 0.02), m.flat(Color("#0e1018")), tl)
+	await m.yb("1092")
 	m.box(Vector3(0, 1.75, 0.0), Vector3(3.0, 0.02, 0.01), m.flat(Color("#ffc83d"), 2.0), tl)
+	await m.yb("1094")
 	var exp: Array = Data.profile.get("experience", [])
 	for i in mini(exp.size(), 5):
 		var x := -1.3 + i * (2.6 / maxf(1, mini(exp.size(), 5) - 1))
 		m.box(Vector3(x, 1.75, 0.005), Vector3(0.06, 0.06, 0.01), m.flat(Color("#ffc83d"), 3.0), tl)
+		await m.yb("1099")
 		var up := 1.0 if i % 2 == 0 else -1.0
 		var cl := label3d(m, str(exp[i].get("company", "")), Vector3(x, 1.75 + up * 0.32, 0.01), 0, 24, Color("#ffc83d") * 1.6, "title", tl, 0.0022)
+		await m.yb("1102")
 		cl.width = 300
 		cl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		label3d(m, str(exp[i].get("period", "")), Vector3(x, 1.75 + up * 0.16, 0.01), 0, 18, Color("#cfd6ee"), "type", tl, 0.0019)
+		await m.yb("1106")
 	label3d(m, L.t("CARREIRA"), Vector3(0, 2.42, 0.01), 0, 40, Color("#eef2ff"), "title", tl, 0.0026)
+	await m.yb("1108")
 	act(m, tl, Vector3(-W / 2 + 1.1, 1.6, -0.6), {"title": "Linha do tempo", "panel": "timeline", "verb": "VER", "text": ""})
+	await m.yb("1110")
 	# parede direita: foto e cartão de contato
 	var pc := Node3D.new()
 	pc.position = Vector3(W / 2 - 0.14, 0, -0.6)
@@ -965,6 +1120,7 @@ static func _lab(m) -> void:
 				photo = load(p)
 				break
 	m.box(Vector3(-0.7, 1.9, -0.01), Vector3(1.0, 1.2, 0.03), m.flat(Color("#ffc83d"), 1.5), pc)
+	await m.yb("1123")
 	if photo:
 		var q := MeshInstance3D.new()
 		var qm := QuadMesh.new()
@@ -977,30 +1133,45 @@ static func _lab(m) -> void:
 		q.position = Vector3(-0.7, 1.9, 0.01)
 		pc.add_child(q)
 	label3d(m, "GABRIEL INÁCIO", Vector3(0.55, 2.3, 0.01), 0, 46, Color("#ffc83d") * 1.6, "title", pc, 0.0026)
+	await m.yb("1136")
 	var role := label3d(m, L.t("Engenheiro de software full-stack · games · IA"), Vector3(0.55, 2.06, 0.01), 0, 22, Color("#e8ecf8"), "type", pc, 0.002)
+	await m.yb("1138")
 	role.width = 420
 	role.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	m.box(Vector3(0.55, 1.5, -0.005), Vector3(1.0, 0.6, 0.02), m.flat(Color("#141826")), pc)
+	await m.yb("1142")
 	label3d(m, "LinkedIn · GitHub · E-mail", Vector3(0.55, 1.5, 0.01), 0, 22, Color("#5bd0ff") * 1.5, "bold", pc, 0.002)
+	await m.yb("1144")
 	act(m, pc, Vector3(W / 2 - 1.1, 1.6, -0.6), {"title": "Contato", "panel": "contact", "verb": "CONECTAR", "text": ""})
+	await m.yb("1146")
 	# mesa do meio: monitores com código, servidor de IA, livros técnicos
 	var dz := 0.9
 	var d := desk(m, Vector3(0, 0, dz), 0.0, 2.0, 0.8, Color("#2a2a34"))
+	await m.yb("1150")
 	var mon := Node3D.new()
 	mon.position = Vector3(0, 1.08, -0.2)
 	d.add_child(mon)
 	code_monitor(m, mon, Vector3(-0.35, 0, 0), 1.0)
+	await m.yb("1155")
 	code_monitor(m, mon, Vector3(0.35, 0, 0), 2.0, MATRIX, {"tint": Color("#5bd0ff")})
+	await m.yb("1157")
 	var all_techs := []
 	for cat in cats:
 		all_techs.append_array(groups[cat])
 	laptop(m, d, Vector3(0.7, 0.77, -0.1), all_techs.slice(10, 16), 3.0)
+	await m.yb("1162")
 	m.prop("servidor_ia", Vector3(-W / 2 + 0.5, 0, D / 2 - 0.7), PI / 4, 0.9)
+	await m.yb("1164")
 	tech_shelf(m, Vector3(W / 2 - 0.25, 0, D / 2 - 1.7), -PI / 2, all_techs, 1.4)
+	await m.yb("1166")
 	neon(m, "CLAUDE · AGENTES · IA LOCAL", Vector3(-W / 2 + 0.14, 2.95, -0.6), PI / 2, Color("#ff4fa3"), 44)
+	await m.yb("1168")
 	neon(m, "GODOT · BLENDER", Vector3(W / 2 - 0.14, 2.95, -0.6), -PI / 2, Color("#5fd38a"), 50)
+	await m.yb("1170")
 	m.prop("sd_cabos", Vector3(0.6, 0, dz - 0.6), 0.4)
+	await m.yb("1172")
 	m.prop("caneca", Vector3(-0.6, 0.77, dz))
+	await m.yb("1174")
 	# parede da frente: como eu trabalho com IA (quadro branco) e rack com LEDs
 	whiteboard(m, Vector3(-2.2, 1.75, D / 2 - 0.14), PI, L.t("Como eu trabalho com IA"),
 		[[L.t("Ideia"), -0.6, 0.15], ["Claude Code", -0.05, 0.15], [L.t("Agentes"), 0.55, 0.15], [L.t("Testes"), -0.3, -0.25], ["Deploy", 0.35, -0.25]],
@@ -1010,15 +1181,22 @@ static func _lab(m) -> void:
 	r.rotation.y = PI
 	m.add_child(r)
 	m.box(Vector3(0, 1.0, 0), Vector3(0.6, 2.0, 0.7), m.flat(Color("#0c0f12")), r)
+	await m.yb("1184")
 	screen(m, Vector3(0, 1.02, 0.36), 0, Vector2(0.5, 1.8), LED, {"seed": 4.0, "units": 18.0}, r)
+	await m.yb("1186")
 	var st := Node3D.new()
 	st.position = Vector3(-0.26, 1.95, 0.36)
 	r.add_child(st)
 	stickers(m, st, Vector3.ZERO, ["Ollama", "Docker", "Postgres", "Redis"], 2, Vector2(0.18, 0.06))
+	await m.yb("1191")
 	m.prop("planta_vaso", Vector3(-W / 2 + 0.45, 0, -D / 2 + 0.5))
+	await m.yb("1193")
 	m.prop("planta_vaso", Vector3(W / 2 - 0.45, 0, -D / 2 + 0.5))
+	await m.yb("1195")
 	m.prop("pilha_livros", Vector3(1.4, 0, dz + 0.6))
+	await m.yb("1197")
 	m.prop("sd_latas", Vector3(-1.2, 0, dz + 0.7))
+	await m.yb("1199")
 	_switch(m, Vector3(1.05, 1.25, D / 2 - 0.12))
 
 
@@ -1033,7 +1211,9 @@ static func _career(m) -> void:
 	for z in [-D / 2 + 4.3, -D / 2 + 8.6]:
 		for sx in [-1, 1]:
 			m.box(Vector3(sx * (W / 2 - 1.2), 1.3, z), Vector3(2.2, 2.6, 0.04), glass)
+			await m.yb("1214")
 			m.box(Vector3(sx * (W / 2 - 1.2), 2.62, z), Vector3(2.2, 0.05, 0.08), m.flat(Color("#2a2e3a")))
+			await m.yb("1216")
 	var zones := [["SYS EVOLUTION", Color("#4e9bff"), -D / 2 + 2.1], ["SYS EVOLUTION · SYSGUIDE", Color("#ff6fae"), -D / 2 + 6.4], ["LOOP · UNESP · FREELA", Color("#5fd38a"), D / 2 - 2.3]]
 	var zi := 0
 	for zn in zones:
@@ -1041,20 +1221,31 @@ static func _career(m) -> void:
 		var dx := -1.85 if zi % 2 == 0 else 1.85
 		zi += 1
 		neon(m, zn[0], Vector3(0, m.H - 0.35, z - 1.9) if z < 0 else Vector3(0, m.H - 0.35, z + 1.95), 0 if z < 0 else PI, zn[1], 56)
+		await m.yb("1224")
 		var d := desk(m, Vector3(dx, 0, z), -signf(dx) * PI / 2, 1.6, 0.7, Color("#4a3a2c"))
+		await m.yb("1226")
 		var mon := Node3D.new()
 		mon.position = Vector3(0, 1.08, -0.15)
 		d.add_child(mon)
 		code_monitor(m, mon, Vector3(-0.32, 0, 0), z, CODE)
+		await m.yb("1231")
 		code_monitor(m, mon, Vector3(0.32, 0, 0), z + 1.0, CHART, {"accent": zn[1], "accent2": Color("#ffc83d")})
+		await m.yb("1233")
 		m.prop("cadeira_escritorio", Vector3(dx * 0.55, 0, z), -signf(dx) * PI / 2 + PI)
+		await m.yb("1235")
 		m.prop("planta_vaso", Vector3(-dx * 1.0, 0, z + 1.4))
+		await m.yb("1237")
 	m.prop("rack_servidor", Vector3(-W / 2 + 0.45, 0, -D / 2 + 5.0), PI / 2, 0.85)
+	await m.yb("1239")
 	m.prop("rack_servidor", Vector3(-W / 2 + 0.45, 0, -D / 2 + 5.7), PI / 2, 0.85)
+	await m.yb("1241")
 	m.prop("sd_cabos", Vector3(-1.6, 0, -D / 2 + 5.4), 0.4)
+	await m.yb("1243")
 	m.prop("caixas_papelao", Vector3(W / 2 - 0.5, 0, D / 2 - 0.5), 0.3, 0.7)
+	await m.yb("1245")
 	_switch(m, Vector3(1.05, 1.25, D / 2 - 0.12))
-	_career_islands(m, zones)
+	await _career_islands(m, zones)
+	await m.yb("1248")
 
 
 ## Ilhas de exposição no meio do corredor, uma por empresa, com os objetos do trabalho feito lá e um
@@ -1076,36 +1267,55 @@ static func _career_islands(m, zones: Array) -> void:
 		m.add_child(base)
 		# pedestal largo com tampo de vidro e friso dourado
 		m.box(Vector3(0, 0.42, 0), Vector3(1.5, 0.84, 0.9), wood, base)
+		await m.yb("1270")
 		m.box(Vector3(0, 0.85, 0), Vector3(1.56, 0.03, 0.96), trim, base)
+		await m.yb("1272")
 		m.box(Vector3(0, 1.12, 0), Vector3(1.5, 0.5, 0.9), glass, base)
+		await m.yb("1274")
 		var strip: MeshInstance3D = m.box(Vector3(0, 0.05, 0.46), Vector3(1.5, 0.03, 0.02), m.flat(col, 2.2), base)
+		await m.yb("1276")
 		strip.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		match i:
 			0:
 				# licitações: pilhas de editais, caixa de arquivo e monitor com a tabela de milhões de linhas
 				m.prop("pilha_papeis", Vector3(-0.45, 0.87, 0.05), 0.2, 0.9, base)
+				await m.yb("1282")
 				m.prop("sd_pastas", Vector3(-0.1, 0.87, 0.2), -0.4, 0.8, base)
+				await m.yb("1284")
 				m.prop("sd_caixa_arquivo", Vector3(0.5, 0.87, 0.15), 0.1, 0.55, base)
+				await m.yb("1286")
 				var mon := Node3D.new()
 				mon.position = Vector3(0.25, 0.87, -0.2)
 				base.add_child(mon)
 				code_monitor(m, mon, Vector3.ZERO, 3.0, CHART, {"accent": col, "accent2": Color("#ffc83d")})
+				await m.yb("1291")
 				label3d(m, "EDITAIS · MILHÕES DE LINHAS", Vector3(0, 0.62, 0.47), 0, 20, Color("#e8e2d0"), "type", base)
+				await m.yb("1293")
 			1:
 				# SysGuide: servidor de vídeo, câmera de streaming, notebook (Rust + Tauri) e microfone (Whisper)
 				m.prop("servidor_ia", Vector3(-0.5, 0.87, 0.0), 0.3, 0.5, base)
+				await m.yb("1297")
 				m.prop("microfone_estudio", Vector3(0.55, 0.87, 0.2), -0.5, 0.55, base)
+				await m.yb("1299")
 				_tripod_cam(m, base, Vector3(0.6, 0.87, -0.25), col)
+				await m.yb("1301")
 				laptop(m, base, Vector3(0.0, 0.87, 0.12), ["Rust", "Tauri", "Whisper", "LLM local"], 1.7)
+				await m.yb("1303")
 				label3d(m, "STREAMING · RUST + TAURI · WHISPER", Vector3(0, 0.62, 0.47), 0, 20, Color("#e8e2d0"), "type", base)
+				await m.yb("1305")
 			2:
 				# Loop, UNESP e freelas: livros, diploma, notebook e caneca
 				m.prop("pilha_livros", Vector3(-0.5, 0.87, 0.1), 0.6, 0.7, base)
+				await m.yb("1309")
 				m.prop("caneca", Vector3(0.55, 0.87, 0.25), 0.0, 1.0, base)
+				await m.yb("1311")
 				laptop(m, base, Vector3(0.05, 0.87, 0.05), ["C#", "WPF", "Python", "Vue"], 2.9)
+				await m.yb("1313")
 				var frame: MeshInstance3D = m.box(Vector3(0.45, 1.05, -0.3), Vector3(0.36, 0.28, 0.02), m.flat(Color("#e8e2d0")), base)
+				await m.yb("1315")
 				frame.rotation.x = -0.25
 				label3d(m, "PESQUISA · DESKTOP · FREELAS", Vector3(0, 0.62, 0.47), 0, 20, Color("#e8e2d0"), "type", base)
+				await m.yb("1318")
 		# spot de destaque sobre a ilha (uma luz por ilha, sem sombra)
 		var sp := SpotLight3D.new()
 		sp.position = Vector3(0, m.H - 0.2, z)
@@ -1141,6 +1351,7 @@ static func _switch(m, pos: Vector3) -> void:
 
 static func _common(m, style: String) -> void:
 	m.prop("sd_relogio", Vector3(-1.9, 2.95, -m.D / 2 + 0.14))
+	await m.yb("1354")
 	# telão do GitHub (README, estrelas, último commit, linguagens) nas lojas de projeto
 	var id := str(m.project.get("id", ""))
 	if id != "" and not m.is_lab and style != "career":
@@ -1155,6 +1366,7 @@ static func _common(m, style: String) -> void:
 		s.rotation.y = PI
 		m.add_child(s)
 		act(m, s, pos + Vector3(0, -0.3, -0.9), {"title": "GitHub ao vivo", "panel": "terminal", "repo": id, "verb": "LER README", "text": ""})
+		await m.yb("1369")
 	var p := CPUParticles3D.new()
 	p.amount = 24 if not UI.is_mobile() else 10
 	p.lifetime = 7.0

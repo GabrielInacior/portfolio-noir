@@ -116,7 +116,7 @@ func _ready() -> void:
 	# toon (lojas): original com light() do motor x versão noir, mesma cor, perto da luz da esquerda/direita
 	for side in 2:
 		var tm := ShaderMaterial.new()
-		tm.shader = load("res://tools_dev/toon_ref.gdshader") if side == 0 else load("res://shaders/toon.gdshader")
+		tm.shader = load("res://tools_dev/toon_ref.gdshader") if side == 0 else load("res://shaders/toon_noir.gdshader")
 		tm.set_shader_parameter("albedo", Color("#8a6040"))
 		var tq := MeshInstance3D.new()
 		var tp := PlaneMesh.new()

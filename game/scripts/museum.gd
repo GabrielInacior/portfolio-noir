@@ -15,6 +15,9 @@ const PolyFace := preload("res://scripts/museum_objects.gd")
 const Dress := preload("res://scripts/museum_dress.gd")
 const HOVER := preload("res://shaders/hover_outline.gdshader")
 const PS1 := preload("res://scripts/ps1.gd")
+const Noir := preload("res://scripts/render/noir.gd")
+const TOON := preload("res://shaders/toon.gdshader")
+const TOON_NOIR := preload("res://shaders/toon_noir.gdshader")
 
 var project: Dictionary = {}
 var data: Dictionary = {}
@@ -52,7 +55,30 @@ func pid() -> String:
 	return str(project.get("id", ""))
 
 
+## montada em fatias (pré-montagem fora da vista, hud.gd): cede o quadro entre as etapas
+var sliced := false
+var is_built := false
+signal built
+
+
+func _step(t0: int, what: String, times: Array) -> int:
+	var t := Time.get_ticks_usec()
+	times.append("%s %d" % [what, (t - t0) / 1000])
+	if sliced:
+		if t - _slice_t > max_chunk:
+			max_chunk = t - _slice_t
+			max_chunk_at = what
+		await get_tree().process_frame
+	_slice_t = Time.get_ticks_usec()
+	return Time.get_ticks_usec()
+
+
 func _ready() -> void:
+	add_to_group("pf_shop")
+	var times: Array = []
+	var t := Time.get_ticks_usec()
+	_slice_t = t
+	var t_all := t
 	var theme: Dictionary = data.get("theme", {})
 	_accent = Color(str(theme.get("accent", "#ffc83d")))
 	_warm = Color(str(theme.get("warm", "#ffb23d")))
@@ -68,22 +94,62 @@ func _ready() -> void:
 		_warm = Color(look["warm"])
 	_build_env(look)
 	_build_shell(look)
-	_place_items(style)
-	Dress.dress(self, style)
+	t = await _step(t, "casca", times)
+	_slice_t = Time.get_ticks_usec()
+	await _place_items(style)
+	t = await _step(t, "itens", times)
+	_slice_t = Time.get_ticks_usec()
+	await Dress.dress(self, style)
+	t = await _step(t, "decoracao", times)
 	preload("res://scripts/lowpoly.gd").node(self)
-	_fuse()
+	# mundo noir nas lojas: os materiais viram os programas da cidade ANTES da fusão (cor, emissão e
+	# rugosidade vão para o vértice e a sala cai em poucas malhas por textura)
+	if Noir.shop_noir():
+		Noir.convert_tree(self)
+	t = await _step(t, "noir", times)
+	await _fuse()
+	t = await _step(t, "fusao", times)
+	# o que gira não entra no oclusor fixo da passada nítida (sharp_pass._shop_tag)
+	for n in _spin:
+		if is_instance_valid(n):
+			(n as Node).set_meta("sharp_dyn", true)
+	print("PFT loja %s montada em %d ms (%s)%s" % [pid(), (Time.get_ticks_usec() - t_all) / 1000, ", ".join(times), (" em fatias, maior fatia %d ms (%s)" % [max_chunk / 1000, max_chunk_at]) if sliced else ""])
+	is_built = true
 	examined.emit(0, items.size())
+	built.emit()
 
 
 ## Fusão de malhas da loja (como na cidade): casca, móveis e decoração viram poucas malhas por material.
 ## Ficam de fora os objetos examináveis (contorno ao mirar, ações), o que gira (_spin, ventilador) e os NPCs.
 ## Antes: 130 a 330 draw calls por loja, quase todas de caixas soltas com material próprio.
+var _slice_t := 0
+
+
+## cede o quadro na montagem em fatias quando passa do orçamento (6 ms); montagem direta não cede
+var max_chunk := 0
+var max_chunk_at := ""
+
+
+func yb(at := "") -> void:
+	var dt := Time.get_ticks_usec() - _slice_t
+	if sliced and dt > max_chunk:
+		max_chunk = dt
+		max_chunk_at = at
+	if sliced and dt > 6000:
+		await get_tree().process_frame
+		_slice_t = Time.get_ticks_usec()
+
+
 func _fuse() -> void:
-	# desligada por padrão: corta 35 a 55% dos draws da loja, mas a 1ª entrada a frio subiu para 4 a 6 s
-	# (as variantes com cor de vértice ainda não são aquecidas); ligar com PF_SHOPMERGE=1 ou ?shopmerge=1
-	var on := OS.get_environment("PF_SHOPMERGE") != ""
-	if OS.has_feature("web") and not on:
-		on = str(JavaScriptBridge.eval("/[?&]shopmerge=1/.test(location.search)?1:0", true)).begins_with("1")
+	# no caminho do motor a fusão ficava desligada (variantes com cor de vértice: 1ª entrada a frio de 4 a
+	# 6 s); com as lojas no mundo noir não há variante nova e ela fica ligada. ?shopmerge=0/1 força.
+	var on := Noir.shop_noir()
+	if OS.get_environment("PF_SHOPMERGE") != "":
+		on = OS.get_environment("PF_SHOPMERGE") != "0"
+	if OS.has_feature("web"):
+		var q := str(JavaScriptBridge.eval("(location.search.match(/[?&]shopmerge=([01])/)||[])[1]||''", true))
+		if q != "":
+			on = q == "1"
 	if not on or OS.get_environment("NOMERGE") != "":
 		return
 	var ex: Array = []
@@ -92,7 +158,14 @@ func _fuse() -> void:
 			ex.append(e["node"])
 	ex.append_array(_spin)
 	# sem `tick` a fusão não cede quadro: roda inteira aqui, dentro do véu de entrada
-	var r: Variant = await preload("res://scripts/render/merge.gd").merge(self, ex, 0.0, 0.0)
+	var tick := Callable()
+	if sliced:
+		tick = func() -> void:
+			if Time.get_ticks_usec() - _slice_t > 8000:
+				await get_tree().process_frame
+				_slice_t = Time.get_ticks_usec()
+	_slice_t = Time.get_ticks_usec()
+	var r: Variant = await preload("res://scripts/render/merge.gd").merge(self, ex, 0.0, 0.0, [], tick)
 	if r is Dictionary:
 		print("MERGE loja %s: %d malhas -> %d" % [str(data.get("id", "")), r["in"], r["out"]])
 
@@ -124,12 +197,16 @@ func _build_env(look: Dictionary) -> void:
 		e.glow_bloom = 0.08
 		e.glow_hdr_threshold = 1.1
 	we.environment = e
-	add_child(we)
+	_we = we
+	# pré-montada fora da vista: o ambiente só entra ao abrir a porta (dois WorldEnvironment no mesmo mundo
+	# trocariam o da cidade)
+	if not sliced:
+		add_child(we)
 
 
 func painted(tex: String, tint: Color, scale := 0.5) -> ShaderMaterial:
 	var m := ShaderMaterial.new()
-	m.shader = load("res://shaders/toon.gdshader")
+	m.shader = TOON_NOIR if Noir.shop_noir() else TOON
 	m.set_shader_parameter("albedo", tint)
 	m.set_shader_parameter("shadow_tint", tint.darkened(0.55).lerp(_cool, 0.3))
 	m.set_shader_parameter("use_tex", true)
@@ -285,6 +362,7 @@ func _place_items(style: String) -> void:
 	for i in n:
 		var node := _make_item(wall_items[i], slots[i])
 		add_entry(node, wall_items[i], slots[i]["pos"] + slots[i]["normal"] * 0.9)
+		await yb()
 	# o que sobrar vira a galeria (um quadro que abre todas as imagens restantes)
 	var rest := wall_items.slice(n)
 	if not rest.is_empty():
@@ -301,6 +379,7 @@ func _place_items(style: String) -> void:
 		it["verb"] = "INSPECIONAR"
 		var node3 := _make_item(it, {"pos": spots[i], "normal": Vector3(0, 0, 1), "yaw": 0.0, "floor": true})
 		add_entry(node3, it, spots[i] + Vector3(0, 1.1, 0))
+		await yb()
 
 
 ## Registra um objeto examinável/acionável. item pode ter "panel" (exhibit, inspect, terminal,
@@ -434,6 +513,25 @@ func _make_item(it: Dictionary, slot: Dictionary) -> Node3D:
 	return holder
 
 
+var _we: WorldEnvironment
+
+
+## loja em cache (hud.gd): ligada ao entrar, escondida e parada ao sair (fica montada para a próxima visita)
+func activate() -> void:
+	visible = true
+	process_mode = Node.PROCESS_MODE_INHERIT
+	if _we and not _we.is_inside_tree():
+		add_child(_we)
+
+
+func deactivate() -> void:
+	visible = false
+	process_mode = Node.PROCESS_MODE_DISABLED
+	if _we and _we.is_inside_tree():
+		remove_child(_we)
+	set_hot({})
+
+
 func exit_pos() -> Vector3:
 	return _exit_pos
 
@@ -494,7 +592,9 @@ func _overlay(n: Node, m: Material) -> void:
 	if n is MeshInstance3D:
 		var mi := n as MeshInstance3D
 		# não contorna vidro nem rótulos
-		if not (mi.material_override is StandardMaterial3D and (mi.material_override as StandardMaterial3D).transparency != BaseMaterial3D.TRANSPARENCY_DISABLED):
+		var mo := mi.material_override
+		var glass := (mo is StandardMaterial3D and (mo as StandardMaterial3D).transparency != BaseMaterial3D.TRANSPARENCY_DISABLED) 			or (mo is ShaderMaterial and str(mo.get_meta("noir_kind", "")) in ["blend", "add"])
+		if not glass:
 			mi.material_overlay = m
 	for c in n.get_children():
 		_overlay(c, m)
@@ -524,3 +624,9 @@ func _process(dt: float) -> void:
 	for t in tickers:
 		if t is Callable:
 			(t as Callable).call(dt, _t)
+
+
+func _notification(what: int) -> void:
+	# ambiente guardado fora da árvore (loja em cache) não é liberado com a loja
+	if what == NOTIFICATION_PREDELETE and _we and is_instance_valid(_we) and not _we.is_inside_tree():
+		_we.free()

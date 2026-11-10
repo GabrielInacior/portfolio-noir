@@ -270,7 +270,7 @@ func _apply_quality() -> void:
 	if UI.software() and city:
 		_apply_software()
 	var q := UI.quality()
-	_sharp.far_limit = [16.0, 34.0, 40.0][q]
+	_sharp.set_far([16.0, 34.0, 40.0][q])
 	if city and city.player and city.player.cam:
 		city.player.cam.far = 38.0 if UI.software() else [70.0, 140.0, 160.0][q]
 	for n in city.find_children("*", "WorldEnvironment", true, false) if city else []:
@@ -307,7 +307,7 @@ func _watch_fps(dt: float) -> void:
 		elif _potato_h > 216:
 			_potato_h -= 42
 			_fit_world()
-			_sharp.far_limit = maxf(8.0, _sharp.far_limit - 4.0)
+			_sharp.set_far(maxf(8.0, _sharp.far_limit - 4.0))
 
 
 ## Vigia de texto vertical (lição do RUMOR): texto que quebra linha e ficou espremido vira coluna de
@@ -468,6 +468,8 @@ func _ab(args: Array) -> void:
 				_gate.entered.emit()
 		"noirfeed":
 			_noir.set_process(on)
+		"lang":
+			L.set_lang(str(args[2]) if args.size() > 2 else ("pt" if L.lang == "en" else "en"))
 		"census":
 			_census(str(args[2]) if args.size() > 2 else "cena")
 		"sfxtick":

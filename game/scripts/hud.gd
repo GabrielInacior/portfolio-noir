@@ -64,6 +64,38 @@ func setup(p, c) -> void:
 		world_vp = m._world_vp
 	_build()
 	_on_visited(city.visited_count(), city.total_projects())
+	L.switching.connect(_lang_glitch)
+	get_tree().create_timer(4.0).timeout.connect(L.prepare)
+	L.changed.connect(func() -> void:
+		_sync_mode()
+		_on_visited(city.visited_count(), city.total_projects()))
+
+
+## troca de idioma ao vivo: glitch curto de faixas de neon por cima de tudo (só itens de interface comuns,
+## nenhum shader novo para compilar na hora do clique)
+func _lang_glitch(_to: String) -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 100
+	get_tree().root.add_child(layer)
+	var bars: Array = []
+	var cols := [Color(1, 0.31, 0.64, 0.55), Color(0.3, 0.85, 1, 0.5), Color(1, 0.78, 0.24, 0.45), Color(0.05, 0.05, 0.1, 0.7)]
+	for i in 9:
+		var r := ColorRect.new()
+		r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		r.color = cols[i % cols.size()]
+		layer.add_child(r)
+		bars.append(r)
+	var vs := get_viewport().get_visible_rect().size
+	for f in 10:
+		for r in bars:
+			var h := randf_range(4.0, 26.0)
+			(r as ColorRect).position = Vector2(randf_range(-vs.x * 0.2, vs.x * 0.1), randf_range(0.0, vs.y))
+			(r as ColorRect).size = Vector2(vs.x * randf_range(0.5, 1.3), h)
+			(r as ColorRect).visible = randf() < 0.8
+		modulate = Color(1.0, 0.85 + randf() * 0.15, 1.0, 0.7 + randf() * 0.3)
+		await get_tree().create_timer(0.035).timeout
+	modulate = Color.WHITE
+	layer.queue_free()
 
 
 func _ready() -> void:
@@ -752,13 +784,13 @@ func enter_museum(project: Dictionary) -> void:
 			prompt.visible = true
 			prompt_label.text = "Loading the shop..." if L.lang == "en" else "Carregando a loja..."
 		await Packs.need("shops")
-	var id := "_lab" if project.get("special", "") == "about" else ("_carreira" if project.get("special", "") == "career" else str(project.get("id", "")))
-	var path := "res://assets/museum/_items/%s.json" % id
-	if not FileAccess.file_exists(path):
+	var id := _shop_id(project)
+	var d := _shop_data(id)
+	if d.is_empty():
 		open_dossier(project)
 		return
-	var d: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
 	_entering = true
+	var t_door := Time.get_ticks_usec()
 	await _veil_in()
 	if city:
 		city.mark_visited(project)
@@ -767,9 +799,20 @@ func enter_museum(project: Dictionary) -> void:
 	city.visible = false
 	city.set_process(false)
 	city.set_physics_process(false)
-	_museum = Museum.new()
-	_museum.setup(project if project.get("special", "") != "career" else {"id": "_carreira", "title": "CARREIRA", "special": "career"}, d, project.get("special", "") == "about")
-	city.get_parent().add_child(_museum)
+	var cached: bool = _shop_cache.has(id)
+	if cached:
+		_museum = _shop_cache[id]
+		_trim_cache(id)
+		if not _museum.is_built:
+			_museum.sliced = false   # termina de uma vez, atrás do véu
+			await _museum.built
+	else:
+		_museum = _new_museum(project, d)
+		city.get_parent().add_child(_museum)
+		_shop_cache[id] = _museum
+		_trim_cache(id)
+	_museum.activate()
+	print("PFT porta %s: %s, %d ms" % [id, "loja pronta" if cached else "montada agora", (Time.get_ticks_usec() - t_door) / 1000])
 	if UI.software():
 		for l in _museum.find_children("*", "Light3D", true, false):
 			(l as Light3D).visible = false
@@ -786,7 +829,8 @@ func enter_museum(project: Dictionary) -> void:
 	var br: Rect2 = _museum.bounds()
 	player.bound_min = br.position
 	player.bound_max = br.end
-	_museum.examined.connect(func(_c: int, _t: int) -> void: _sync_mode())
+	if not _museum.examined.is_connected(_sync_mode_x):
+		_museum.examined.connect(_sync_mode_x)
 	_tour_i = -1
 	_hide_prompt()
 	_sync_mode()
@@ -804,7 +848,8 @@ func exit_museum() -> void:
 	player._yaw = player.rotation.y
 	player.sync_look()
 	player.walk_rects = player.get_meta("walk", [])
-	_museum.queue_free()
+	# a loja fica montada (escondida e parada) para a próxima visita
+	_museum.deactivate()
 	_museum = null
 	_exam = {}
 	_tour_i = -1
@@ -815,6 +860,117 @@ func exit_museum() -> void:
 	_ret_hot = false
 	_sync_mode()
 	_suggest_next()
+
+
+func _sync_mode_x(_c: int, _t: int) -> void:
+	_sync_mode()
+
+
+# ───────────────────────────────── lojas montadas antes da porta (rodada 4)
+## Depois do ENTRAR, em fatias de poucos ms por quadro, a loja mais provável (a mais perto, com bônus para a
+## que o jogador está olhando) é montada escondida; abrir a porta só liga o que já está pronto.
+## No máximo CACHE_MAX lojas ficam montadas (a mais antiga sai).
+const CACHE_MAX := 3
+const PREBUILD_N := 2
+var _shop_cache := {}        # id -> museu montado (escondido)
+var _cache_order: Array = []
+var _prebuilding := false
+var _pre_t := 0.0
+
+
+func _shop_id(project: Dictionary) -> String:
+	var sp := str(project.get("special", ""))
+	return "_lab" if sp == "about" else ("_carreira" if sp == "career" else str(project.get("id", "")))
+
+
+func _shop_data(id: String) -> Dictionary:
+	var path := "res://assets/museum/_items/%s.json" % id
+	if not FileAccess.file_exists(path):
+		return {}
+	var v: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	return v if v is Dictionary else {}
+
+
+func _new_museum(project: Dictionary, d: Dictionary):
+	var m = Museum.new()
+	m.setup(project if project.get("special", "") != "career" else {"id": "_carreira", "title": "CARREIRA", "special": "career"}, d, project.get("special", "") == "about")
+	return m
+
+
+func _trim_cache(keep: String) -> void:
+	_cache_order.erase(keep)
+	_cache_order.push_front(keep)
+	while _cache_order.size() > CACHE_MAX + 1:
+		var old: String = _cache_order.pop_back()
+		var m = _shop_cache.get(old)
+		_shop_cache.erase(old)
+		if m and is_instance_valid(m) and m != _museum and m.is_built:
+			m.queue_free()
+
+
+func _prebuild_tick(dt: float) -> void:
+	_pre_t += dt
+	if _pre_t < 0.5 or _prebuilding or _entering or _museum != null or not visible or city == null or player == null:
+		return
+	_pre_t = 0.0
+	if OS.get_environment("PF_NOPREBUILD") != "" or not Packs.ready_pack("shops"):
+		return
+	# as PREBUILD_N lojas mais prováveis ficam montadas; as outras saem do cache (exceto a aberta)
+	var ranked: Array = []
+	var fwd: Vector3 = player.forward()
+	for pl in Nav.places(city):
+		var pr: Dictionary = pl["project"]
+		var id := _shop_id(pr)
+		if not FileAccess.file_exists("res://assets/museum/_items/%s.json" % id):
+			continue
+		var to: Vector3 = (pl["pos"] as Vector3) - player.global_position
+		to.y = 0.0
+		var dist := to.length()
+		# olhando para ela: conta como se estivesse 40% mais perto
+		ranked.append([dist * (1.0 - 0.4 * maxf(0.0, fwd.dot(to.normalized()))), pr, id])
+	ranked.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
+	var want := {}
+	# celular: uma só (CPU e memória)
+	for r in ranked.slice(0, 1 if UI.is_mobile() else PREBUILD_N):
+		if float(r[0]) < 60.0:
+			want[r[2]] = r[1]
+	for id in want:
+		if not _shop_cache.has(id):
+			# abre espaço tirando uma loja montada que não está entre as mais prováveis
+			if _shop_cache.size() >= (2 if UI.is_mobile() else CACHE_MAX):
+				for old in _cache_order.duplicate():
+					if not want.has(old):
+						var m = _shop_cache[old]
+						if m and is_instance_valid(m) and m.is_built:
+							_shop_cache.erase(old)
+							_cache_order.erase(old)
+							m.queue_free()
+							break
+				if _shop_cache.size() >= (2 if UI.is_mobile() else CACHE_MAX):
+					return
+			_prebuild(want[id])
+			return
+
+
+func _prebuild(project: Dictionary) -> void:
+	var id := _shop_id(project)
+	var d := _shop_data(id)
+	if d.is_empty():
+		return
+	_prebuilding = true
+	var m = _new_museum(project, d)
+	m.sliced = true
+	m.visible = false
+	m.process_mode = Node.PROCESS_MODE_DISABLED
+	_shop_cache[id] = m
+	_cache_order.push_front(id)
+	city.get_parent().add_child(m)
+	if not m.is_built:
+		await m.built
+	if UI.software():
+		for l in m.find_children("*", "Light3D", true, false):
+			(l as Light3D).visible = false
+	_prebuilding = false
 
 
 ## ao sair de uma loja, a seta de HUD sugere o próximo projeto ainda não visitado (o mais perto)
@@ -881,6 +1037,7 @@ func _open_exhibit(entry: Dictionary) -> void:
 
 # ───────────────────────────────── quadro a quadro: alvo atual e realces
 func _process(_dt: float) -> void:
+	_prebuild_tick(_dt)
 	if reticle:
 		reticle.queue_redraw()
 	if _goal_arrow:

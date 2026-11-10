@@ -94,6 +94,7 @@ func _prog(p: float, stage: String) -> void:
 
 
 func _ready() -> void:
+	add_to_group("pf_lang_tex")
 	_rng.seed = 20260501
 	_t_slice = Time.get_ticks_usec()
 	# modo leve: celular, GPU fraca ou perfil "batata" (ver UI.quality); corta luzes reais, metade dos
@@ -323,7 +324,8 @@ func _painted(name: String, tint := Color.WHITE, rough := 0.9, metal := 0.0, sca
 	m.uv1_triplanar = true
 	m.uv1_world_triplanar = true
 	m.uv1_scale = Vector3(scale, scale, scale)
-	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	# superfícies (paredes, piso, calçada, asfalto): texel nítido estilo PS1 (texturas de 128 px, rodada 4)
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
 	_mat_cache[key] = m
 	return m
 
@@ -1855,7 +1857,7 @@ func _warm_up() -> void:
 			var mm := n as MultiMeshInstance3D
 			add_item.call(mm.material_override if mm.material_override else mm.multimesh.mesh.surface_get_material(0), true)
 	# programas das LOJAS também (as lojas montam ao entrar; sem isto a 1ª porta congelava compilando)
-	for sp in ["code_scroll", "chart_screen", "led_panel", "matrix_rain", "arcade_attract", "face_atlas", "hover_outline", "outline"]:
+	for sp in ["code_scroll", "chart_screen", "led_panel", "matrix_rain", "arcade_attract", "face_atlas", "hover_outline", "outline", "toon_noir"]:
 		var path := "res://shaders/%s.gdshader" % sp
 		if ResourceLoader.exists(path):
 			var wm := ShaderMaterial.new()
@@ -1907,7 +1909,8 @@ func _warm_up() -> void:
 	var all_items := items
 	var lit_items: Array = []
 	# no celular a loja aquece quando o jogador entra (atrás do véu), não no carregador
-	if Noir.enabled() and not UI.is_mobile():
+	# lojas no mundo noir (Noir.shop_noir): nenhuma variante com luz do motor sobra para aquecer
+	if Noir.enabled() and not Noir.shop_noir() and not UI.is_mobile():
 		var plain := StandardMaterial3D.new()
 		plain.roughness = 0.9
 		var texd := StandardMaterial3D.new()
@@ -2984,6 +2987,20 @@ func _build_ads() -> void:
 		_lhalo(hold6, Vector3(0, ty, 0.3), Vector2(tw * 1.3, th * 1.5), Color("#9fd8ff"), 0.08)
 		_ad_tvs.append({"mat": scr.material_override, "texs": texs, "i": 0, "t": float(ti) * 1.3, "g": 0.0})
 	_build_roofs()
+
+
+## troca de idioma ao vivo (i18n.gd): os telões guardam a lista de anúncios da língua antiga
+func lang_textures(from: String, to: String) -> int:
+	var c := 0
+	for tv in _ad_tvs:
+		var arr: Array = tv["texs"]
+		for i in arr.size():
+			var nt: Texture2D = L.swap_tex(arr[i], from, to)
+			if nt != arr[i]:
+				arr[i] = nt
+				c += 1
+	_ad_tex_cache.clear()
+	return c
 
 
 func _tick_ads(dt: float) -> void:

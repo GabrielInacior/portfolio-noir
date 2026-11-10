@@ -296,9 +296,10 @@ JS = r"""(function () {
       var engine = new Engine(Object.assign({}, CFG, { canvas: canvas, args: args.length ? ['--'].concat(args) : [] }));
       window.__pfEngine = engine;
       // pacotes em segundo plano (música, lojas): baixam depois do principal e entram no sistema de arquivos do motor
-      var queue = ['lang', 'shops'];
+      // o pacote do OUTRO idioma vem por último (troca de idioma ao vivo, sem recarregar)
+      var queue = ['lang', 'shops', en ? 'lang_pt' : 'lang_en'];
       window.pfMusicUrl = CFG.pfMusic || '';
-      var PK = { lang: langPack, music: CFG.pfPacks.music, shops: CFG.pfPacks.shops };
+      var PK = { lang: langPack, lang_pt: CFG.pfLang.pt, lang_en: CFG.pfLang.en, music: CFG.pfPacks.music, shops: CFG.pfPacks.shops };
       function whenEngine(fn) { if (engine.rtenv) fn(); else setTimeout(function () { whenEngine(fn); }, 100); }
       function nextPack() {
         var id = queue.shift();
@@ -312,6 +313,7 @@ JS = r"""(function () {
             var p = '/pfpacks/' + id + '.pck';
             engine.copyToFS(p, buf);
             packState[id] = p;
+            if (id === 'lang') packState[en ? 'lang_en' : 'lang_pt'] = p;
             mark('pacote_' + id);
             nextPack();
           });

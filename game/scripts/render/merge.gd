@@ -34,7 +34,7 @@ static func merge(root: Node3D, exclude: Array, near := 24.0, mid := 42.0, dyn_m
 	var idx := 0
 	for n in root.find_children("*", "MeshInstance3D", true, false):
 		idx += 1
-		if tick.is_valid() and idx % 24 == 0:
+		if tick.is_valid() and idx % 4 == 0:
 			await tick.call()
 		if not is_instance_valid(n):
 			continue
@@ -119,7 +119,7 @@ static func merge(root: Node3D, exclude: Array, near := 24.0, mid := 42.0, dyn_m
 	var gi := 0
 	for k in groups:
 		gi += 1
-		if tick.is_valid() and gi % 4 == 0:
+		if tick.is_valid():
 			await tick.call()
 		var g: Dictionary = groups[k]
 		var am := (g["st"] as SurfaceTool).commit()

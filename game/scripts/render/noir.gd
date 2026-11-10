@@ -39,6 +39,22 @@ static var max_lights := MAX_LIGHTS
 static var stats := {"conv": 0, "skip": 0, "skip_why": {}}
 
 
+## lojas no mundo noir (rodada 4): toon e StandardMaterial3D das lojas viram os mesmos programas da cidade
+## (já compilados no carregador), luzes como dados. `?shopnoir=0` / `SHOPNOIR=0` voltam ao caminho do motor.
+static var _shop_on := -1
+
+
+static func shop_noir() -> bool:
+	if _shop_on < 0:
+		_shop_on = 1 if enabled() else 0
+		if _shop_on == 1:
+			if OS.get_environment("SHOPNOIR") == "0":
+				_shop_on = 0
+			elif OS.has_feature("web") and str(JavaScriptBridge.eval("(/[?&]shopnoir=0/.test(location.search))?1:0", true)) == "1":
+				_shop_on = 0
+	return _shop_on == 1
+
+
 static func enabled() -> bool:
 	if _on < 0:
 		_on = 1
@@ -114,7 +130,7 @@ static func params_of(m: BaseMaterial3D) -> Dictionary:
 	var tex: Texture2D = m.albedo_texture
 	p["use_tex"] = 1.0 if tex != null else 0.0
 	p["albedo_tex"] = tex
-	p["tex_nearest"] = 1.0 if m.texture_filter in [BaseMaterial3D.TEXTURE_FILTER_NEAREST, BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS, BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS_ANISOTROPIC] else 0.0
+	p["tex_nearest"] = 1.0 if m.texture_filter == BaseMaterial3D.TEXTURE_FILTER_NEAREST else (2.0 if m.texture_filter in [BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS, BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS_ANISOTROPIC] else 0.0)
 	p["use_vc"] = 1.0 if m.vertex_color_use_as_albedo else 0.0
 	p["uv_scale"] = m.uv1_scale
 	p["uv_offset"] = m.uv1_offset
@@ -477,7 +493,7 @@ static func in_shop(n: Node) -> bool:
 func _on_added(n: Node) -> void:
 	if not enabled():
 		return
-	if (n is Light3D or n is WorldEnvironment or n is GeometryInstance3D) and in_shop(n):
+	if (n is Light3D or n is WorldEnvironment or n is GeometryInstance3D) and not shop_noir() and in_shop(n):
 		return
 	if n.has_meta("noir_keep"):
 		return
