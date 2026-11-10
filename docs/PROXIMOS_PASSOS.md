@@ -187,3 +187,17 @@ Ver `docs/PERFORMANCE.md` (seção "Rodada de carregamento e travadas"). Em orde
 6. **SwiftShader** (65 ms): menos draws ajudam aqui também; resolução interna menor no perfil sem placa.
 7. Template próprio: dá para cortar mais (build_profile com classes não usadas; text_server_fb no lugar do adv se o
    texto ficar igual).
+
+
+## Desempenho depois da rodada 4 (ver docs/PERFORMANCE.md)
+Feito: lojas no mundo noir, pré-montadas antes da porta e com nítida exclusiva; idioma ao vivo; efeitos pelo navegador;
+texturas de superfície 128 px (PS1); filtro VHS. Em aberto, por ganho esperado:
+1. **Celular até o ENTRAR (38 s, meta 10 s)**: cidade pronta no build (refazer as listas de `city.gd` a partir de grupos e
+   metas da cena salva) ou, mais barato, fundir a geometria direto em PackedArrays (sem `SurfaceTool.append_from` por
+   malha) e liberar o ENTRAR antes do aquecimento completo (aquecer o resto em fatias depois).
+2. **Draws da cidade (~380 a 450 + 85 a 210)**: atlas das texturas pintadas e dos anúncios para a fusão cair num material
+   por célula; rever as 3 faixas de tamanho da fusão.
+3. **Lojas não pré-montadas** (350 a 460 ms no PC, ~1,4 s no celular): pré-montar também o destino escolhido no mapa ou
+   no menu de lugares.
+4. Imagens do outro idioma no celular (~2,4 s): páginas de anúncio por idioma menores ou só a parte com texto.
+5. Papéis do chão (`sd_papeis`) mais claros no noir que no motor (normal para baixo + luz por vértice): conferir.

@@ -30,6 +30,8 @@ func _ready() -> void:
 		var a0 := Time.get_ticks_usec()
 		await get_tree().process_frame
 		cfr.append((Time.get_ticks_usec() - a0) / 1000)
+		if cfr[-1] > 40:
+			print("SHOPPROBE quadro lento %d ms em %d ms" % [cfr[-1], Time.get_ticks_msec()])
 	cfr.sort()
 	if not cfr.is_empty():
 		print("SHOPPROBE cidade durante a pré-montagem: pior quadro %d ms, p95 %d ms, mediana %d ms" % [cfr[-1], cfr[int(cfr.size() * 0.95)], cfr[cfr.size() / 2]])

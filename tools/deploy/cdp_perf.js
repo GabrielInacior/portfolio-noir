@@ -128,7 +128,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
       const pre = opt('--langshot', '');
       if (pre) { const r = await send('Page.captureScreenshot', { format: 'png' }); fs.writeFileSync(pre.replace(/\.png$/, '_antes.png'), Buffer.from(r.result.data, 'base64')); }
       const href0 = await ev('location.href');
-      await ev('window.__pfLangMs=-1;window.__pfNav=performance.getEntriesByType("navigation").length');
+      await ev('window.__pfLangMs=-1;window.__pfLangAllMs=-1;window.__pfNav=performance.getEntriesByType("navigation").length');
       const c0 = Date.now();
       await ev('pfFrameStats(true)');
       await ev('pfAB("lang",true,"' + ls + '")');
@@ -137,7 +137,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
       const wall = Date.now() - c0;
       await sleep(600);
       const st = JSON.parse(await ev('JSON.stringify(pfFrameStats(true))'));
-      out.langswitch = 'jogo ' + ms + ' ms | relógio ' + wall + ' ms | pior quadro ' + st.cpu_max + ' ms | url ' + href0 + ' -> ' + await ev('location.href') + ' | lang=' + await ev('document.documentElement.lang') + ' | title=' + await ev('document.title');
+      for (let i = 0; i < 100 && !(await ev('window.__pfLangAllMs>=0')); i++) await sleep(50);
+      out.langswitch = 'textos ' + ms + ' ms, imagens ' + await ev('window.__pfLangAllMs') + ' ms | relógio ' + wall + ' ms | pior quadro ' + st.cpu_max + ' ms | url ' + href0 + ' -> ' + await ev('location.href') + ' | lang=' + await ev('document.documentElement.lang') + ' | title=' + await ev('document.title');
       if (pre) { await sleep(400); const r = await send('Page.captureScreenshot', { format: 'png' }); fs.writeFileSync(pre.replace(/\.png$/, '_depois.png'), Buffer.from(r.result.data, 'base64')); }
     }
     const shot = opt('--shot', '');

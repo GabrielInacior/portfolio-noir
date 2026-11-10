@@ -112,8 +112,19 @@ func _build_card(md: String) -> void:
 	rt.add_theme_font_size_override("normal_font_size", 19)
 	rt.add_theme_font_size_override("bold_font_size", 20)
 	rt.add_theme_color_override("default_color", Color("#e6eaf6"))
-	rt.text = md_to_bbcode(md if md != "" else str(r.get("desc", "")), accent)
 	v.add_child(rt)
+	# o cartão tem altura fixa (o que passa de VH nunca aparece): só o começo do README vira texto, e em outro
+	# quadro (montagem das lojas em fatias, sem travar a rua)
+	var src := md if md != "" else str(r.get("desc", ""))
+	if src.length() > 3500:
+		var cut := src.find("
+", 3200)
+		src = src.substr(0, cut if cut > 0 else 3500)
+	if is_inside_tree():
+		await get_tree().process_frame
+	if is_instance_valid(rt):
+		rt.text = md_to_bbcode(src, accent)
+		_vp.render_target_update_mode = SubViewport.UPDATE_ONCE
 
 
 func _lang_bar(langs: Dictionary) -> Control:

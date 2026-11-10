@@ -60,6 +60,9 @@ func _ready() -> void:
 	await get_tree().process_frame
 	hud.setup(city.player, city)
 	_read_args()
+	# troca de idioma ao vivo: índice e imagens do outro idioma prontos ainda com o carregador na tela
+	if not UI.software():
+		await L.prepare(true)
 	_build_gate(layer)
 	# avisa a página (boot.js) que a cidade está montada e desenhada: o carregador HTML some
 	for _i in 3:
@@ -179,8 +182,24 @@ func _fit_world() -> void:
 		m.set_shader_parameter("res", Vector2(_world_vp.size))
 		m.set_shader_parameter("levels", 28.0 if retro == "forte" else 48.0)
 		m.set_shader_parameter("dither", 1.0 if retro == "forte" else 0.6)
+		var vfx := _vhs_level()
+		m.set_shader_parameter("fx", vfx)
+		if _sharp and _sharp.rect and _sharp.rect.material:
+			(_sharp.rect.material as ShaderMaterial).set_shader_parameter("fx", vfx)
 		_world_rect.material = m
 		_world_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
+
+## filtro de fita VHS / TV antiga (retro_ps1.gdshader): completo no PC, com grão no celular, mínimo (vinheta e
+## scanline) no batata e sem placa; ?vhs=0 desliga
+func _vhs_level() -> float:
+	if OS.get_environment("PF_VHS") != "":
+		return float(OS.get_environment("PF_VHS"))
+	if OS.has_feature("web") and str(JavaScriptBridge.eval("/[?&]vhs=0/.test(location.search)?1:0", true)) == "1":
+		return 0.0
+	if UI.software() or UI.quality() == 0:
+		return 1.0
+	return 2.0 if UI.is_mobile() else 3.0
 
 
 func set_retro(level: String) -> void:

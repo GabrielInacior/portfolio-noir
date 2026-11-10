@@ -239,3 +239,73 @@ entrada a frio subiu para 4 a 6 s. Com a câmera olhando para dentro, a 1ª entr
 - Meta do celular (8 s após o download): exige cidade pré-montada no build (.scn) e streaming por distância.
 
 Capturas: `docs/perf/marcador_entrada_r3.png`, `docs/perf/lojas_entrada_r3.png`.
+
+
+## Rodada 4 (nov 2026): lojas sem travar, idioma ao vivo, efeitos pelo navegador, texturas PS1, filtro VHS
+Medido com `cdp_perf.js` no ar (inaciodev.online), PC (RTX 4070 Ti SUPER, Chrome headless) e perfil de celular
+(`--mobile`: 390x844, toque, CPU 4x). "Antes" = rodada 3 no ar, medida de novo no começo desta rodada (mesma máquina).
+
+| Item | Antes (no ar) | Depois (no ar) |
+|---|---|---|
+| PC: pronto para ENTRAR, 1ª visita | 37,9 s (aquecimento 20,8 s) | 29,9 s (aquecimento ~9,5 s) |
+| PC: pronto para ENTRAR, visita repetida | 11,0 s | 9,7 s |
+| Celular: download até ENTRAR, 1ª visita | 52,7 s | 38,4 s |
+| Celular: download até ENTRAR, repetida | não medido | 28,4 s |
+| PC: porta da loja rumor, 1ª entrada a frio | 6 589 ms congelado | 25 ms (loja pré-montada) |
+| PC: porta de loja não pré-montada (labia/fortress) | 0,7 a 1,2 s | 350 a 460 ms |
+| Celular: porta da loja rumor | 16 668 ms | 53 a 293 ms |
+| PC: draws dentro da loja (mundo + nítida) | rumor 306+236, fortress 269+208, formataai 314+240, labia 133+67 | 70+94, 71+104, 69+100, 33+22 |
+| PC: CPU por quadro dentro da loja | 7,9 a 14 ms | 5,9 a 7,0 ms |
+| PC: draws na cidade (mundo + nítida, ponto do ENTRAR) | 484 + 224 | 386 a 449 + 85 a 214 (avenida, nativo: 838 -> 682) |
+| Troca de idioma | recarregava a página (motor e cidade de novo) | ao vivo: PC 14 a 30 ms de jogo (150 a 180 ms de relógio); celular: textos na hora, imagens em ~2,4 s |
+| Efeitos sonoros no celular (amostras entregues pelo mixer do Godot) | 93 a 96% (buracos e estalos) | tocados pelo navegador (modo sample) |
+
+### O que entrou
+- **Lojas no mundo noir** (`shaders/toon_noir.gdshader`, `noir.shop_noir()`): o toon das lojas roda sobre as luzes-dados
+  e os StandardMaterial3D viram os 5 programas da cidade (já compilados no carregador). Censo da loja: 9 programas, 0 com
+  luz do motor (antes 15 a 18, 6 a 8 com luz). Ajuste achado: no toon o termo de ambiente usa o albedo como o motor
+  (a versão da rodada 2 convertia a cor duas vezes só no ambiente, por isso ficava escura). Diferença média com o motor:
+  2 a 10/255 (`r4_loja_rumor_motor_x_noir.png`, `r4_loja_fortress_motor_x_noir.png`). `?shopnoir=0` volta ao motor.
+  Diferença conhecida: os papéis do chão (prop `sd_papeis`, normal para baixo) aparecem um pouco mais claros no noir.
+- **Fusão das lojas ligada por padrão** (`?shopmerge=0` desliga): 130 a 260 malhas viram 37 a 58.
+- **Loja montada antes da porta** (`hud.gd`, `_prebuild_tick`): a cada 0,5 s escolhe as 2 lojas mais prováveis (1 no
+  celular; distância com bônus para a que está na frente da câmera) e monta escondida, em fatias de ~6 ms (`museum.gd`
+  virou corrotina; `museum_dress.gd` cede o quadro entre as peças; a fusão cede a cada 4 malhas; o README do telão do
+  GitHub vira texto noutro quadro e só o começo que cabe no cartão). Cache de até 3 lojas (2 no celular); ao sair a
+  loja fica escondida e parada. O ambiente da loja só entra na árvore ao abrir a porta. Pior quadro da rua durante a
+  pré-montagem (nativo): 21 ms. `PF_NOPREBUILD=1` desliga.
+- **Passada nítida exclusiva nas lojas** (`sharp_pass._shop_tag`): textos e imagens da loja só nela (um draw cada, não
+  dois) e todo o cenário fixo vira um oclusor único (antes ~70 gêmeos).
+- **Cidade: texto 3D e imagem pequena em par perto/longe** (`sharp_pass._split`): o original fica só no retrô e só além de
+  `far_limit`; um gêmeo fica só na passada nítida e só antes dele. Avenida (nativo): 838 -> 682 draws. `?split=0` desliga.
+- **Texturas de superfície em 128 px** (paredes, piso, teto, calçada, asfalto, fachadas; liberado pelo usuário):
+  `compress_imports.py` (limite 128 e mipmaps) e amostragem do texel exato do nível de mip (`noir_inc`: `tex_nearest = 2`;
+  toon: `filter_nearest_mipmap`). Captura `r4_texturas_superficie.png`.
+- **Idioma ao vivo** (`i18n.gd`, `switch_live`): textos (dicionário, campos `*_en` dos dados e literais da cidade) e
+  letreiros 3D trocam no lugar; anúncios e outdoors trocam a textura pela do outro idioma (índice montado com o
+  carregador na tela; no PC as imagens do outro idioma já ficam carregadas, no celular carregam na troca, uma por
+  quadro). Sinais `L.switching` (glitch curto de faixas de neon, só interface) e `L.changed`. URL (`/` e `/en/` na home),
+  `<html lang>` e `title` atualizados com `history.replaceState`. O pacote do outro idioma baixa por último (`boot.js`).
+  Posição, câmera e loja aberta ficam (sonda `tools_dev/lang_probe.tscn`: deslocamento 0,000 m). `?live=0` recarrega.
+  Capturas `r4_idioma_cidade.png`, `r4_idioma_loja.png`.
+- **Efeitos e ambientes pelo navegador** (`audio.gd`, `playback_type = SAMPLE` na web): no celular o mixer do Godot sem
+  threads entregava 93 a 96% das amostras (`cdp_perf.js --audiocheck`). No navegador não há a reverb leve dos
+  barramentos. `?sfx=stream` volta.
+- **Filtro VHS / TV antiga** na composição que já existia (`retro_ps1.gdshader` e a chave da passada nítida, sem viewport
+  nova): vinheta, scanlines finas, aberração cromática radial, sangramento de cor, grão animado e uma linha de tracking a
+  cada ~13 s. Interface sem efeito; textos e imagens 3D só com vinheta, scanline e grão leves. Celular: vinheta, scanline
+  e grão; batata e sem placa: vinheta e scanline. `?vhs=0` desliga. Capturas `r4_vhs_cidade.png`, `r4_vhs_loja.png`.
+- Sondas: `tools_dev/shop_probe.tscn` (porta, draws, capturas e luzes por loja; `REPEAT`, `PREWAIT`, `SHOPNOIR=0`),
+  `tools_dev/lang_probe.tscn`; `cdp_perf.js --audiocheck` e `--langswitch pt|en [--langshot arq.png]`.
+
+### Não feito / ficou de fora
+- **Cidade pronta no build (.scn)**: o `city.gd` (3 268 linhas) guarda o estado do jogo em listas de nós (carros,
+  pedestres, neon, telões, quiosques); salvar a cena exige refazer essas referências. O atalho de guardar só a geometria
+  fundida foi avaliado e descartado: com cor e dados por vértice passaria de 10 MB por perfil (PC e leve) no download.
+  A meta de 10 s no celular não foi atingida (38,4 s; motor ~6 s, montar a cidade ~11 s, fundir ~14 s, aquecer ~13 s
+  na 1ª visita).
+- **Textos 3D em atlas**: trocado pelo par perto/longe (mesmo ganho de draws dos textos, sem refazer letreiros). A cidade
+  continua acima de 300 draws: sobram ~370 malhas fundidas visíveis (célula + material + faixa de tamanho).
+- Troca de idioma no celular: textos na hora; as imagens do outro idioma (3 páginas 2048 + 10 outdoors, ~100 MB de
+  VRAM) não ficam pré-carregadas, então os anúncios trocam em ~2,4 s.
+- Curvatura de CRT no filtro VHS: não aplicada (atrapalharia mira e cliques).

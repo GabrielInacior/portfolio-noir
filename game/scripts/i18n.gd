@@ -200,36 +200,41 @@ var _tex_idx: Array = []      # [material, chave] com textura de idioma (_pt/_en
 var _idx_ready := false
 
 
-## monta com antecedência, em fatias (hud.gd chama depois do ENTRAR): pares de texto, índice dos materiais com
-## imagem de idioma e (no PC) as texturas do outro idioma já carregadas
-func prepare() -> void:
+## monta com antecedência: pares de texto, índice dos materiais com imagem de idioma e (no PC) as texturas do
+## outro idioma já carregadas. main.gd chama ainda com o carregador na tela (`now`, sem fatias: decodificar as
+## páginas de anúncio custa ~80 ms cada e não pode cair no meio do jogo); sem o pacote, fica para a troca.
+var _prepared := false
+
+
+func prepare(now := false) -> void:
+	if _prepared:
+		return
+	_prepared = true
+	var t0 := Time.get_ticks_usec()
 	if _pairs_cache.is_empty():
 		_pairs_cache = _pairs()
-	await get_tree().process_frame
+	if not now:
+		await get_tree().process_frame
 	var world: Array = get_tree().root.find_children("*", "GeometryInstance3D", true, false)
-	await get_tree().process_frame
 	var seen := {}
 	var t := Time.get_ticks_usec()
 	for g in world:
-		if Time.get_ticks_usec() - t > 4000:
+		if not now and Time.get_ticks_usec() - t > 4000:
 			await get_tree().process_frame
 			t = Time.get_ticks_usec()
 		if is_instance_valid(g) and not _in_shop_tree(g):
 			_index_geom(g as GeometryInstance3D, seen, _tex_idx)
 	_idx_ready = true
-	# PC: as imagens do outro idioma ficam prontas (no celular carregam na hora da troca: memória de vídeo)
+	var n := 0
 	var ui := get_node_or_null("/root/UI")
-	if ui and ui.has_method("is_mobile") and ui.is_mobile():
-		return
-	var other := "pt" if lang == "en" else "en"
 	var packs := get_node_or_null("/root/Packs")
-	if packs:
-		await packs.need("lang_" + other)
-	for e in _tex_idx:
-		var v: Variant = _get_tex(e[0], e[1])
-		if v is Texture2D:
-			swap_tex(v, lang, other)
-			await get_tree().process_frame
+	var other := "pt" if lang == "en" else "en"
+	if now and not (ui and ui.is_mobile()) and packs and packs.ready_pack("lang_" + other):
+		for e in _tex_idx:
+			var v: Variant = _get_tex(e[0], e[1])
+			if v is Texture2D and swap_tex(v, lang, other) != v:
+				n += 1
+	print("PFT idioma preparado: %d pares, %d materiais com imagem de idioma, %d texturas do outro idioma, %d ms" % [_pairs_cache.size(), _tex_idx.size(), n, (Time.get_ticks_usec() - t0) / 1000])
 
 
 func _in_shop_tree(n: Node) -> bool:
@@ -328,6 +333,11 @@ func switch_live(l: String) -> void:
 	_load()
 	var root := get_tree().root
 	var n_txt := _retext(root, map)
+	changed.emit()
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval(_JS_URL % ("true" if l == "en" else "false"), true)
+	# textos prontos: é isto que o jogador lê primeiro (as imagens vêm logo atrás)
+	last_ms = (Time.get_ticks_usec() - t1) / 1000
 	var n_tex := 0
 	if _idx_ready:
 		var idx: Array = _tex_idx.duplicate()
@@ -335,24 +345,28 @@ func switch_live(l: String) -> void:
 		for sh in get_tree().get_nodes_in_group("pf_shop"):
 			for g in (sh as Node).find_children("*", "GeometryInstance3D", true, false):
 				_index_geom(g as GeometryInstance3D, seen, idx)
+		var tq := Time.get_ticks_usec()
 		for e in idx:
 			var v: Variant = _get_tex(e[0], e[1])
 			if v is Texture2D:
+				# imagem ainda não carregada (celular não guarda as do outro idioma): uma por quadro,
+				# para a troca não congelar a tela
+				var fresh := not _swap_cache.has("%d|%s" % [(v as Texture2D).get_instance_id(), l])
 				var nt := swap_tex(v, from, l)
 				if nt != v:
 					_set_tex(e[0], e[1], nt)
 					n_tex += 1
+				if fresh and Time.get_ticks_usec() - tq > 30000:
+					await get_tree().process_frame
+					tq = Time.get_ticks_usec()
 		for c in get_tree().get_nodes_in_group("pf_lang_tex"):
 			n_tex += int(c.call("lang_textures", from, l))
 	else:
 		n_tex = _retexture(root, from, l)
-	changed.emit()
+	var all_ms := (Time.get_ticks_usec() - t1) / 1000
+	print("PFT idioma ao vivo %s -> %s: %d textos em %d ms, %d texturas (tudo em %d ms; +%d ms esperando o pacote)" % [from, l, n_txt, last_ms, n_tex, all_ms, (t1 - t0) / 1000])
 	if OS.has_feature("web"):
-		JavaScriptBridge.eval(_JS_URL % ("true" if l == "en" else "false"), true)
-	last_ms = (Time.get_ticks_usec() - t1) / 1000
-	print("PFT idioma ao vivo %s -> %s: %d textos, %d texturas, %d ms (+%d ms esperando o pacote)" % [from, l, n_txt, n_tex, last_ms, (t1 - t0) / 1000])
-	if OS.has_feature("web"):
-		JavaScriptBridge.eval("window.__pfLangMs=%d" % last_ms, true)
+		JavaScriptBridge.eval("window.__pfLangMs=%d;window.__pfLangAllMs=%d" % [last_ms, all_ms], true)
 	busy = false
 
 

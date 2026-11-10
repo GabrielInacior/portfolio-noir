@@ -19,9 +19,10 @@ func _ready() -> void:
 	L.set_lang(to)
 	while L.busy:
 		await get_tree().process_frame
+	var moved: float = pos.distance_to(main.city.player.global_position)
 	await _wait(0.8)
 	_save(dir, "cidade_depois")
-	print("LANGPROBE cidade %s: %d ms, posição mantida=%s" % [to, L.last_ms, pos.distance_to(main.city.player.global_position) < 0.01])
+	print("LANGPROBE cidade %s: %d ms, deslocamento do jogador na troca=%.3f m, cena recarregada=%s" % [to, L.last_ms, moved, main.get_parent() != self])
 	for p in Data.projects:
 		if str(p.get("id", "")) == "rumor":
 			main.hud.enter_museum(p)
