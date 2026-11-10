@@ -215,3 +215,18 @@ Por ganho esperado:
    consulte o status logo após o link (KHR_parallel_shader_compile) ou que compile só as variantes usadas.
 4. **Aquecimento a frio (6,2 s)**: mais programas podem ir para depois do ENTRAR se a vista inicial não os usa.
 5. Loja não pré-montada no celular (~750 ms): pré-montar também o destino escolhido no mapa.
+
+
+## Desempenho depois da rodada 6 (ver docs/PERFORMANCE.md)
+Celular (4x, no ar): 16,0 a 16,8 s do download ao ENTRAR na 1ª visita, 15,6 a 16,3 s na repetida (meta 15 / 8 s).
+PC repetida: 3,6 a 3,8 s do download (4,8 a 5,2 s desde a navegação). Por ganho esperado:
+1. **ENTRAR cedo / cidade em streaming**: montar o quarteirão inicial, fundir e liberar o ENTRAR; o resto monta e funde por
+   célula depois, de fora da neblina para dentro. Pré-requisito: a luz por objeto (noir) atribuída por célula já fundida,
+   para não mudar a luz na troca (pop), e as listas do `city.gd` (carros, pedestres, telões, quiosques) por célula.
+   Destino aberto pelo mapa antes de montado: montar sob demanda atrás do véu (o véu já espera a loja completa).
+2. **Montar os nós (~5,3 s)**: perfil com nomes do wasm (`debug_symbols=yes`, recompilar tudo) para achar o custo por nó
+   (materiais únicos por objeto: 631 materiais canônicos na fusão; `_mat` sem cache).
+3. **Motor (~4,2 s mesmo na visita repetida)**: medir com nomes; candidatos: montar o pck (7,8 MB) e o tema/fontes.
+4. **Fusão (~3,2 s)**: material canônico (0,47 s), chave/formato (0,55 s) e o resto do laço em GDScript; cache da
+   geometria fundida em user:// só tiraria ~0,7 s (o laço que acha os grupos continua).
+5. Loja não pré-montada no celular (~0,73 s): pré-montar também o destino escolhido no mapa.

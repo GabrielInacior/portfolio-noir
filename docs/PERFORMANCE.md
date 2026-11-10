@@ -388,3 +388,82 @@ Download adicionado: nenhum (o `.pck` principal ficou do mesmo tamanho; nada nov
 Capturas: `docs/perf/r5_cidade_antes_depois.png` (fusão antiga x nova, mesmo ponto), `docs/perf/r5_loader_celular.png`
 (carregador no celular, no ar), `docs/perf/r5_vhs_removido.png`, `docs/perf/r5_inaciocyber_antes_depois.png`,
 `docs/perf/r5_fachadas_antes_depois.png`.
+
+
+## Rodada 6 (nov 2026): carregamento no celular (motor, shaders, imagens) e lojas sem "limbo"
+Medido no ar (inaciodev.online) com `cdp_perf.js`, 3 pares (1ª visita + repetida) por perfil. Celular = `--mobile`
+(390x844, toque, CPU 4x). "Download até ENTRAR" = `download_concluido` até `pronto_para_entrar`.
+
+| Etapa (celular 4x, no ar) | Rodada 5, 1ª | Rodada 6, 1ª | Rodada 5, repetida | Rodada 6, repetida |
+|---|---|---|---|---|
+| Motor (fim do download até o 1º script) | 7,6 s | ~4,5 s | 4,3 s | ~4,2 s |
+| Montar os nós da cidade | ~8,1 s | ~5,3 s (fachadas 3,1 -> 0,7; outdoors 0,8 -> 0,1; anúncios 1,4 -> 0,2) | ~7,9 s | ~5,3 s |
+| Fusão + noir + luz por objeto | 4,1 s | ~3,2 s | 4,0 s | ~3,2 s |
+| Aquecer shaders | 6,2 s | 0,7 s | dispensado | dispensado |
+| Interface até o ENTRAR (nítida, HUD, 1º quadro, idioma, tela de entrada) | ~3,4 s | ~1,6 s | ~3,3 s | ~1,6 s |
+| **Download até ENTRAR** | **29,6 s** | **16,0 / 16,6 / 16,8 s** | **19,5 s** | **15,6 / 15,6 / 16,3 s** |
+
+| PC (no ar) | Rodada 5 | Rodada 6 |
+|---|---|---|
+| Download até ENTRAR, 1ª visita | 11,2 s | 4,0 / 4,1 / 4,3 s |
+| Download até ENTRAR, repetida | não medido | 3,6 / 3,7 / 3,8 s |
+| Pronto para ENTRAR desde a navegação, repetida | 6,5 s | 4,8 / 5,2 / 5,2 s |
+
+| Porta da loja (pior quadro ao entrar, no ar) | Rodada 5 | Rodada 6 |
+|---|---|---|
+| Celular, rumor (pré-montada) | 244 a 281 ms | 238 ms |
+| Celular, labia (não pré-montada) | 731 a 769 ms | 726 ms |
+| PC, rumor | 51 a 57 ms | 20 ms |
+| PC, labia | 147 a 151 ms | 173 ms (local: 148 a 164 ms) |
+
+Download: pacote principal 9,4 -> 7,8 MB; as imagens grandes saíram do pacote para 95 arquivos próprios (5,8 MB nos dois
+idiomas, só o idioma ativo baixa antes do ENTRAR). Som conferido no ar com `--sfxcheck` (ambientes e os 18 efeitos tocam).
+
+### O que entrou
+- **Lojas sem "limbo" em aparelho lento** (commit próprio): a loja pré-montada fazia o 1º desenho 500 m abaixo da cidade;
+  abrindo a porta nesse meio tempo o jogador era posto pela posição global da loja deslocada e subia 500 m quando ela
+  voltava. Agora o véu entra primeiro e só sai com a loja completa (termina a montagem com prioridade, espera o 1º desenho
+  devolver a loja, só então põe o jogador na posição local da sala); o pacote das lojas é esperado com progresso no véu,
+  com nova tentativa e mensagem se falhar; sair e viajar pelo mapa com a porta em andamento são ignorados. Conferido com
+  `--throttle 6` e `8` nas 13 portas pelo mapa logo após o ENTRAR (`r6_portas_lento_6x.png`) e com o pacote lento e
+  falhando na 1ª tentativa (`r6_veu_pacote_falhou.png`; o texto do véu saía em quadradinhos, sem fonte).
+- **Shaders do motor sob demanda** (template, `tools/deploy/godot_template/r6_shaders_gl.patch`): na web o cache de shaders
+  do Godot é "válido" mas não guarda nada, e por isso cada shader compilava de cara os 4 modos (cor, instâncias,
+  profundidade x2) com a especialização padrão, que quase nunca são desenhados (176 programas antes do ENTRAR, ~60 agora).
+  O estado de compilação de cada etapa só é lido se o link falhar.
+- **Shaders em paralelo durante o carregamento** (KHR_parallel_shader_compile, mesmo patch): os programas de cena e de
+  interface são ligados sem esperar e o desenho é pulado até o navegador avisar que terminou; antes da tela de entrada o
+  jogo liga `PF_SYNC_SHADERS` e dali em diante um programa pendente é esperado no 1º uso (nada some no jogo). Céu e cópias
+  continuam síncronos. `?asyncsh=0` volta.
+- **Imagens grandes decodificadas pelo navegador** (`render/fast_tex.gd`, `pck_split.py`, `make_boot.py`): páginas de
+  anúncio, outdoors, colagens e panfletos. O build grava os MESMOS WebP de cada nível de mipmap do `.ctex` em `jogo/img/`;
+  o carregador baixa e decodifica com `createImageBitmap` em paralelo com o boot e envia cada nível direto para a textura
+  GL do jogo (o template exporta `GL`); a textura nasce com uma imagem mínima de mesma contagem de mipmaps. Mesmos pixels
+  (18 pontos fixos e lojas iguais à rodada 5, `r6_pontos_antes_depois.png`, `r6_lojas_antes_depois.png`). Troca de idioma
+  no celular: imagens 2,4 -> 0,85 s. `?fasttex=0` volta. A VRAM informada pelo motor cai (ele pensa que a textura tem 1 px
+  de altura), a real é a mesma.
+- **Fusão**: primitivas vêm de `get_mesh_arrays()` (CPU) em vez de ler a GPU (585 -> 357 leituras), arrays guardados entre
+  `_fmt` e `_part`, tick a cada 12 malhas. Ganho pequeno (~0,3 s); `?mergegpu=1` volta.
+- Sondas: `cdp_profile.js --from-log` (perfil de um trecho), `prof_names.js`, `cdp_perf.js --travel` (porta pelo mapa),
+  `--veilshot`, captura do 1º quadro depois do véu (`window.__pfShopReady`), `--tpquiet` (pontos fixos sem carros,
+  pedestres e chuva; os pontos ficam em `tools/deploy/tp_points.txt`), `serve_local.py --slow-re/--slow-kbps/--fail-re`.
+
+### Testado e descartado / ficou de fora
+- **Letreiros em 230 px rasterizados na hora**: a suspeita não se confirmou. Medido por parte: os letreiros custavam 50 a
+  110 ms; o grosso das fachadas, outdoors e anúncios era decodificar WebP na thread do jogo (resolvido acima).
+- **Pedir os programas antes da fusão** (para o navegador compilar enquanto a fusão roda): sem ganho medido.
+- **Fatias de 40 ms**: fusão 3,7 -> 3,1 s, ENTRAR igual dentro do ruído.
+- **ENTRAR cedo (cidade em streaming depois do ENTRAR)**: não feito. O `city.gd` monta e guarda o estado em listas que a
+  fusão, a luz por objeto (noir), a passada nítida e o índice de idioma percorrem de uma vez; montar e fundir por célula
+  depois do ENTRAR, sem pop de luz (a luz por objeto muda quando a malha é fundida), é a próxima reforma grande.
+- **Interface antes do ENTRAR**: medido 1,6 s, quase tudo é o 1º quadro da cidade e da passada nítida; HUD 0,06 s, tela de
+  entrada 0,05 s. Nada relevante a adiar.
+- **Nomes das funções do wasm no perfil**: o build de produção minifica os nomes antes do mapa de símbolos; só com
+  `debug_symbols=yes` (recompilar tudo).
+- Metas: celular 1ª visita 15 s (no ar 16,0 a 16,8 s), repetida 8 s (15,6 a 16,3 s) e PC repetida 4 s (3,6 a 3,8 s do
+  download, 4,8 a 5,2 s desde a navegação) não atingidas por inteiro. Na visita repetida o aquecimento já era dispensado;
+  o que sobra é montar os nós (~5,3 s), fundir (~3,2 s) e o motor (~4,2 s).
+
+Capturas: `docs/perf/r6_pontos_antes_depois.png` (18 pontos, esquerda rodada 5, direita rodada 6),
+`r6_lojas_antes_depois.png` (rumor e lábia, com a diferença), `r6_loader_celular_9s.png` (carregador aos 9 s, antes e
+depois), `r6_portas_lento_6x.png` (13 portas, 1º quadro, celular 6x), `r6_veu_pacote_falhou.png`.
